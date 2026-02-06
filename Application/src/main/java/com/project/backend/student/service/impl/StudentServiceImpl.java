@@ -11,6 +11,7 @@ import com.project.backend.student.dto.student.StudentSaveDTO;
 import com.project.backend.student.entity.Student;
 import com.project.backend.student.mapper.StudentMapper;
 import com.project.backend.student.service.StudentBatchLoadContext;
+import com.project.backend.student.service.StudentCacheManager;
 import com.project.backend.student.service.StudentService;
 import com.project.backend.student.vo.StudentVO;
 import com.project.core.exception.BusinessException;
