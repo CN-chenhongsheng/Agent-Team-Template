@@ -1,12 +1,12 @@
 # Node.js
 node_modules/
 .env
+.mcp.json
 
 # Claude/Cursor
 .claude
 .cursor
 .shared
-.mcp.json
 .skills
 
 # Compressed files
