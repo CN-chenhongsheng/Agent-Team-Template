@@ -1,0 +1,28 @@
+# Node.js
+node_modules/
+.env
+
+# Claude/Cursor
+.claude
+.cursor
+.shared
+.mcp.json
+.skills
+
+# Compressed files
+.zip
+.rar
+.7z
+.tar
+.tar.gz
+.tar.bz2
+.tar.xz
+.tar.lzma
+.tar.lz
+.tar.lz4
+
+# Documentation
+docs
+demo
+文档
+AGENTS.md
