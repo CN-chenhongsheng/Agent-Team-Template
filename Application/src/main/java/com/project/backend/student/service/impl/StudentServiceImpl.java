@@ -10,6 +10,7 @@ import com.project.backend.student.dto.student.StudentQueryDTO;
 import com.project.backend.student.dto.student.StudentSaveDTO;
 import com.project.backend.student.entity.Student;
 import com.project.backend.student.mapper.StudentMapper;
+import com.project.backend.student.service.StudentBatchLoadContext;
 import com.project.backend.student.service.StudentService;
 import com.project.backend.student.vo.StudentVO;
 import com.project.core.exception.BusinessException;
@@ -36,7 +37,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -57,6 +60,7 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
     private final FloorMapper floorMapper;
     private final RoomMapper roomMapper;
     private final BedMapper bedMapper;
+    private final StudentCacheManager cacheManager;
 
     @Override
     public PageResult<StudentVO> pageList(StudentQueryDTO queryDTO) {
@@ -79,8 +83,11 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         Page<Student> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         page(page, wrapper);
 
-        List<StudentVO> voList = page.getRecords().stream()
-                .map(this::convertToVO)
+        List<Student> records = page.getRecords();
+        StudentBatchLoadContext context = batchLoadRelatedData(records);
+
+        List<StudentVO> voList = records.stream()
+                .map(student -> convertToVO(student, context))
                 .collect(Collectors.toList());
 
         return PageResult.build(voList, page.getTotal(), page.getCurrent(), page.getSize());
@@ -92,7 +99,8 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         if (student == null) {
             throw new BusinessException("学生不存在");
         }
-        return convertToVO(student);
+        StudentBatchLoadContext context = batchLoadRelatedData(List.of(student));
+        return convertToVO(student, context);
     }
 
     @Override
@@ -228,103 +236,77 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         return updateById(student);
     }
 
-    /**
-     * 实体转VO
-     */
-    private StudentVO convertToVO(Student student) {
+    private StudentVO convertToVO(Student student, StudentBatchLoadContext context) {
         StudentVO vo = new StudentVO();
         BeanUtil.copyProperties(student, vo);
         vo.setStatusText(DictUtils.getLabel("sys_user_status", student.getStatus(), "未知"));
         vo.setGenderText(DictUtils.getLabel("sys_user_sex", student.getGender(), "未知"));
         vo.setAcademicStatusText(DictUtils.getLabel("academic_status", student.getAcademicStatus(), "未知"));
 
-        // 查询校区名称
         if (StrUtil.isNotBlank(student.getCampusCode())) {
-            LambdaQueryWrapper<Campus> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(Campus::getCampusCode, student.getCampusCode());
-            Campus campus = campusMapper.selectOne(wrapper);
+            Campus campus = context.getCampusByCode().get(student.getCampusCode());
             if (campus != null) {
                 vo.setCampusName(campus.getCampusName());
             }
         }
 
-        // 查询院系名称
         if (StrUtil.isNotBlank(student.getDeptCode())) {
-            LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(Department::getDeptCode, student.getDeptCode());
-            Department department = departmentMapper.selectOne(wrapper);
+            Department department = context.getDeptByCode().get(student.getDeptCode());
             if (department != null) {
                 vo.setDeptName(department.getDeptName());
             }
         }
 
-        // 查询专业名称
         if (StrUtil.isNotBlank(student.getMajorCode())) {
-            LambdaQueryWrapper<Major> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(Major::getMajorCode, student.getMajorCode());
-            Major major = majorMapper.selectOne(wrapper);
+            Major major = context.getMajorByCode().get(student.getMajorCode());
             if (major != null) {
                 vo.setMajorName(major.getMajorName());
             }
         }
 
-        // 查询班级名称
         if (student.getClassId() != null) {
-            Class classEntity = classMapper.selectById(student.getClassId());
+            Class classEntity = context.getClassById().get(student.getClassId());
             if (classEntity != null) {
                 vo.setClassName(classEntity.getClassName());
             }
         }
 
-        // 查询楼层名称
         if (student.getFloorId() != null) {
-            Floor floor = floorMapper.selectById(student.getFloorId());
+            Floor floor = context.getFloorById().get(student.getFloorId());
             if (floor != null) {
                 vo.setFloorName(floor.getFloorName());
             }
         } else if (StrUtil.isNotBlank(student.getFloorCode())) {
-            // 如果没有floorId，尝试用floorCode查询
-            LambdaQueryWrapper<Floor> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(Floor::getFloorCode, student.getFloorCode());
-            Floor floor = floorMapper.selectOne(wrapper);
+            Floor floor = context.getFloorByCode().get(student.getFloorCode());
             if (floor != null) {
                 vo.setFloorName(floor.getFloorName());
             }
         }
 
-        // 查询房间名称
         if (student.getRoomId() != null) {
-            Room room = roomMapper.selectById(student.getRoomId());
+            Room room = context.getRoomById().get(student.getRoomId());
             if (room != null) {
                 vo.setRoomName(room.getRoomNumber());
             }
         } else if (StrUtil.isNotBlank(student.getRoomCode())) {
-            // 如果没有roomId，尝试用roomCode查询
-            LambdaQueryWrapper<Room> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(Room::getRoomCode, student.getRoomCode());
-            Room room = roomMapper.selectOne(wrapper);
+            Room room = context.getRoomByCode().get(student.getRoomCode());
             if (room != null) {
                 vo.setRoomName(room.getRoomNumber());
             }
         }
 
-        // 查询床位名称
         if (student.getBedId() != null) {
-            Bed bed = bedMapper.selectById(student.getBedId());
+            Bed bed = context.getBedById().get(student.getBedId());
             if (bed != null) {
                 vo.setBedName(bed.getBedNumber());
             }
         } else if (StrUtil.isNotBlank(student.getBedCode())) {
-            // 如果没有bedId，尝试用bedCode查询
-            LambdaQueryWrapper<Bed> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(Bed::getBedCode, student.getBedCode());
-            Bed bed = bedMapper.selectOne(wrapper);
+            Bed bed = context.getBedByCode().get(student.getBedCode());
             if (bed != null) {
                 vo.setBedName(bed.getBedNumber());
             }
         }
 
-        // 转换生活习惯字段为文本
         vo.setSmokingStatusText(LifestyleTextConverter.getSmokingStatusText(student.getSmokingStatus()));
         vo.setSmokingToleranceText(LifestyleTextConverter.getSmokingToleranceText(student.getSmokingTolerance()));
         vo.setSleepScheduleText(LifestyleTextConverter.getSleepScheduleText(student.getSleepSchedule()));
@@ -346,5 +328,218 @@ public class StudentServiceImpl extends ServiceImpl<StudentMapper, Student> impl
         vo.setEatInRoomText(LifestyleTextConverter.getEatInRoomText(student.getEatInRoom()));
 
         return vo;
+    }
+
+    private StudentBatchLoadContext batchLoadRelatedData(List<Student> students) {
+        StudentBatchLoadContext context = new StudentBatchLoadContext();
+        if (students.isEmpty()) {
+            return context;
+        }
+
+        Set<String> campusCodes = new HashSet<>();
+        Set<String> deptCodes = new HashSet<>();
+        Set<String> majorCodes = new HashSet<>();
+        Set<Long> classIds = new HashSet<>();
+        Set<Long> floorIds = new HashSet<>();
+        Set<String> floorCodes = new HashSet<>();
+        Set<Long> roomIds = new HashSet<>();
+        Set<String> roomCodes = new HashSet<>();
+        Set<Long> bedIds = new HashSet<>();
+        Set<String> bedCodes = new HashSet<>();
+
+        for (Student student : students) {
+            if (StrUtil.isNotBlank(student.getCampusCode())) {
+                campusCodes.add(student.getCampusCode());
+            }
+            if (StrUtil.isNotBlank(student.getDeptCode())) {
+                deptCodes.add(student.getDeptCode());
+            }
+            if (StrUtil.isNotBlank(student.getMajorCode())) {
+                majorCodes.add(student.getMajorCode());
+            }
+            if (student.getClassId() != null) {
+                classIds.add(student.getClassId());
+            }
+            if (student.getFloorId() != null) {
+                floorIds.add(student.getFloorId());
+            }
+            if (StrUtil.isNotBlank(student.getFloorCode())) {
+                floorCodes.add(student.getFloorCode());
+            }
+            if (student.getRoomId() != null) {
+                roomIds.add(student.getRoomId());
+            }
+            if (StrUtil.isNotBlank(student.getRoomCode())) {
+                roomCodes.add(student.getRoomCode());
+            }
+            if (student.getBedId() != null) {
+                bedIds.add(student.getBedId());
+            }
+            if (StrUtil.isNotBlank(student.getBedCode())) {
+                bedCodes.add(student.getBedCode());
+            }
+        }
+
+        if (!campusCodes.isEmpty()) {
+            Set<String> uncachedCodes = new HashSet<>();
+            for (String code : campusCodes) {
+                Campus cached = cacheManager.getCampus(code);
+                if (cached != null) {
+                    context.getCampusByCode().put(code, cached);
+                } else {
+                    uncachedCodes.add(code);
+                }
+            }
+            if (!uncachedCodes.isEmpty()) {
+                LambdaQueryWrapper<Campus> wrapper = new LambdaQueryWrapper<>();
+                wrapper.in(Campus::getCampusCode, uncachedCodes);
+                List<Campus> campuses = campusMapper.selectList(wrapper);
+                campuses.forEach(c -> {
+                    context.getCampusByCode().put(c.getCampusCode(), c);
+                    cacheManager.putCampus(c.getCampusCode(), c);
+                });
+            }
+        }
+
+        if (!deptCodes.isEmpty()) {
+            Set<String> uncachedCodes = new HashSet<>();
+            for (String code : deptCodes) {
+                Department cached = cacheManager.getDept(code);
+                if (cached != null) {
+                    context.getDeptByCode().put(code, cached);
+                } else {
+                    uncachedCodes.add(code);
+                }
+            }
+            if (!uncachedCodes.isEmpty()) {
+                LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
+                wrapper.in(Department::getDeptCode, uncachedCodes);
+                List<Department> depts = departmentMapper.selectList(wrapper);
+                depts.forEach(d -> {
+                    context.getDeptByCode().put(d.getDeptCode(), d);
+                    cacheManager.putDept(d.getDeptCode(), d);
+                });
+            }
+        }
+
+        if (!majorCodes.isEmpty()) {
+            Set<String> uncachedCodes = new HashSet<>();
+            for (String code : majorCodes) {
+                Major cached = cacheManager.getMajor(code);
+                if (cached != null) {
+                    context.getMajorByCode().put(code, cached);
+                } else {
+                    uncachedCodes.add(code);
+                }
+            }
+            if (!uncachedCodes.isEmpty()) {
+                LambdaQueryWrapper<Major> wrapper = new LambdaQueryWrapper<>();
+                wrapper.in(Major::getMajorCode, uncachedCodes);
+                List<Major> majors = majorMapper.selectList(wrapper);
+                majors.forEach(m -> {
+                    context.getMajorByCode().put(m.getMajorCode(), m);
+                    cacheManager.putMajor(m.getMajorCode(), m);
+                });
+            }
+        }
+
+        if (!classIds.isEmpty()) {
+            Set<Long> uncachedIds = new HashSet<>();
+            for (Long id : classIds) {
+                Class cached = cacheManager.getClass(id);
+                if (cached != null) {
+                    context.getClassById().put(id, cached);
+                } else {
+                    uncachedIds.add(id);
+                }
+            }
+            if (!uncachedIds.isEmpty()) {
+                List<Class> classes = classMapper.selectBatchIds(uncachedIds);
+                classes.forEach(c -> {
+                    context.getClassById().put(c.getId(), c);
+                    cacheManager.putClass(c.getId(), c);
+                });
+            }
+        }
+
+        if (!floorIds.isEmpty()) {
+            Set<Long> uncachedIds = new HashSet<>();
+            for (Long id : floorIds) {
+                Floor cached = cacheManager.getFloor(id);
+                if (cached != null) {
+                    context.getFloorById().put(id, cached);
+                } else {
+                    uncachedIds.add(id);
+                }
+            }
+            if (!uncachedIds.isEmpty()) {
+                List<Floor> floors = floorMapper.selectBatchIds(uncachedIds);
+                floors.forEach(f -> {
+                    context.getFloorById().put(f.getId(), f);
+                    cacheManager.putFloor(f.getId(), f);
+                });
+            }
+        }
+
+        if (!floorCodes.isEmpty()) {
+            LambdaQueryWrapper<Floor> wrapper = new LambdaQueryWrapper<>();
+            wrapper.in(Floor::getFloorCode, floorCodes);
+            List<Floor> floors = floorMapper.selectList(wrapper);
+            floors.forEach(f -> context.getFloorByCode().put(f.getFloorCode(), f));
+        }
+
+        if (!roomIds.isEmpty()) {
+            Set<Long> uncachedIds = new HashSet<>();
+            for (Long id : roomIds) {
+                Room cached = cacheManager.getRoom(id);
+                if (cached != null) {
+                    context.getRoomById().put(id, cached);
+                } else {
+                    uncachedIds.add(id);
+                }
+            }
+            if (!uncachedIds.isEmpty()) {
+                List<Room> rooms = roomMapper.selectBatchIds(uncachedIds);
+                rooms.forEach(r -> {
+                    context.getRoomById().put(r.getId(), r);
+                    cacheManager.putRoom(r.getId(), r);
+                });
+            }
+        }
+
+        if (!roomCodes.isEmpty()) {
+            LambdaQueryWrapper<Room> wrapper = new LambdaQueryWrapper<>();
+            wrapper.in(Room::getRoomCode, roomCodes);
+            List<Room> rooms = roomMapper.selectList(wrapper);
+            rooms.forEach(r -> context.getRoomByCode().put(r.getRoomCode(), r));
+        }
+
+        if (!bedIds.isEmpty()) {
+            Set<Long> uncachedIds = new HashSet<>();
+            for (Long id : bedIds) {
+                Bed cached = cacheManager.getBed(id);
+                if (cached != null) {
+                    context.getBedById().put(id, cached);
+                } else {
+                    uncachedIds.add(id);
+                }
+            }
+            if (!uncachedIds.isEmpty()) {
+                List<Bed> beds = bedMapper.selectBatchIds(uncachedIds);
+                beds.forEach(b -> {
+                    context.getBedById().put(b.getId(), b);
+                    cacheManager.putBed(b.getId(), b);
+                });
+            }
+        }
+
+        if (!bedCodes.isEmpty()) {
+            LambdaQueryWrapper<Bed> wrapper = new LambdaQueryWrapper<>();
+            wrapper.in(Bed::getBedCode, bedCodes);
+            List<Bed> beds = bedMapper.selectList(wrapper);
+            beds.forEach(b -> context.getBedByCode().put(b.getBedCode(), b));
+        }
+
+        return context;
     }
 }
