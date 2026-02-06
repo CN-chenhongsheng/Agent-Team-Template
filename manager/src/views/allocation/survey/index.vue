@@ -22,9 +22,7 @@
       >
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="handleBatchReminder">
-              批量提醒未填写
-            </ElButton>
+            <ElButton @click="handleBatchReminder"> 批量提醒未填写 </ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -59,7 +57,6 @@
   import SurveySearch from './modules/survey-search.vue'
   import SurveyDrawer from './modules/survey-drawer.vue'
   import { ElMessageBox, ElTag } from 'element-plus'
-  import type { ActionButtonConfig } from '@/types/component'
 
   defineOptions({ name: 'AllocationSurvey' })
 
@@ -80,35 +77,24 @@
     fillStatus: undefined
   })
 
-  // 前置声明函数
-  let handleViewDetail: (row: SurveyListItem) => void
-  let handleSendReminder: (row: SurveyListItem) => Promise<void>
+  // 查看详情
+  const handleViewDetail = (row: SurveyListItem) => {
+    currentStudentId.value = row.studentId
+    currentStudentName.value = row.studentName
+    drawerVisible.value = true
+  }
 
-  /**
-   * 获取操作配置
-   */
-  const getRowActions = (row: SurveyListItem): ActionButtonConfig[] => {
-    const actions: ActionButtonConfig[] = []
-
-    if (row.fillStatus === 'filled') {
-      actions.push({
-        type: 'view',
-        label: '查看详情',
-        onClick: () => handleViewDetail(row),
-        auth: 'allocation:survey:view'
+  // 发送提醒
+  const handleSendReminder = async (row: SurveyListItem) => {
+    try {
+      await ElMessageBox.confirm(`确定要向 ${row.studentName} 发送问卷填写提醒吗？`, '发送提醒', {
+        type: 'info'
       })
+      // TODO: 调用发送提醒 API（需要对接消息系统）
+      ElMessage.success('提醒发送成功')
+    } catch {
+      // 取消操作
     }
-
-    if (row.fillStatus === 'unfilled') {
-      actions.push({
-        type: 'notify',
-        label: '发送提醒',
-        onClick: () => handleSendReminder(row),
-        auth: 'allocation:survey:notify'
-      })
-    }
-
-    return actions
   }
 
   const {
@@ -182,7 +168,29 @@
           label: '操作',
           width: 120,
           fixed: 'right',
-          formatter: (row: SurveyListItem) => getRowActions(row)
+          formatter: (row: SurveyListItem) => {
+            const actions = []
+
+            if (row.fillStatus === 'filled') {
+              actions.push({
+                type: 'view',
+                label: '查看详情',
+                onClick: () => handleViewDetail(row),
+                auth: 'allocation:survey:detail'
+              })
+            }
+
+            if (row.fillStatus === 'unfilled') {
+              actions.push({
+                type: 'notify',
+                label: '发送提醒',
+                onClick: () => handleSendReminder(row),
+                auth: 'allocation:survey:statistics'
+              })
+            }
+
+            return actions
+          }
         }
       ]
     },
@@ -190,8 +198,7 @@
       enabled: true
     },
     contextMenu: {
-      enabled: true,
-      actionsGetter: getRowActions
+      enabled: true
     }
   })
 
@@ -212,28 +219,6 @@
       fillStatus: undefined
     }
     await resetSearchParams()
-  }
-
-  // 查看详情
-  handleViewDetail = (row: SurveyListItem) => {
-    currentStudentId.value = row.studentId
-    currentStudentName.value = row.studentName
-    drawerVisible.value = true
-  }
-
-  // 发送提醒
-  handleSendReminder = async (row: SurveyListItem) => {
-    try {
-      await ElMessageBox.confirm(
-        `确定要向 ${row.studentName} 发送问卷填写提醒吗？`,
-        '发送提醒',
-        { type: 'info' }
-      )
-      // TODO: 调用发送提醒 API（需要对接消息系统）
-      ElMessage.success('提醒发送成功')
-    } catch {
-      // 取消操作
-    }
   }
 
   // 批量发送提醒

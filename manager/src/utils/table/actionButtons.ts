@@ -28,7 +28,8 @@ const BUTTON_LABELS: Record<string, string> = {
   assign: '分配',
   reset: '重置',
   share: '分配',
-  link: '绑定'
+  link: '绑定',
+  notify: '提醒'
 }
 
 /**
@@ -45,7 +46,8 @@ export const BUTTON_ICONS: Record<string, string> = {
   assign: 'ri:user-settings-line',
   reset: 'ri:refresh-line',
   share: 'ri:share-line',
-  link: 'ri:link'
+  link: 'ri:link',
+  notify: 'ri:notification-line'
 }
 
 /**
