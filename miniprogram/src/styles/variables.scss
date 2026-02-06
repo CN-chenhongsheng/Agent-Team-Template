@@ -1,0 +1,76 @@
+/**
+ * 全局主题变量
+ */
+
+// 主色调
+$primary: #0adbc3;
+$primary-dark: #08bda8;
+$primary-light: #e0fbf8;
+
+// 辅助色
+$accent: #ff9f43;
+$accent-dark: #ff8f2b;
+
+// 背景色
+$bg-light: #f5f8f8;
+$bg-gradient-start: #f0fdfa;
+$bg-gradient-end: #ecfccb;
+
+// 文本颜色
+$text-main: #111817;
+$text-sub: #6b7280;
+$text-disabled: #9ca3af;
+$text-placeholder: #9ca3af;
+
+// 毛玻璃效果
+$glass-bg: rgb(255 255 255 / 65%);
+$glass-border: rgb(255 255 255 / 80%);
+$glass-border-light: rgb(255 255 255 / 60%);
+
+// 阴影
+$shadow-sm: 0 2rpx 6rpx rgb(0 0 0 / 2%);
+$shadow-md: 0 8rpx 32rpx rgb(31 38 135 / 7%);
+$shadow-lg: 0 8rpx 24rpx rgb(10 219 195 / 30%);
+
+// 圆角
+$radius-sm: 16rpx;
+$radius-md: 24rpx;
+$radius-lg: 32rpx;
+$radius-xl: 48rpx;
+$radius-full: 9999rpx;
+
+// 间距
+$spacing-xs: 8rpx;
+$spacing-sm: 16rpx;
+$spacing-md: 24rpx;
+$spacing-lg: 32rpx;
+$spacing-xl: 40rpx;
+$spacing-2xl: 48rpx;
+
+// 字体大小
+$font-xs: 20rpx;
+$font-sm: 24rpx;
+$font-md: 28rpx;
+$font-lg: 32rpx;
+$font-xl: 36rpx;
+$font-2xl: 48rpx;
+
+// 字体粗细
+$font-normal: 400;
+$font-medium: 500;
+$font-semibold: 600;
+$font-bold: 700;
+
+// 过渡动画
+$transition-fast: all 0.2s;
+$transition-normal: all 0.3s;
+$transition-slow: all 0.5s;
+
+// Z-index 层级
+$z-dropdown: 1000;
+$z-sticky: 1020;
+$z-fixed: 1030;
+$z-modal-backdrop: 9998;
+$z-modal: 9999;
+$z-popover: 10000;
+$z-tooltip: 10001;

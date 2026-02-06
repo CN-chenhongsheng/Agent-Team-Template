@@ -1,0 +1,26 @@
+# 开发环境配置
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/project_management?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+# MyBatis-Plus日志输出
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 日志配置
+logging:
+  level:
+    root: info
+    com.project.backend: debug
+

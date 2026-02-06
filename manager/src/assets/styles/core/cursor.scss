@@ -1,0 +1,147 @@
+/**
+ * 自定义光标样式
+ * 使用自定义 SVG 光标替代系统默认光标
+ * 通过 CSS 变量集中管理，易于维护和主题切换
+ */
+
+/* 根节点定义光标 CSS 变量 */
+:root {
+  /* 光标图片路径 */
+  --cursor-default: url('/src/assets/svg/cursor/1.svg') 0 0, auto;
+  --cursor-pointer: url('/src/assets/svg/cursor/2.svg') 6 6, pointer;
+  --cursor-text: url('/src/assets/svg/cursor/3.svg') 6 12, text;
+  --cursor-grab: url('/src/assets/svg/cursor/4.svg') 14 14, grab;
+  --cursor-grabbing: url('/src/assets/svg/cursor/5.svg') 14 12, grabbing;
+
+  /* 系统光标（特殊状态） */
+  --cursor-not-allowed: not-allowed;
+  --cursor-wait: wait;
+  --cursor-col-resize: col-resize;
+  --cursor-help: help;
+}
+
+/* 默认光标 - cursor-default */
+div {
+  cursor: var(--cursor-default);
+}
+
+/* 指针光标 - cursor-pointer (适用于可点击元素) */
+a,
+button,
+.c-p,
+.cursor-pointer,
+[role='button'],
+input[type='submit'],
+input[type='button'],
+input[type='reset'],
+label[for],
+.el-radio-button__inner,
+.el-dropdown-menu__item,
+svg,
+select {
+  cursor: var(--cursor-pointer) !important;
+}
+
+/* 文本光标 - cursor-text (适用于文本输入和可选择文本) */
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='search'],
+input[type='tel'],
+input[type='url'],
+input[type='number'],
+textarea,
+.cursor-text,
+[contenteditable='true'] {
+  cursor: var(--cursor-text) !important;
+}
+
+/* 抓取光标 - cursor-grab (适用于可拖拽元素) */
+.cursor-grab,
+[draggable='true'],
+.draggable,
+.sortable-ghost,
+.el-tree-node__content,
+.el-upload-dragger {
+  cursor: var(--cursor-grab) !important;
+}
+
+/* 抓取中光标 - cursor-grabbing (拖拽时) */
+.cursor-grabbing,
+.sortable-drag,
+*:active.cursor-grab,
+*:active[draggable='true'],
+*:active.draggable {
+  cursor: var(--cursor-grabbing) !important;
+}
+
+/* Element Plus 组件特殊处理 */
+.el-button,
+.el-link,
+.el-switch,
+.el-checkbox,
+.el-radio,
+.el-select,
+.el-cascader,
+.el-pagination button,
+.el-pagination li,
+.el-table__row,
+.el-menu-item,
+.el-submenu__title,
+.el-tabs__item,
+.el-tree-node__content {
+  cursor: var(--cursor-pointer) !important;
+}
+
+.el-input__inner,
+.el-textarea__inner {
+  cursor: var(--cursor-text) !important;
+}
+
+/* 禁用状态保持系统默认 not-allowed 光标 */
+[disabled],
+.is-disabled,
+.el-button.is-disabled,
+.el-input.is-disabled .el-input__inner {
+  cursor: var(--cursor-not-allowed) !important;
+}
+
+/* 加载状态保持系统默认 wait 光标 */
+.is-loading,
+.el-loading-mask {
+  cursor: var(--cursor-wait) !important;
+}
+
+/* 调整大小光标保持系统默认 */
+.el-table__column-resize-proxy,
+.resize-handle {
+  cursor: var(--cursor-col-resize) !important;
+}
+
+/* 帮助光标保持系统默认 */
+.cursor-help,
+[title]:not([title='']):hover {
+  cursor: var(--cursor-help) !important;
+}
+
+/* 滚动条光标样式 */
+/* WebKit 浏览器 (Chrome, Edge, Safari) */
+::-webkit-scrollbar-thumb {
+  cursor: var(--cursor-pointer) !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  cursor: var(--cursor-pointer) !important;
+}
+
+::-webkit-scrollbar-thumb:active {
+  cursor: var(--cursor-grabbing) !important;
+}
+
+/* Firefox 浏览器 */
+* {
+  scrollbar-color: auto;
+  scrollbar-width: thin;
+}
+
+/* Firefox 滚动条拖拽时的光标（通过 JavaScript 处理，CSS 无法直接实现） */

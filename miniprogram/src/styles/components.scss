@@ -1,0 +1,523 @@
+/**
+ * 全局公共组件样式
+ * 包含可复用的CSS类和组件样式
+ */
+
+@use './variables' as *;
+
+// ========================================
+// 毛玻璃卡片 Mixins
+// ========================================
+
+// 毛玻璃卡片 mixin
+@mixin glass-card($bg: $glass-bg, $blur: 32rpx) {
+  background: $bg;
+  border: 2rpx solid $glass-border;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-md;
+  backdrop-filter: blur($blur);
+}
+
+// 背景装饰球 mixin
+@mixin ambient-blob($color, $size: 500rpx) {
+  position: absolute;
+  width: $size;
+  height: $size;
+  background-color: $color;
+  border-radius: 50%;
+  opacity: 0.6;
+  filter: blur(120rpx);
+  pointer-events: none;
+}
+
+// ========================================
+// 毛玻璃卡片类
+// ========================================
+
+.glass-card {
+  background: $glass-bg;
+  border: 2rpx solid $glass-border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  backdrop-filter: blur(32rpx);
+
+  // 尺寸变体
+  &--sm {
+    border-radius: $radius-md;
+  }
+
+  &--lg {
+    border-radius: $radius-xl;
+  }
+
+  // 可点击变体
+  &--clickable {
+    transition: all 0.3s;
+
+    &:active {
+      transform: scale(0.98);
+      box-shadow: 0 2rpx 8rpx rgb(31 38 135 / 8%);
+    }
+  }
+}
+
+// ========================================
+// 背景装饰容器
+// ========================================
+
+.bg-decorations {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(100rpx);
+    animation: blob-float 20s ease-in-out infinite;
+
+    // 默认颜色变体 - 暖色系
+    &-1 {
+      top: -200rpx;
+      right: -100rpx;
+      width: 600rpx;
+      height: 600rpx;
+      background: rgb(255 220 220 / 75%);
+      animation-delay: 0s;
+    }
+
+    &-2 {
+      bottom: -150rpx;
+      left: -100rpx;
+      width: 500rpx;
+      height: 500rpx;
+      background: rgb(255 220 180 / 45%);
+      animation-delay: 5s;
+    }
+
+    &-3 {
+      top: 50%;
+      left: 50%;
+      width: 400rpx;
+      height: 400rpx;
+      background: rgb(255 200 180 / 30%);
+      transform: translate(-50%, -50%);
+      animation-delay: 10s;
+    }
+
+    // 主色调变体
+    &--primary {
+      background: rgb(10 219 195 / 30%);
+    }
+
+    &--accent {
+      background: rgb(255 159 67 / 30%);
+    }
+
+    &--blue {
+      background: rgb(59 130 246 / 20%);
+    }
+  }
+}
+
+// ========================================
+// 页面容器布局
+// ========================================
+
+.page-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  margin: 0 auto;
+  max-width: 750rpx;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+// ========================================
+// 页面头部样式
+// ========================================
+
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: calc(var(--status-bar-height, 0) + 45rpx) $spacing-lg 25rpx;
+
+  &--blur {
+    backdrop-filter: blur(20rpx);
+  }
+
+  &--center {
+    justify-content: center;
+  }
+
+  // 标题组
+  &__title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4rpx;
+  }
+
+  &__title {
+    font-size: 40rpx;
+    color: $text-main;
+    font-weight: $font-bold;
+    letter-spacing: 0.5rpx;
+  }
+
+  &__subtitle {
+    font-size: 22rpx;
+    color: $text-sub;
+    font-weight: $font-medium;
+    letter-spacing: 1rpx;
+    text-transform: uppercase;
+  }
+}
+
+// ========================================
+// 加载状态
+// ========================================
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 120rpx 0;
+  flex-direction: column;
+
+  &__spinner {
+    width: 60rpx;
+    height: 60rpx;
+    border: 4rpx solid rgb(243 243 243);
+    border-top-color: $primary;
+    border-radius: 50%;
+    animation: loading-spin 1s linear infinite;
+  }
+
+  &__text {
+    margin-top: $spacing-md;
+    font-size: $font-md;
+    color: $text-sub;
+  }
+}
+
+// ========================================
+// 空状态
+// ========================================
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 120rpx 0;
+  flex-direction: column;
+}
+
+// ========================================
+// Tab 切换栏
+// ========================================
+
+.filter-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  overflow: hidden;
+  padding: 0;
+  margin: 0 $spacing-lg;
+  background: $glass-bg;
+  border: 2rpx solid $glass-border;
+  border-radius: $radius-md;
+  box-shadow: $shadow-md;
+  backdrop-filter: blur(32rpx);
+
+  &__item {
+    position: relative;
+    padding: 20rpx 0;
+    text-align: center;
+    transition: all 0.3s;
+    flex: 1;
+
+    &-content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6rpx;
+      color: $text-sub;
+      transition: all 0.3s;
+    }
+
+    &-label {
+      font-size: 26rpx;
+      font-weight: $font-medium;
+    }
+
+    &--active &-content {
+      color: $primary;
+      font-weight: $font-bold;
+    }
+  }
+
+  // 筋斗云指示器
+  &__indicator {
+    position: absolute;
+    bottom: 0;
+    width: 60rpx;
+    height: 4rpx;
+    background: linear-gradient(90deg, $primary 0%, $primary-dark 100%);
+    border-radius: 2rpx;
+    box-shadow: 0 2rpx 8rpx rgb(10 219 195 / 40%);
+    transition:
+      left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+}
+
+// ========================================
+// 状态标签
+// ========================================
+
+.status-tag {
+  padding: 4rpx 16rpx;
+  font-size: $font-sm;
+  border-radius: $radius-sm;
+  font-weight: $font-semibold;
+
+  &--pending {
+    color: #f97316;
+    background: rgb(249 115 22 / 10%);
+  }
+
+  &--processing {
+    color: #3b82f6;
+    background: rgb(59 130 246 / 10%);
+  }
+
+  &--approved,
+  &--success {
+    color: #22c55e;
+    background: rgb(34 197 94 / 10%);
+  }
+
+  &--rejected,
+  &--danger {
+    color: #ef4444;
+    background: rgb(239 68 68 / 10%);
+  }
+
+  &--info {
+    color: #6b7280;
+    background: rgb(107 114 128 / 10%);
+  }
+
+  &--primary {
+    color: $primary;
+    background: rgb(10 219 195 / 10%);
+  }
+}
+
+// ========================================
+// 列表项卡片
+// ========================================
+
+.list-item-card {
+  padding: 0;
+  background: $glass-bg;
+  border: 2rpx solid $glass-border-light;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgb(31 38 135 / 5%);
+  transition: all 0.3s;
+  backdrop-filter: blur(32rpx);
+
+  &:active {
+    transform: scale(0.98);
+    box-shadow: 0 2rpx 8rpx rgb(31 38 135 / 8%);
+  }
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 20rpx $spacing-md 0;
+  }
+
+  &__content {
+    padding: 12rpx $spacing-md 0;
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12rpx $spacing-md 20rpx;
+    margin-top: 12rpx;
+    border-top: 1rpx solid rgb(229 231 235 / 50%);
+  }
+}
+
+// ========================================
+// 安全底部区域
+// ========================================
+
+.safe-bottom {
+  height: calc(env(safe-area-inset-bottom) + 80rpx);
+
+  &--lg {
+    height: calc(env(safe-area-inset-bottom) + 160rpx);
+  }
+
+  &--xl {
+    height: calc(env(safe-area-inset-bottom) + 250rpx);
+  }
+}
+
+// ========================================
+// 区块标题
+// ========================================
+
+.section-title {
+  display: flex;
+  align-items: center;
+  padding-left: 4rpx;
+  gap: 12rpx;
+
+  &__indicator {
+    width: 8rpx;
+    height: 32rpx;
+    background: linear-gradient(180deg, $primary 0%, $primary-dark 100%);
+    border-radius: 4rpx;
+  }
+
+  &__text {
+    font-size: 30rpx;
+    color: $text-main;
+    font-weight: $font-semibold;
+  }
+}
+
+// ========================================
+// 动画关键帧
+// ========================================
+
+// 背景球浮动动画
+@keyframes blob-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  25% {
+    transform: translate(20rpx, -20rpx) scale(1.05);
+  }
+
+  50% {
+    transform: translate(-10rpx, 10rpx) scale(0.95);
+  }
+
+  75% {
+    transform: translate(-20rpx, -10rpx) scale(1.02);
+  }
+}
+
+// 加载旋转
+@keyframes loading-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 淡入动画
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 脉冲动画
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+// 脉冲环动画
+@keyframes pulse-ring {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+// ========================================
+// 动画工具类
+// ========================================
+
+.animate-fade-in {
+  opacity: 0;
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+// ========================================
+// 信息行样式
+// ========================================
+
+.info-row {
+  display: flex;
+  margin-bottom: 12rpx;
+  font-size: 26rpx;
+  line-height: 1.6;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &__label {
+    flex-shrink: 0;
+    color: $text-sub;
+    font-weight: $font-medium;
+  }
+
+  &__value {
+    flex: 1;
+    color: $text-main;
+
+    &--ellipsis {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <!--
+    Spotless配置示例
+    用于自动格式化代码
+  -->
+
+  <formats>
+    <!-- 可以配置要格式化的文件类型 -->
+  </formats>
+
+  <java>
+    <!-- 导入排序 -->
+    <importOrder>
+      <order>java,javax,org,,com.projectct</order>
+    </importOrder>
+
+    <!-- 移除未使用的导入 -->
+    <removeUnusedImports/>
+
+    <!-- Google Java格式化指南 -->
+    <googleJavaFormat>
+      <version>1.17.0</version>
+      <style>GOOGLE</style>
+    </googleJavaFormat>
+
+    <!-- 可选：使用Eclipse JDT格式化
+    <eclipse>
+      <version>4.21</version>
+      <file>${basedir}/spotless.eclipseformat.xml</file>
+    </eclipse>
+    -->
+  </java>
+
+  <pom>
+    <sortPom>
+      <encoding>UTF-8</encoding>
+      <lineSeparator>${line.separator}</lineSeparator>
+      <indentBlankLines>false</indentBlankLines>
+      <keepBlankLines>true</keepBlankLines>
+      <sortDependencies>scope,groupId,artifactId</sortDependencies>
+      <sortDependencyExclusions>groupId,artifactId</sortDependencyExclusions>
+      <sortPlugins>groupId,artifactId</sortPlugins>
+      <sortModules>false</sortModules>
+      <sortProperties>true</sortProperties>
+    </sortPom>
+  </pom>
+</configuration>

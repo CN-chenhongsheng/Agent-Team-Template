@@ -1,0 +1,181 @@
+/**
+ * Info Card 公共样式
+ * 用于基础信息卡片和审批信息卡片的统一样式
+ *
+ * 使用说明：
+ * - .row-value 默认超长文字会显示省略号
+ * - 鼠标悬停时会自动换行显示完整文字
+ * - 如需更优雅的悬浮提示框效果，建议在组件中使用 ElTooltip 包装：
+ *   <ElTooltip :content="data.longText" placement="top">
+ *     <div class="row-value">{{ data.longText }}</div>
+ *   </ElTooltip>
+ */
+
+.info-card {
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: calc(var(--custom-radius) / 2 + 2px) !important;
+  transition: all 0.3s;
+
+  &:hover {
+    border-color: var(--el-color-primary-light-7);
+    box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
+    background: linear-gradient(
+      0deg,
+      #ffffff00 0%,
+      color-mix(in srgb, var(--el-color-primary) 2%, var(--el-bg-color)) 100%
+    );
+  }
+
+  .el-card__header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--el-border-color-lighter);
+  }
+
+  .el-card__body {
+    padding: 4px 16px;
+  }
+
+  .card-header {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    .header-icon {
+      font-size: 18px;
+      color: var(--el-color-primary);
+    }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--el-text-color-primary);
+    }
+  }
+
+  .info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .info-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--el-border-color-extra-light);
+
+    &:last-of-type {
+      border-bottom: none;
+    }
+
+    .row-label {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-size: 13px;
+      color: var(--el-text-color-secondary);
+      flex-shrink: 0;
+
+      .label-icon {
+        width: 16px;
+        height: 16px;
+        color: var(--el-text-color-placeholder);
+      }
+    }
+
+    .row-value {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--el-text-color-primary);
+      padding-left: 12px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      cursor: var(--cursor-text);
+      max-width: 100%;
+      flex-shrink: 1;
+
+      .value-dot {
+        width: 6px;
+        height: 6px;
+        background: var(--el-text-color-placeholder);
+        border-radius: 50%;
+      }
+
+      &.is-good {
+        color: var(--el-color-success);
+
+        .value-dot {
+          background: var(--el-color-success);
+        }
+      }
+
+      &.is-warn {
+        color: var(--el-color-warning-dark-2);
+
+        .value-dot {
+          background: var(--el-color-warning);
+        }
+      }
+
+      &.is-danger {
+        color: var(--el-color-danger);
+
+        .value-dot {
+          background: var(--el-color-danger);
+        }
+      }
+
+      &.is-mono {
+        font-family: 'SF Mono', Menlo, Consolas, monospace;
+        letter-spacing: 0.5px;
+      }
+
+      &.is-copyable {
+        color: var(--el-color-primary);
+      }
+
+      &.is-code {
+        padding: 2px 8px;
+        font-family: 'SF Mono', Menlo, Consolas, monospace;
+        font-size: 12px;
+        color: var(--el-color-primary);
+        background: var(--el-color-primary-light-9);
+        border-radius: 4px;
+      }
+    }
+  }
+
+  .empty-state {
+    padding: 24px;
+    text-align: center;
+
+    .empty-text {
+      font-size: 14px;
+      color: var(--el-text-color-placeholder);
+    }
+  }
+
+  .remark-content {
+    padding: 12px 0;
+
+    .remark-text {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--el-text-color-regular);
+      word-break: break-word;
+    }
+  }
+}
+
+// Info Card Tooltip 样式（全局）
+.info-card-tooltip {
+  max-width: 380px !important;
+  word-break: break-word;
+  cursor: var(--cursor-text);
+}

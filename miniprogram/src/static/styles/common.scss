@@ -1,0 +1,291 @@
+@use '../../styles/variables' as *;
+@use '../../styles/components' as *;
+
+page {
+	font-size: 28rpx;
+	background-color: $bg-light;
+}
+
+// 全局 Picker 样式统一改造
+// 主题变量
+$picker-primary: #0adbc3;
+$picker-primary-dark: #08bda8;
+$picker-accent: #ff9f43;
+$picker-text-main: #111817;
+$picker-text-sub: #6b7280;
+$picker-glass-bg: rgb(255 255 255 / 65%);
+$picker-glass-border: rgb(255 255 255 / 80%);
+
+// Picker 容器样式
+picker {
+	display: block;
+	width: 100%;
+	cursor: pointer;
+
+	// 去除默认样式
+	&::after {
+		display: none;
+	}
+
+	// Picker 内容区域
+	.picker-view,
+	.picker-view-column {
+		width: 100%;
+	}
+}
+
+// 自定义 Picker 样式（用于表单中的选择器）
+.input-picker-wrapper,
+.textarea-picker-wrapper {
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: 100%;
+	min-height: 48rpx;
+	font-size: 28rpx;
+	color: $picker-text-main;
+	font-weight: 600;
+
+	&.placeholder {
+		color: #9ca3af;
+		font-weight: 400;
+	}
+
+	&.has-value {
+		color: $picker-text-main;
+		font-weight: 600;
+	}
+}
+
+// 选择器箭头图标样式
+.picker-arrow {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	color: #9ca3af;
+	transition: all 0.3s;
+	pointer-events: none;
+}
+
+// 微信小程序原生 Picker 样式覆盖
+// #ifdef MP-WEIXIN
+picker-view {
+	width: 100%;
+	height: 100%;
+	background: transparent;
+}
+
+picker-view-column {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+}
+
+.picker-view-item {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	font-size: 32rpx;
+	color: $picker-text-main;
+	transition: all 0.3s;
+}
+
+// 选中项样式
+.picker-view-item-selected {
+	color: $picker-primary;
+	font-weight: 700;
+	transform: scale(1.05);
+}
+// #endif
+
+// H5 平台 Picker 样式
+// #ifdef H5
+select {
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	font-size: 28rpx;
+	color: $picker-text-main;
+	background: transparent;
+	border: none;
+	outline: none;
+	appearance: none;
+	font-weight: 600;
+	cursor: pointer;
+
+	&:focus {
+		outline: none;
+	}
+
+	&::placeholder {
+		color: #9ca3af;
+		font-weight: 400;
+	}
+
+	option {
+		padding: 16rpx 24rpx;
+		font-size: 28rpx;
+		color: $picker-text-main;
+		background: $picker-glass-bg;
+		border: 1rpx solid $picker-glass-border;
+		backdrop-filter: blur(32rpx);
+
+		&:checked,
+		&:hover {
+			color: $picker-primary;
+			background: rgb(10 219 195 / 10%);
+		}
+
+		&[disabled] {
+			color: #9ca3af;
+			background: transparent;
+		}
+	}
+}
+
+// 自定义下拉箭头（用于覆盖默认样式）
+.picker-custom-arrow {
+	position: absolute;
+	top: 50%;
+	right: 24rpx;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	color: #9ca3af;
+	transition: all 0.3s;
+	transform: translateY(-50%);
+	pointer-events: none;
+}
+
+.input-group:focus-within .picker-custom-arrow,
+.input-group.active .picker-custom-arrow {
+	color: $picker-primary;
+	transform: translateY(-50%) rotate(180deg);
+}
+// #endif
+
+// 通用 Picker 样式增强
+.picker-enhanced {
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: 100%;
+	min-height: 48rpx;
+	font-size: 28rpx;
+	color: $picker-text-main;
+	transition: all 0.3s;
+	font-weight: 600;
+	cursor: pointer;
+
+	&:hover {
+		color: $picker-primary;
+	}
+
+	&.placeholder {
+		color: #9ca3af;
+		font-weight: 400;
+	}
+
+	&.has-value {
+		color: $picker-text-main;
+		font-weight: 600;
+	}
+
+	// 禁用状态
+	&.disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		pointer-events: none;
+	}
+
+	// 错误状态
+	&.error {
+		color: #ef4444;
+	}
+}
+
+// Picker 弹出层样式（如果需要自定义弹窗）
+.picker-popup {
+	padding: 32rpx;
+	background: $picker-glass-bg;
+	border-radius: 32rpx 32rpx 0 0;
+	box-shadow: 0 -8rpx 32rpx rgb(31 38 135 / 10%);
+	backdrop-filter: blur(32rpx);
+	border-top: 2rpx solid $picker-glass-border;
+
+	.picker-popup-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding-bottom: 24rpx;
+		border-bottom: 1rpx solid rgb(229 231 235 / 50%);
+		margin-bottom: 24rpx;
+
+		.picker-popup-title {
+			font-size: 32rpx;
+			font-weight: 700;
+			color: $picker-text-main;
+		}
+
+		.picker-popup-close {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			width: 64rpx;
+			height: 64rpx;
+			color: $picker-text-sub;
+			border-radius: 50%;
+			transition: all 0.2s;
+
+			&:active {
+				background: rgb(0 0 0 / 5%);
+			}
+		}
+	}
+
+	.picker-popup-content {
+		overflow-y: auto;
+		max-height: 600rpx;
+	}
+}
+
+// 全局弹窗定位修复 - 确保所有弹窗固定在屏幕底部
+.picker-overlay,
+.date-range-picker-popup,
+.custom-picker-popup,
+.signature-overlay,
+.signature-modal {
+	// 强制使用 fixed 定位，不受父容器影响
+	position: fixed !important;
+}
+
+.picker-overlay,
+.signature-overlay {
+	inset: 0 !important;
+	z-index: 99998 !important;
+}
+
+.date-range-picker-popup,
+.custom-picker-popup {
+	right: 0 !important;
+	bottom: 0 !important;
+	left: 0 !important;
+	z-index: 99999 !important;
+	width: 100vw !important;
+}
+
+.signature-modal {
+	top: 50% !important;
+	left: 50% !important;
+	transform: translate(-50%, -50%) !important;
+	z-index: 99999 !important;
+}
+
+// 响应式适配
+@media (width <= 750rpx) {
+	.picker-enhanced {
+		font-size: 28rpx;
+	}
+}

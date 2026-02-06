@@ -1,0 +1,23 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+.cursorrules
+CLAUDE.md
+
+# Auto-generated files
+src/types/import/auto-imports.d.ts
+src/types/import/components.d.ts
+.auto-import.json
+
+.zip
+.rar
+.7z
+.tar
+.tar.gz
+.tar.bz2
+.tar.xz
+.tar.lzma
+.tar.lz
+.tar.lz4

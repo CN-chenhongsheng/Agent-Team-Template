@@ -1,0 +1,236 @@
+/**
+ * 全局样式 Mixins
+ */
+
+@import './variables.scss';
+
+// 毛玻璃卡片
+@mixin glass-card {
+  background: $glass-bg;
+  border: 2rpx solid $glass-border;
+  box-shadow: $shadow-md;
+  backdrop-filter: blur(32rpx);
+}
+
+// Flex 居中
+@mixin flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+// Flex 垂直居中
+@mixin flex-align-center {
+  display: flex;
+  align-items: center;
+}
+
+// Flex 水平居中
+@mixin flex-justify-center {
+  display: flex;
+  justify-content: center;
+}
+
+// Flex 两端对齐
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+// 文本省略
+@mixin text-ellipsis($lines: 1) {
+  @if $lines == 1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+ @else {
+    display: -webkit-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: $lines;
+    -webkit-box-orient: vertical;
+  }
+}
+
+// 绝对定位铺满
+@mixin absolute-full {
+  position: absolute;
+  inset: 0;
+}
+
+// 固定定位铺满
+@mixin fixed-full {
+  position: fixed;
+  inset: 0;
+}
+
+// 输入框样式
+@mixin input-field {
+  padding: $spacing-sm $spacing-lg;
+  width: 100%;
+  font-size: $font-md;
+  color: $text-main;
+  background: rgb(255 255 255 / 40%);
+  border: none;
+  border-radius: $radius-md;
+  line-height: 1.6;
+
+  &::placeholder {
+    color: $text-placeholder;
+  }
+}
+
+// 按钮样式
+@mixin button-base {
+  @include flex-center;
+
+  padding: $spacing-md $spacing-xl;
+  font-size: $font-md;
+  border-radius: $radius-lg;
+  transition: $transition-fast;
+  font-weight: $font-bold;
+  cursor: pointer;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// 主按钮
+@mixin button-primary {
+  @include button-base;
+
+  color: #fff;
+  background: linear-gradient(to right, $primary, $primary-dark);
+  box-shadow: $shadow-lg;
+
+  &:active {
+    box-shadow: 0 4rpx 12rpx rgb(10 219 195 / 30%);
+  }
+}
+
+// 次按钮
+@mixin button-secondary {
+  @include button-base;
+
+  color: $text-sub;
+  background: $glass-bg;
+  border: 1rpx solid rgb(229 231 235);
+  backdrop-filter: blur(16rpx);
+}
+
+// 标签样式
+@mixin badge {
+  padding: 4rpx 16rpx;
+  font-size: $font-xs;
+  border-radius: $radius-full;
+  font-weight: $font-bold;
+}
+
+// 淡入动画
+@mixin fade-in-animation($duration: 0.5s, $delay: 0s) {
+  opacity: 0;
+  animation: fadeIn $duration ease-out forwards;
+  animation-delay: $delay;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20rpx);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+// 滑入动画
+@mixin slide-up-animation($duration: 0.3s) {
+  animation: slideUp $duration;
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
+  }
+}
+
+// 缩放动画
+@mixin scale-in-animation($duration: 0.3s) {
+  animation: scaleIn $duration;
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+// 圆形图标容器
+@mixin icon-circle($size: 80rpx, $bg-color: $primary) {
+  @include flex-center;
+
+  width: $size;
+  height: $size;
+  background: $bg-color;
+  border-radius: 50%;
+}
+
+// 区块标题指示器
+@mixin section-indicator($color: $primary) {
+  width: 8rpx;
+  height: 40rpx;
+  background: $color;
+  border-radius: 4rpx;
+}
+
+// 遮罩层
+@mixin overlay($z-index: $z-modal-backdrop) {
+  @include fixed-full;
+
+  z-index: $z-index;
+  background: rgb(0 0 0 / 50%);
+  animation: fadeIn 0.3s;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+// 弹窗样式
+@mixin modal-popup($z-index: $z-modal) {
+  position: fixed !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  z-index: $z-index !important;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom);
+  width: 100vw !important;
+  max-height: 80vh;
+  background: #fff;
+  border-radius: $radius-lg $radius-lg 0 0;
+
+  @include slide-up-animation;
+}
