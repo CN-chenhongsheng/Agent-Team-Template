@@ -62,7 +62,6 @@
 <script setup lang="ts">
   import { useI18n } from 'vue-i18n'
   import { useRouter } from 'vue-router'
-  import { ElMessageBox } from 'element-plus'
   import { useUserStore } from '@/store/modules/user'
   import { WEB_LINKS } from '@/utils/constants'
   import { mittBus } from '@/utils/sys'

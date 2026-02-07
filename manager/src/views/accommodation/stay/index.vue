@@ -75,7 +75,7 @@
     fetchDeleteStay,
     fetchBatchDeleteStay
   } from '@/api/accommodation-manage'
-  import { ElMessageBox, ElPopover } from 'element-plus'
+  import { ElPopover } from 'element-plus'
   import StaySearch from './modules/stay-search.vue'
   import StayDrawer from './modules/stay-drawer.vue'
   import ApprovalProgressTag from '@/components/core/approval/approval-progress-tag/index.vue'

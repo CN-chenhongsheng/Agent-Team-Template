@@ -85,7 +85,6 @@
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
   import MajorDialog from './modules/major-dialog.vue'
   import MajorSearch from './modules/major-search.vue'
-  import { ElMessageBox, ElMessage } from 'element-plus'
   import { DialogType } from '@/types'
   import { h } from 'vue'
 

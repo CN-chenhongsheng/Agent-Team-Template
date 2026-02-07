@@ -73,7 +73,6 @@
     fetchDeleteAcademicYear,
     fetchUpdateAcademicYearStatus
   } from '@/api/school-manage'
-  import { ElMessageBox, ElMessage } from 'element-plus'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
   import { h } from 'vue'
 

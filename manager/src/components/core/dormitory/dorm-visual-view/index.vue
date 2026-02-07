@@ -139,7 +139,6 @@
 
 <script setup lang="ts">
   import { ref, computed, watch, onMounted } from 'vue'
-  import { ElProgress } from 'element-plus'
   import FloorSelector from './components/FloorSelector.vue'
   import ViewSwitcher from './components/ViewSwitcher.vue'
   import RoomGrid from './components/RoomGrid.vue'

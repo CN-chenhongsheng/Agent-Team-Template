@@ -85,7 +85,6 @@
   import NoticeSearch from './modules/notice-search.vue'
   import NoticeDrawer from './modules/notice-drawer.vue'
   import NoticeDialog from './modules/notice-dialog.vue'
-  import { ElTag, ElMessageBox } from 'element-plus'
   import type { DialogType } from '@/types'
 
   defineOptions({ name: 'Notice' })

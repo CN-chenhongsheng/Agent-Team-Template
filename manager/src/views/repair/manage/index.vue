@@ -71,7 +71,7 @@
     fetchDeleteRepair,
     fetchBatchDeleteRepair
   } from '@/api/repair-manage'
-  import { ElMessageBox, ElTag, ElPopover, ElRate } from 'element-plus'
+  import { ElPopover, ElRate } from 'element-plus'
   import RepairSearch from './modules/repair-search.vue'
   import RepairDrawer from './modules/repair-drawer.vue'
   import StudentInfoPopover from '@/components/core/cards/art-student-info-popover/index.vue'

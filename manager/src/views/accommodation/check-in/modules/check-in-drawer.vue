@@ -40,7 +40,6 @@
   import ArtStudentHeaderCard from '@/components/core/cards/art-student-header-card/index.vue'
   import CheckInApprovalInfo from './check-in-approval-info.vue'
   import { fetchGetCheckInDetail, fetchGetStudentDetail } from '@/api/accommodation-manage'
-  import { ElMessage } from 'element-plus'
 
   defineOptions({ name: 'CheckInDrawer' })
 

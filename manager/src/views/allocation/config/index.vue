@@ -66,7 +66,6 @@
   } from '@/api/allocation-manage'
   import ConfigSearch from './modules/config-search.vue'
   import ConfigDialog from './modules/config-dialog.vue'
-  import { ElMessageBox, ElTag } from 'element-plus'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
   import type { ActionButtonConfig } from '@/types/component'
 

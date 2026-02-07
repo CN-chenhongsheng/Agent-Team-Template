@@ -36,7 +36,6 @@
  */
 
 import { reactive, h, defineComponent } from 'vue'
-import { ElNotification, ElProgress, ElMessage } from 'element-plus'
 
 // ===================== 类型定义 =====================
 
@@ -256,7 +255,9 @@ export function useImportProgress<TResult extends ImportResult = ImportResult>(
         const getStageDescription = () => {
           if (state.status !== 'processing') return null
           if (state.stage === 'parsing') {
-            return state.stageMessage || '服务器正在解析导入文件，请耐心等待，不要刷新或关闭当前页面。'
+            return (
+              state.stageMessage || '服务器正在解析导入文件，请耐心等待，不要刷新或关闭当前页面。'
+            )
           }
           return '正在导入数据，请耐心等待，不要刷新或关闭当前页面。'
         }
@@ -269,40 +270,54 @@ export function useImportProgress<TResult extends ImportResult = ImportResult>(
         // 完成状态的简洁布局
         if (isCompleted) {
           const { successCount, failCount, totalRows } = state
-          return h('div', { style: 'display:flex;flex-direction:column;' }, [
-            // 统计信息
-            h('div', { style: 'display:flex;align-items:center;gap:16px;font-size:13px;' }, [
-              h('span', { style: 'color:var(--el-color-success);font-weight:500;' }, [
-                h('span', { style: 'margin-right:4px;' }, '✓'),
-                `成功 ${successCount.toLocaleString()} 行`
+          return h(
+            'div',
+            { style: 'display:flex;flex-direction:column;' },
+            [
+              // 统计信息
+              h('div', { style: 'display:flex;align-items:center;gap:16px;font-size:13px;' }, [
+                h('span', { style: 'color:var(--el-color-success);font-weight:500;' }, [
+                  h('span', { style: 'margin-right:4px;' }, '✓'),
+                  `成功 ${successCount.toLocaleString()} 行`
+                ]),
+                failCount > 0
+                  ? h('span', { style: 'color:var(--el-color-danger);font-weight:500;' }, [
+                      h('span', { style: 'margin-right:4px;' }, '✗'),
+                      `失败 ${failCount.toLocaleString()} 行`
+                    ])
+                  : h('span', { style: 'color:var(--el-text-color-secondary);' }, '失败 0 行')
               ]),
-              failCount > 0
-                ? h('span', { style: 'color:var(--el-color-danger);font-weight:500;' }, [
-                    h('span', { style: 'margin-right:4px;' }, '✗'),
-                    `失败 ${failCount.toLocaleString()} 行`
-                  ])
-                : h('span', { style: 'color:var(--el-text-color-secondary);' }, '失败 0 行')
-            ]),
-            // 总计信息
-            h('div', {
-              style: 'font-size:12px;color:var(--el-text-color-regular);'
-            }, `共处理 ${totalRows.toLocaleString()} 行数据`),
-            // 查看详情按钮
-            onViewDetail && h('div', { style: 'margin-top:2px;' }, [
-              h('span', {
-                style: 'padding:0px 12px;color:var(--el-color-primary);font-size:12px;cursor:pointer;border-radius:4px;background-color:var(--el-color-primary-light-9);transition:background-color 0.2s;user-select:none;display:inline-block;',
-                onMouseenter: (e: MouseEvent) => {
-                  const target = e.target as HTMLElement
-                  if (target) target.style.backgroundColor = 'var(--el-color-primary-light-8)'
+              // 总计信息
+              h(
+                'div',
+                {
+                  style: 'font-size:12px;color:var(--el-text-color-regular);'
                 },
-                onMouseleave: (e: MouseEvent) => {
-                  const target = e.target as HTMLElement
-                  if (target) target.style.backgroundColor = 'var(--el-color-primary-light-9)'
-                },
-                onClick: handleViewDetail
-              }, '查看详情')
-            ])
-          ].filter(Boolean))
+                `共处理 ${totalRows.toLocaleString()} 行数据`
+              ),
+              // 查看详情按钮
+              onViewDetail &&
+                h('div', { style: 'margin-top:2px;' }, [
+                  h(
+                    'span',
+                    {
+                      style:
+                        'padding:0px 12px;color:var(--el-color-primary);font-size:12px;cursor:pointer;border-radius:4px;background-color:var(--el-color-primary-light-9);transition:background-color 0.2s;user-select:none;display:inline-block;',
+                      onMouseenter: (e: MouseEvent) => {
+                        const target = e.target as HTMLElement
+                        if (target) target.style.backgroundColor = 'var(--el-color-primary-light-8)'
+                      },
+                      onMouseleave: (e: MouseEvent) => {
+                        const target = e.target as HTMLElement
+                        if (target) target.style.backgroundColor = 'var(--el-color-primary-light-9)'
+                      },
+                      onClick: handleViewDetail
+                    },
+                    '查看详情'
+                  )
+                ])
+            ].filter(Boolean)
+          )
         }
 
         // 处理中状态的布局
@@ -310,19 +325,39 @@ export function useImportProgress<TResult extends ImportResult = ImportResult>(
         const isLargeFileParsing = state.stage === 'parsing' && state.totalRows === 0
 
         return h('div', { style: 'display:flex;flex-direction:column;' }, [
-          h('div', { style: 'line-height:1.4;' }, [
-            stageDescription && h('div', {
-              style: 'font-size:12px;color:var(--el-text-color-regular);margin-bottom:4px;'
-            }, stageDescription),
-            state.stage === 'importing' && state.totalRows > 0 && h('div', {
-              style: 'font-size:12px;color:var(--el-text-color-regular);line-height:1.4;'
-            }, `成功 ${state.successCount} · 失败 ${state.failCount}`)
-          ].filter(Boolean)),
+          h(
+            'div',
+            { style: 'line-height:1.4;' },
+            [
+              stageDescription &&
+                h(
+                  'div',
+                  {
+                    style: 'font-size:12px;color:var(--el-text-color-regular);margin-bottom:4px;'
+                  },
+                  stageDescription
+                ),
+              state.stage === 'importing' &&
+                state.totalRows > 0 &&
+                h(
+                  'div',
+                  {
+                    style: 'font-size:12px;color:var(--el-text-color-regular);line-height:1.4;'
+                  },
+                  `成功 ${state.successCount} · 失败 ${state.failCount}`
+                )
+            ].filter(Boolean)
+          ),
           // 大文件解析阶段：只显示文字，不显示进度条
           isLargeFileParsing
-            ? h('div', {
-                style: 'font-size:14px;color:var(--el-text-color-primary);margin-top:4px;font-weight:500;'
-              }, progressText)
+            ? h(
+                'div',
+                {
+                  style:
+                    'font-size:14px;color:var(--el-text-color-primary);margin-top:4px;font-weight:500;'
+                },
+                progressText
+              )
             : h('div', { style: 'display:flex;align-items:center;gap:8px;margin-top:4px;' }, [
                 h(ElProgress, {
                   percentage: showIndeterminate ? 100 : state.percent,
@@ -331,9 +366,13 @@ export function useImportProgress<TResult extends ImportResult = ImportResult>(
                   indeterminate: showIndeterminate,
                   style: 'flex:1;'
                 }),
-                h('span', {
-                  style: 'font-size:12px;color:var(--el-text-color-regular);white-space:nowrap;'
-                }, progressText)
+                h(
+                  'span',
+                  {
+                    style: 'font-size:12px;color:var(--el-text-color-regular);white-space:nowrap;'
+                  },
+                  progressText
+                )
               ])
         ])
       }
@@ -371,7 +410,9 @@ export function useImportProgress<TResult extends ImportResult = ImportResult>(
     } else {
       // 更新类型
       ;(notificationInstance as any).type = isCompleted
-        ? (state.status === 'success' ? 'success' : 'warning')
+        ? state.status === 'success'
+          ? 'success'
+          : 'warning'
         : 'info'
     }
   }

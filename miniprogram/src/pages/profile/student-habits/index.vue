@@ -471,7 +471,7 @@
 import { ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import type { IOptionItem, IStudentHabitsForm } from '@/types/api/student-habits';
-import { getStudentHabits, updateStudentHabits } from '@/api/student-habits';
+import { getStudentHabitsAPI, updateStudentHabitsAPI } from '@/api/student-habits';
 import useUserStore from '@/store/modules/user';
 import { ROUTE_CONSTANTS } from '@/constants';
 
@@ -630,7 +630,7 @@ function validateForm(): boolean {
 async function loadData() {
   loading.value = true;
   try {
-    const data = await getStudentHabits();
+    const data = await getStudentHabitsAPI();
     if (data) {
       // 填充表单数据，处理null值
       formData.value = {
@@ -717,7 +717,7 @@ async function handleSubmit(): Promise<void> {
   });
 
   try {
-    await updateStudentHabits(formData.value);
+    await updateStudentHabitsAPI(formData.value);
     uni.hideLoading();
     uni.showModal({
       title: '提交成功',

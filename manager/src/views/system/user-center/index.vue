@@ -200,7 +200,6 @@
 </template>
 
 <script setup lang="ts">
-  import { ElMessage, ElTag } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
   import { fetchGetUserProfile, fetchUpdateUserProfile, fetchChangePassword } from '@/api/auth'
   import { useDictStore } from '@/store/modules/dict'

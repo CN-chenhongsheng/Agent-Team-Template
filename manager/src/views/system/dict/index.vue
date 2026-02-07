@@ -163,7 +163,6 @@
   } from '@/api/system-manage'
   import DictTypeDialog from './modules/dict-type-dialog.vue'
   import DictDataDialog from './modules/dict-data-dialog.vue'
-  import { ElTag, ElMessageBox } from 'element-plus'
   import { h } from 'vue'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'

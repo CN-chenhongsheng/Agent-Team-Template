@@ -50,25 +50,17 @@
     />
 
     <!-- 创建任务弹窗 -->
-    <TaskCreateDialog
-      v-model:visible="createDialogVisible"
-      @submit="handleCreateSubmit"
-    />
+    <TaskCreateDialog v-model:visible="createDialogVisible" @submit="handleCreateSubmit" />
   </div>
 </template>
 
 <script setup lang="ts">
   import { useRouter } from 'vue-router'
   import { useTable } from '@/hooks/core/useTable'
-  import {
-    fetchGetTaskPage,
-    fetchExecuteTask,
-    fetchCancelTask
-  } from '@/api/allocation-manage'
+  import { fetchGetTaskPage, fetchExecuteTask, fetchCancelTask } from '@/api/allocation-manage'
   import TaskSearch from './modules/task-search.vue'
   import TaskProgressDialog from './modules/task-progress-dialog.vue'
   import TaskCreateDialog from './modules/task-create-dialog.vue'
-  import { ElMessageBox, ElTag, ElProgress } from 'element-plus'
   import type { ActionButtonConfig } from '@/types/component'
 
   defineOptions({ name: 'AllocationTask' })
@@ -90,7 +82,10 @@
   }
 
   // 状态映射
-  const statusMap: Record<number, { label: string; type: 'info' | 'warning' | 'success' | 'primary' | 'danger' }> = {
+  const statusMap: Record<
+    number,
+    { label: string; type: 'info' | 'warning' | 'success' | 'primary' | 'danger' }
+  > = {
     0: { label: '待执行', type: 'info' },
     1: { label: '执行中', type: 'warning' },
     2: { label: '已完成', type: 'success' },
@@ -208,7 +203,9 @@
           formatter: (row: TaskListItem) => {
             if (row.status < 2) return h('span', { class: 'text-gray-400' }, '--')
 
-            const percent = row.totalStudents ? Math.round((row.allocatedCount * 100) / row.totalStudents) : 0
+            const percent = row.totalStudents
+              ? Math.round((row.allocatedCount * 100) / row.totalStudents)
+              : 0
             return h('div', [
               h('span', { class: 'text-sm' }, `${row.allocatedCount}/${row.totalStudents}`),
               h(ElProgress, {
@@ -226,7 +223,8 @@
           formatter: (row: TaskListItem) => {
             if (!row.avgMatchScore) return h('span', { class: 'text-gray-400' }, '--')
 
-            const type = row.avgMatchScore >= 70 ? 'success' : row.avgMatchScore >= 50 ? 'warning' : 'danger'
+            const type =
+              row.avgMatchScore >= 70 ? 'success' : row.avgMatchScore >= 50 ? 'warning' : 'danger'
             return h(ElTag, { type }, () => row.avgMatchScore)
           }
         },

@@ -280,7 +280,7 @@ import {
   transformStayToDisplay,
   transformTransferToDisplay,
 } from '@/utils/apply-transform';
-import { useNotice } from '@/hooks/use-notice';
+import { useNotice } from '@/composables/useNotice';
 
 const userStore = useUserStore();
 const { userInfo, isLoggedIn } = storeToRefs(userStore);

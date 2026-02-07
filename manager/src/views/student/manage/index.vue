@@ -9,7 +9,11 @@
       @reset="resetSearchParams"
     ></StudentSearch>
 
-    <ElCard class="art-table-card" shadow="never" :style="{ 'margin-top': showSearchBar ? '12px' : '0' }">
+    <ElCard
+      class="art-table-card"
+      shadow="never"
+      :style="{ 'margin-top': showSearchBar ? '12px' : '0' }"
+    >
       <!-- 表格头部 -->
       <ArtTableHeader
         :showZebra="false"
@@ -28,7 +32,16 @@
             >
               批量删除{{ selectedCount > 0 ? `(${selectedCount})` : '' }}
             </ElButton>
-            <ElButton @click="() => { importDialogVisible = true }" v-ripple> 导入数据 </ElButton>
+            <ElButton
+              @click="
+                () => {
+                  importDialogVisible = true
+                }
+              "
+              v-ripple
+            >
+              导入数据
+            </ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -82,10 +95,7 @@
     />
 
     <!-- 导入结果弹窗 -->
-    <StudentImportResultDialog
-      v-model:visible="importResultVisible"
-      :result="importResultData"
-    />
+    <StudentImportResultDialog v-model:visible="importResultVisible" :result="importResultData" />
   </div>
 </template>
 
@@ -99,7 +109,7 @@
     fetchBatchDeleteStudent,
     fetchUpdateStudentStatus
   } from '@/api/student-manage'
-  import { ElMessageBox, ElMessage, ElPopover } from 'element-plus'
+  import { ElPopover } from 'element-plus'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import StudentInfoPopover from '@/components/core/cards/art-student-info-popover/index.vue'
@@ -110,7 +120,10 @@
   import ArtImportDialog from '@/components/core/forms/art-import-dialog/index.vue'
   import { studentImportConfig } from './config/student-import-config'
   import { scanStudentFileWithWorker } from '@/utils/excel/studentImportWorkerClient'
-  import { studentTemplateColumns, STUDENT_TEMPLATE_SHEET_NAME } from './utils/studentTemplateFields'
+  import {
+    studentTemplateColumns,
+    STUDENT_TEMPLATE_SHEET_NAME
+  } from './utils/studentTemplateFields'
   import { ImportValidationError } from '@/utils/excel/importValidation/errors'
 
   defineOptions({ name: 'StudentManage' })
@@ -130,7 +143,6 @@
   const {
     dialogVisible: importDialogVisible,
     handleDownloadTemplate,
-    handleScanFile: genericScanFile,
     handleUploadSuccess: genericUploadSuccess
   } = useGenericImport({
     ...studentImportConfig,
@@ -242,7 +254,6 @@
     handleCurrentChange,
     refreshData,
     refreshRemove,
-    refreshSoft,
     contextMenuItems,
     contextMenuWidth,
     handleRowContextmenu,
@@ -473,27 +484,26 @@
       row._statusLoading = false
     }
   }
-
 </script>
 
 <style scoped lang="scss">
-// 导入通知样式优化（缩小尺寸）
-:deep(.import-progress-notification) {
-  width: 320px !important;
-  padding: 12px 16px !important;
+  // 导入通知样式优化（缩小尺寸）
+  :deep(.import-progress-notification) {
+    width: 320px !important;
+    padding: 12px 16px !important;
 
-  .el-notification__title {
-    font-size: 14px !important;
-    margin-bottom: 6px !important;
-  }
+    .el-notification__title {
+      margin-bottom: 6px !important;
+      font-size: 14px !important;
+    }
 
-  .el-notification__content {
-    font-size: 12px !important;
-    margin-top: 4px !important;
-  }
+    .el-notification__content {
+      margin-top: 4px !important;
+      font-size: 12px !important;
+    }
 
-  .el-notification__icon {
-    font-size: 20px !important;
+    .el-notification__icon {
+      font-size: 20px !important;
+    }
   }
-}
 </style>

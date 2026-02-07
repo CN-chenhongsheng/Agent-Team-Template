@@ -32,13 +32,9 @@
 
 <script setup lang="ts">
   import { ref, watch, computed, reactive, nextTick } from 'vue'
-  import { ElDialog, ElButton, ElMessage } from 'element-plus'
+  import { ElDialog, ElButton } from 'element-plus'
   import type { FormRules } from 'element-plus'
-  import {
-    fetchAddStudent,
-    fetchUpdateStudent,
-    fetchGetStudentDetail
-  } from '@/api/student-manage'
+  import { fetchAddStudent, fetchUpdateStudent, fetchGetStudentDetail } from '@/api/student-manage'
   import { useDictStore } from '@/store/modules/dict'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
   import type { FormItem } from '@/components/core/forms/art-form/index.vue'

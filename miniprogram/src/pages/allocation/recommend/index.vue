@@ -147,7 +147,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { getRecommendBeds, getTransferRecommend } from '@/api/allocation';
+import { getRecommendBedsAPI, getTransferRecommendAPI } from '@/api/allocation';
 import type { IBedRecommend } from '@/types/api';
 
 // 推荐类型
@@ -195,11 +195,11 @@ async function loadRecommendList(): Promise<void> {
   loading.value = true;
   try {
     if (recommendType.value === 'transfer') {
-      const data = await getTransferRecommend(10);
+      const data = await getTransferRecommendAPI(10);
       recommendList.value = data || [];
     }
     else {
-      const data = await getRecommendBeds(10);
+      const data = await getRecommendBedsAPI(10);
       recommendList.value = data || [];
     }
     hasSurvey.value = true;

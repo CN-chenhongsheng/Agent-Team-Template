@@ -37,7 +37,6 @@
 
 <script setup lang="ts">
   import { ref, watch, onMounted, onUnmounted } from 'vue'
-  import { ElMessage, ElMessageBox } from 'element-plus'
   import ArtLogicFlow from '@/components/core/charts/art-logic-flow/index.vue'
   import AssigneeSelectDialog from '@/views/approval/flow-config/modules/assignee-select-dialog.vue'
   import { registerApprovalNodes } from '@/components/core/charts/art-logic-flow/approval-node'

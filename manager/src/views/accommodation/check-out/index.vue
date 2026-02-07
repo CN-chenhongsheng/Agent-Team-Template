@@ -75,7 +75,7 @@
     fetchDeleteCheckOut,
     fetchBatchDeleteCheckOut
   } from '@/api/accommodation-manage'
-  import { ElMessageBox, ElPopover } from 'element-plus'
+  import { ElPopover } from 'element-plus'
   import CheckOutSearch from './modules/check-out-search.vue'
   import CheckOutDrawer from './modules/check-out-drawer.vue'
   import ApprovalProgressTag from '@/components/core/approval/approval-progress-tag/index.vue'

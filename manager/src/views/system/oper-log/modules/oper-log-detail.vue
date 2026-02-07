@@ -79,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ElDescriptions, ElDescriptionsItem, ElTag, ElInput, ElAlert } from 'element-plus'
+  import { ElDescriptions, ElDescriptionsItem, ElInput, ElAlert } from 'element-plus'
 
   interface Props {
     visible: boolean

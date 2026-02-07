@@ -27,7 +27,6 @@
 
 <script setup lang="ts">
   import { fetchAddRole, fetchUpdateRole } from '@/api/system-manage'
-  import { ElMessage } from 'element-plus'
   import type { FormRules } from 'element-plus'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
   import type { FormItem } from '@/components/core/forms/art-form/index.vue'

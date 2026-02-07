@@ -20,7 +20,6 @@
 <script setup lang="ts">
   import { ref, onMounted, onUnmounted } from 'vue'
   import { useRoute } from 'vue-router'
-  import { ElMessage, ElMessageBox } from 'element-plus'
   import FlowEditor from '@/components/core/flow-editor/index.vue'
   import { useFlowData } from '@/components/core/flow-editor/composables/useFlowData'
   import { useFlowCommunication } from '@/components/core/flow-editor/composables/useFlowCommunication'

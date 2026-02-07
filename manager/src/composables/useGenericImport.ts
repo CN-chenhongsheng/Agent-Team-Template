@@ -35,7 +35,6 @@
  */
 
 import { ref, onBeforeUnmount, type Ref } from 'vue'
-import { ElMessage } from 'element-plus'
 import { generateTemplate, type TemplateColumn, type CascadeData } from '@/utils/excel'
 import type { UploadResult } from '@/utils/upload'
 import { useImportProgress } from '@/hooks/core/useImportProgress'
@@ -213,8 +212,6 @@ export function useGenericImport<TResult extends ImportResult = ImportResult, TC
     uploadApi,
     subscribeApi,
     pollApi,
-    enableChunkUpload = true,
-    chunkSizeThreshold = 5 * 1024 * 1024,
     skipScanThreshold = 50 * 1024 * 1024,
     onImportComplete,
     onViewDetail,
@@ -339,7 +336,9 @@ export function useGenericImport<TResult extends ImportResult = ImportResult, TC
   /**
    * 处理上传成功
    */
-  const handleUploadSuccess = async (uploadResult: UploadResult & { totalRows?: number | null }): Promise<void> => {
+  const handleUploadSuccess = async (
+    uploadResult: UploadResult & { totalRows?: number | null }
+  ): Promise<void> => {
     const fileUrl = uploadResult?.url
     if (!fileUrl) {
       ElMessage.warning('未获取到文件地址')

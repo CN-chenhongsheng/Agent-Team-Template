@@ -58,7 +58,6 @@
   } from '@/api/approval-manage'
   import FlowSearch from './modules/flow-search.vue'
   import FlowBindingDialog from './modules/flow-binding-dialog.vue'
-  import { ElMessageBox, ElMessage, ElTag } from 'element-plus'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
   import ArtStatusDot from '@/components/core/tables/art-status-dot/index.vue'
   import { useBusinessType } from '@/hooks'

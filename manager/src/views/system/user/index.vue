@@ -76,7 +76,7 @@
   import { ACCOUNT_TABLE_DATA } from '@/mock/temp/formData'
   import { useTable } from '@/hooks/core/useTable'
   import {
-    fetchGetUserList,
+    fetchGetUserPage,
     fetchDeleteUser,
     fetchBatchDeleteUser,
     fetchUpdateUserStatus,
@@ -87,7 +87,7 @@
   import UserPermissionDialog from './modules/user-permission-dialog.vue'
   import { useScopeCache } from '@/views/system/scope-editor/composables/useScopeCache'
   import { useScopeCommunication } from '@/views/system/scope-editor/composables/useScopeCommunication'
-  import { ElTag, ElMessageBox, ElImage, ElMessage, ElTooltip } from 'element-plus'
+  import { ElImage, ElTooltip } from 'element-plus'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
   import { DialogType } from '@/types'
   import type { ActionButtonConfig } from '@/types/component'
@@ -191,10 +191,10 @@
     contextMenuWidth,
     handleRowContextmenu,
     handleContextMenuSelect
-  } = useTable<typeof fetchGetUserList>({
+  } = useTable<typeof fetchGetUserPage>({
     // 核心配置
     core: {
-      apiFn: fetchGetUserList,
+      apiFn: fetchGetUserPage,
       apiParams: computed(() => {
         return {
           pageNum: formFilters.value.pageNum,

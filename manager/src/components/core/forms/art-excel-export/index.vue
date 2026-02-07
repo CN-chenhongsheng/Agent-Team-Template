@@ -24,7 +24,6 @@
   import { ref, computed, nextTick } from 'vue'
   import { Loading } from '@element-plus/icons-vue'
   import type { ButtonType } from 'element-plus'
-  import { ElMessage } from 'element-plus'
   import { useThrottleFn } from '@vueuse/core'
   import AppConfig from '@/config'
 
