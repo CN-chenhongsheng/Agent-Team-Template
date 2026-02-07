@@ -598,7 +598,7 @@ function selectOption(field: keyof ISurveyData, value: number): void {
 async function loadSurveyData(): Promise<void> {
   try {
     loading.value = true;
-    const data = await getSurveyData();
+    const data = await getSurveyDataAPI();
     if (data) {
       surveyStatus.value = data.surveyStatus || 0;
       // 填充已有数据
@@ -639,7 +639,7 @@ async function handleSubmit(): Promise<void> {
       if (res.confirm) {
         submitting.value = true;
         try {
-          await submitSurvey(formData);
+          await submitSurveyAPI(formData);
           uni.showToast({ title: '提交成功', icon: 'success' });
           surveyStatus.value = 1;
           setTimeout(() => {
