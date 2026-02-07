@@ -380,13 +380,17 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginVO wxLogin(WxLoginDTO wxLoginDTO, HttpServletRequest request, HttpServletResponse response) {
-        log.info("微信小程序登�? code={}", wxLoginDTO.getCode());
+        log.info("微信小程序登录, code={}", wxLoginDTO.getCode());
 
-        // TODO: 调用微信接口获取 openid
-        // 这里需要配置微信小程序AppID AppSecret
-        // String openid = getOpenIdFromWxCode(wxLoginDTO.getCode());
+        // 生产环境禁止使用 code 直接作为 openid，必须调用微信 API
+        if (isProdEnvironment()) {
+            // TODO: 实现真实微信 API 调用
+            // String openid = getOpenIdFromWxCode(wxLoginDTO.getCode());
+            throw new BusinessException("微信登录接口尚未对接微信API，请使用学号密码登录");
+        }
 
-        // 临时方案：直接使用code 作为 openid 用于测试
+        // 开发/测试环境：使用 code 作为 openid（仅限非生产环境）
+        log.warn("【非生产环境】微信登录使用 code 直接作为 openid，请勿在生产环境使用");
         String openid = wxLoginDTO.getCode();
 
         // 根据 openid 查询学生

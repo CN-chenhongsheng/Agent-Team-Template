@@ -25,7 +25,7 @@ export function getDefaultConfig(): LogicFlowConfig {
       color: 'transparent' // 确保画布透明
     },
     keyboard: {
-      enabled: true
+      enabled: false
     },
     style: {
       rect: {

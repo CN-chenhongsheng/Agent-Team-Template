@@ -1,4 +1,4 @@
-<!-- 审批人选择弹窗 - 卡片网格式展示 -->
+<!-- 审批人选择弹窗 -->
 <template>
   <ElDialog
     v-model="dialogVisible"
@@ -7,9 +7,8 @@
     :close-on-click-modal="false"
     destroy-on-close
   >
-    <!-- 顶部工具栏 -->
-    <div class="dialog-header">
-      <!-- 搜索 -->
+    <!-- 顶部搜索 -->
+    <div class="mb-5">
       <ElInput v-model="searchKeyword" placeholder="搜索角色或用户" clearable size="default">
         <template #prefix>
           <i class="ri-search-line"></i>
@@ -18,61 +17,90 @@
     </div>
 
     <!-- 左右分栏布局 -->
-    <div class="split-layout">
+    <div class="flex gap-4 h-[500px] overflow-hidden">
       <!-- 左侧：角色列表 -->
-      <div class="left-panel">
-        <div class="panel-title">
-          <i class="ri-shield-user-line"></i>
+      <div class="flex flex-col w-[280px] shrink-0 pr-4 border-r border-[var(--el-border-color)]">
+        <div
+          class="flex items-center gap-2 py-3 mb-3 text-sm font-semibold text-[var(--el-text-color-primary)] border-b border-[var(--el-border-color)]"
+        >
+          <i class="ri-shield-user-line text-base text-[var(--el-color-primary)]"></i>
           <span>选择角色</span>
         </div>
-        <div v-if="filteredRoles.length > 0" class="role-list">
+
+        <div v-if="filteredRoles.length > 0" class="flex-1 overflow-y-auto pr-1">
           <div
             v-for="role in filteredRoles"
             :key="role.id"
-            class="role-item"
-            :class="{ active: selectedRoleIds.includes(role.id) }"
+            class="p-3 mb-2 cursor-pointer rounded-xl border-2 transition-all duration-200 hover:bg-[var(--el-color-primary-light-9)] hover:border-[var(--el-color-primary)]"
+            :class="
+              selectedRoleIds.includes(role.id)
+                ? 'bg-[var(--el-color-primary-light-9)] border-[var(--el-color-primary)]'
+                : 'bg-[var(--el-bg-color)] border-[var(--el-border-color)]'
+            "
             @click="toggleRoleSelection(role.id)"
           >
-            <div class="role-content">
-              <div class="role-name">{{ role.roleName }}</div>
-              <div class="role-meta">
-                <span class="role-code">{{ role.roleCode }}</span>
-                <span v-if="getRoleUserCount(role.id) > 0" class="role-count">
-                  {{ getRoleUserCount(role.id) }}人
-                </span>
-              </div>
+            <div class="text-sm font-semibold text-[var(--el-text-color-primary)] mb-1.5">
+              {{ role.roleName }}
             </div>
-            <div
-              v-if="selectedRoleIds.includes(role.id) && getRoleUserCount(role.id) > 0"
-              class="role-selected-info"
-            >
-              {{ getCheckedCount(role.id) }} / {{ getRoleUserCount(role.id) }} 已选
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-[var(--el-text-color-secondary)]">{{ role.roleCode }}</span>
+              <span
+                v-if="selectedRoleIds.includes(role.id) && getRoleUserCount(role.id) > 0"
+                class="px-1.5 py-0.5 font-medium text-[var(--el-color-primary)] bg-[var(--el-color-primary-light-9)] rounded"
+              >
+                {{ getCheckedCount(role.id) }}/{{ getRoleUserCount(role.id) }} 已选
+              </span>
+              <span
+                v-else-if="getRoleUserCount(role.id) > 0"
+                class="px-1.5 py-0.5 font-medium text-[var(--el-text-color-regular)] bg-[var(--el-fill-color-light)] rounded"
+              >
+                {{ getRoleUserCount(role.id) }}人
+              </span>
+              <span
+                v-else
+                class="px-1.5 py-0.5 font-medium text-[var(--el-text-color-placeholder)] bg-[var(--el-fill-color-light)] rounded"
+              >
+                0人
+              </span>
             </div>
           </div>
         </div>
-        <div v-else class="empty-tip">
-          <i class="ri-information-line"></i>
+
+        <div
+          v-else
+          class="flex items-center justify-center gap-1.5 py-5 text-[13px] text-[var(--el-text-color-placeholder)]"
+        >
+          <i class="ri-information-line text-base"></i>
           <span>未找到匹配的角色</span>
         </div>
       </div>
 
       <!-- 右侧：用户列表 -->
-      <div class="right-panel">
-        <div class="panel-title">
-          <i class="ri-team-line"></i>
+      <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
+        <div
+          class="flex items-center gap-2 py-3 mb-3 text-sm font-semibold text-[var(--el-text-color-primary)] border-b border-[var(--el-border-color)]"
+        >
+          <i class="ri-team-line text-base text-[var(--el-color-primary)]"></i>
           <span>选择用户</span>
-          <span class="selected-count">(已选 {{ selectedUserCount }} 人)</span>
+          <span class="ml-auto text-xs font-normal text-[var(--el-color-primary)]">
+            (已选 {{ selectedUserCount }} 人)
+          </span>
         </div>
+
         <div
           v-if="selectedRoleIds.length > 0 && roleUserGroups.length > 0"
-          class="user-panel-content"
+          class="flex-1 overflow-y-auto pr-1"
         >
           <template v-for="group in roleUserGroups" :key="group.roleId">
-            <div v-show="expandedRoles.has(group.roleId)" class="user-group">
+            <div v-show="expandedRoles.has(group.roleId)" class="mb-5">
               <!-- 角色标题栏 -->
-              <div class="group-header">
-                <div class="group-title">
-                  <i class="ri-shield-user-line"></i>
+              <div
+                class="flex items-center justify-between px-3 py-2 mb-3 rounded-lg bg-[var(--el-fill-color-light)]"
+              >
+                <div
+                  class="flex items-center gap-2 text-sm font-semibold text-[var(--el-text-color-primary)]"
+                >
+                  <i class="ri-shield-user-line text-base text-[var(--el-color-primary)]"></i>
                   <span>{{ group.roleName }}</span>
                 </div>
                 <ElButton
@@ -85,38 +113,69 @@
               </div>
 
               <!-- 用户卡片网格 -->
-              <div v-if="getFilteredUsers(group.users).length > 0" class="user-cards-grid">
+              <div
+                v-if="getFilteredUsers(group.users).length > 0"
+                class="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3"
+              >
                 <div
                   v-for="user in getFilteredUsers(group.users)"
                   :key="user.id"
-                  class="user-card"
-                  :class="{ selected: selectedUserIds.has(user.id) }"
+                  class="relative flex items-center gap-3 p-3 cursor-pointer rounded-xl border-2 transition-all duration-200 hover:border-[var(--el-color-primary)] hover:-translate-y-px hover:shadow-md"
+                  :class="
+                    selectedUserIds.has(user.id)
+                      ? 'bg-[var(--el-color-primary-light-9)] border-[var(--el-color-primary)]'
+                      : 'bg-[var(--el-bg-color)] border-[var(--el-border-color)]'
+                  "
                   @click="handleUserCheck(user.id, !selectedUserIds.has(user.id))"
                 >
-                  <div class="user-avatar">
-                    <span>{{ (user.nickname || user.username).charAt(0).toUpperCase() }}</span>
+                  <!-- 头像 -->
+                  <div
+                    class="shrink-0 w-10 h-10 flex items-center justify-center rounded-full text-base font-semibold text-white bg-gradient-to-br from-[var(--el-color-success)] to-[var(--el-color-success-light-3)]"
+                  >
+                    {{ (user.nickname || user.username).charAt(0).toUpperCase() }}
                   </div>
-                  <div class="user-info">
-                    <div class="user-name">{{ user.nickname || user.username }}</div>
-                    <div v-if="user.phone" class="user-phone">
-                      <i class="ri-phone-line"></i>
+                  <!-- 信息 -->
+                  <div class="flex-1 min-w-0">
+                    <div
+                      class="text-sm font-medium text-[var(--el-text-color-primary)] truncate mb-1"
+                    >
+                      {{ user.nickname || user.username }}
+                    </div>
+                    <div
+                      v-if="user.phone"
+                      class="flex items-center gap-1 text-xs text-[var(--el-text-color-secondary)]"
+                    >
+                      <i class="ri-phone-line text-xs"></i>
                       {{ user.phone }}
                     </div>
                   </div>
-                  <div v-if="selectedUserIds.has(user.id)" class="user-check-mark">
+                  <!-- 选中标记 -->
+                  <div
+                    v-if="selectedUserIds.has(user.id)"
+                    class="absolute top-2 right-2 text-lg text-[var(--el-color-primary)]"
+                  >
                     <i class="ri-checkbox-circle-fill"></i>
                   </div>
                 </div>
               </div>
-              <div v-else class="empty-tip">
+
+              <div
+                v-else
+                class="flex items-center justify-center py-5 text-[13px] text-[var(--el-text-color-placeholder)]"
+              >
                 <span>未找到匹配的用户</span>
               </div>
             </div>
           </template>
         </div>
-        <div v-else class="empty-state">
-          <i class="ri-user-add-line"></i>
-          <p>请从左侧选择角色，系统将自动加载该角色下的用户</p>
+
+        <!-- 空状态 -->
+        <div
+          v-else
+          class="flex flex-col items-center justify-center py-15 text-[var(--el-text-color-placeholder)] text-center"
+        >
+          <i class="ri-user-add-line text-5xl text-[var(--el-border-color)] mb-3"></i>
+          <p class="m-0 text-sm">请从左侧选择角色，系统将自动加载该角色下的用户</p>
         </div>
       </div>
     </div>
@@ -178,6 +237,7 @@
   const selectedUserIds = reactive(new Set<number>())
   const expandedRoles = reactive(new Set<number>()) // 展开的角色ID集合
   const loading = ref(false)
+  const isRestoring = ref(false) // 是否正在恢复预选状态（防止 watcher 覆盖）
 
   // 计算已选用户数量
   const selectedUserCount = computed(() => selectedUserIds.size)
@@ -268,6 +328,9 @@
   watch(
     selectedRoleIds,
     async (newRoleIds: number[], oldRoleIds: number[]) => {
+      // 恢复预选状态期间，跳过 watcher 的自动处理
+      if (isRestoring.value) return
+
       if (newRoleIds.length === 0) {
         roleUserGroups.value = []
         selectedUserIds.clear()
@@ -338,27 +401,77 @@
     { deep: true }
   )
 
+  /**
+   * 恢复预选审批人状态：加载所有角色的用户，找到包含已选用户的角色并展开
+   */
+  const restorePreSelection = async (preSelectedIds: number[]) => {
+    if (roles.value.length === 0 || preSelectedIds.length === 0) return
+
+    isRestoring.value = true
+    try {
+      // 加载所有角色的用户，找出包含已选用户的角色
+      const allRoleCodes = roles.value.map((r: RoleItem) => r.roleCode)
+      const userMap = await fetchGetUsersByRoleCodes(allRoleCodes)
+
+      const rolesToSelect: number[] = []
+      const groups: RoleUserGroup[] = []
+
+      for (const role of roles.value) {
+        const users = userMap[role.roleCode] || []
+        const hasPreSelected = users.some((u: UserItem) => preSelectedIds.includes(u.id))
+
+        if (hasPreSelected) {
+          rolesToSelect.push(role.id)
+          groups.push({
+            roleId: role.id,
+            roleName: role.roleName,
+            roleCode: role.roleCode,
+            users
+          })
+          expandedRoles.add(role.id)
+        }
+      }
+
+      // 设置状态（跳过 watcher）
+      roleUserGroups.value = groups
+      preSelectedIds.forEach((id: number) => selectedUserIds.add(id))
+      selectedRoleIds.value = rolesToSelect
+    } catch (error) {
+      console.error('恢复预选审批人失败:', error)
+    } finally {
+      isRestoring.value = false
+    }
+  }
+
   // 监听弹窗打开
   watch(
     () => props.modelValue,
     async (val: boolean) => {
       if (val) {
-        await loadRoles()
-        // 根据已选用户ID反推并设置
-        selectedUserIds.clear()
-        if (props.selectedIds && props.selectedIds.length > 0) {
-          props.selectedIds.forEach((id: number) => selectedUserIds.add(id))
-        }
-        selectedRoleIds.value = []
-        roleUserGroups.value = []
-        expandedRoles.clear()
-      } else {
-        // 清空状态
+        // 先清空所有状态
+        isRestoring.value = true
         searchKeyword.value = ''
         selectedRoleIds.value = []
         selectedUserIds.clear()
         roleUserGroups.value = []
         expandedRoles.clear()
+        isRestoring.value = false
+
+        await loadRoles()
+
+        // 如果有预选用户，自动恢复选择状态
+        if (props.selectedIds && props.selectedIds.length > 0) {
+          await restorePreSelection(props.selectedIds)
+        }
+      } else {
+        // 关闭时清空状态
+        searchKeyword.value = ''
+        isRestoring.value = true
+        selectedRoleIds.value = []
+        selectedUserIds.clear()
+        roleUserGroups.value = []
+        expandedRoles.clear()
+        isRestoring.value = false
       }
     }
   )
@@ -403,318 +516,3 @@
     dialogVisible.value = false
   }
 </script>
-
-<style lang="scss" scoped>
-  // 顶部工具栏
-  .dialog-header {
-    margin-bottom: 20px;
-  }
-
-  // 左右分栏布局
-  .split-layout {
-    display: flex;
-    gap: 16px;
-    height: 500px;
-    overflow: hidden;
-  }
-
-  // 左侧面板：角色列表
-  .left-panel {
-    display: flex;
-    flex-direction: column;
-    width: 280px;
-    padding-right: 16px;
-    border-right: 1px solid #e4e7ed;
-
-    .panel-title {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      padding: 12px 0;
-      margin-bottom: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #303133;
-      border-bottom: 1px solid #e4e7ed;
-
-      i {
-        font-size: 16px;
-        color: #409eff;
-      }
-    }
-
-    .role-list {
-      flex: 1;
-      padding-right: 4px;
-      overflow-y: auto;
-    }
-
-    .role-item {
-      padding: 12px;
-      margin-bottom: 8px;
-      cursor: pointer;
-      background: #fff;
-      border: 2px solid #e4e7ed;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-
-      &:hover {
-        background: #f0f9ff;
-        border-color: #409eff;
-      }
-
-      &.active {
-        background: #ecf5ff;
-        border-color: #409eff;
-      }
-
-      .role-content {
-        .role-name {
-          margin-bottom: 6px;
-          font-size: 14px;
-          font-weight: 600;
-          color: #303133;
-        }
-
-        .role-meta {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          font-size: 12px;
-
-          .role-code {
-            color: #909399;
-          }
-
-          .role-count {
-            padding: 2px 6px;
-            font-weight: 500;
-            color: #606266;
-            background: #f0f2f5;
-            border-radius: 4px;
-          }
-        }
-      }
-
-      .role-selected-info {
-        padding-top: 8px;
-        margin-top: 8px;
-        font-size: 12px;
-        font-weight: 500;
-        color: #409eff;
-        border-top: 1px solid #e4e7ed;
-      }
-    }
-  }
-
-  // 右侧面板：用户列表
-  .right-panel {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    overflow: hidden;
-
-    .panel-title {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      padding: 12px 0;
-      margin-bottom: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      color: #303133;
-      border-bottom: 1px solid #e4e7ed;
-
-      i {
-        font-size: 16px;
-        color: #409eff;
-      }
-
-      .selected-count {
-        margin-left: auto;
-        font-size: 12px;
-        font-weight: normal;
-        color: #409eff;
-      }
-    }
-
-    .user-panel-content {
-      flex: 1;
-      padding-right: 4px;
-      overflow-y: auto;
-    }
-
-    .user-group {
-      margin-bottom: 20px;
-
-      .group-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 8px 12px;
-        margin-bottom: 12px;
-        background: #f5f7fa;
-        border-radius: 8px;
-
-        .group-title {
-          display: flex;
-          gap: 8px;
-          align-items: center;
-          font-size: 14px;
-          font-weight: 600;
-          color: #303133;
-
-          i {
-            font-size: 16px;
-            color: #409eff;
-          }
-        }
-      }
-
-      .user-cards-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 12px;
-      }
-    }
-  }
-
-  // 用户卡片
-  .user-card {
-    position: relative;
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    padding: 12px;
-    cursor: pointer;
-    background: #fff;
-    border: 2px solid #e4e7ed;
-    border-radius: 10px;
-    transition: all 0.3s ease;
-
-    &:hover {
-      border-color: #409eff;
-      box-shadow: 0 2px 8px rgb(64 158 255 / 15%);
-      transform: translateY(-1px);
-    }
-
-    &.selected {
-      background: #ecf5ff;
-      border-color: #409eff;
-
-      .user-check-mark {
-        opacity: 1;
-      }
-    }
-
-    .user-avatar {
-      display: flex;
-      flex-shrink: 0;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      font-size: 16px;
-      font-weight: 600;
-      color: #fff;
-      background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
-      border-radius: 50%;
-    }
-
-    .user-info {
-      flex: 1;
-      min-width: 0;
-
-      .user-name {
-        margin-bottom: 4px;
-        overflow: hidden;
-        font-size: 14px;
-        font-weight: 500;
-        color: #303133;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .user-phone {
-        display: flex;
-        gap: 4px;
-        align-items: center;
-        font-size: 12px;
-        color: #909399;
-
-        i {
-          font-size: 12px;
-        }
-      }
-    }
-
-    .user-check-mark {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      font-size: 18px;
-      color: #409eff;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-  }
-
-  // 空状态
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
-    color: #909399;
-    text-align: center;
-
-    i {
-      margin-bottom: 12px;
-      font-size: 48px;
-      color: #dcdfe6;
-    }
-
-    p {
-      margin: 0;
-      font-size: 14px;
-    }
-  }
-
-  .empty-tip {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    font-size: 13px;
-    color: #909399;
-    text-align: center;
-
-    i {
-      font-size: 16px;
-    }
-  }
-
-  // 滚动条样式
-  .role-list,
-  .user-panel-content {
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 3px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: #c1c1c1;
-      border-radius: 3px;
-
-      &:hover {
-        background: #a8a8a8;
-      }
-    }
-  }
-</style>

@@ -207,6 +207,59 @@ declare namespace Api {
     }
   }
 
+  /** 学生导入树形结构类型 */
+  namespace StudentImportTree {
+    /** 组织架构树节点 */
+    interface OrgTreeNode {
+      /** 节点ID */
+      id: number
+      /** 节点编码 */
+      code: string
+      /** 节点名称 */
+      name: string
+      /** 节点类型 */
+      type: 'campus' | 'department' | 'major' | 'class'
+      /** 父节点编码 */
+      parentCode?: string
+      /** 状态：1启用 0停用 */
+      status: number
+      /** 子节点列表 */
+      children?: OrgTreeNode[]
+    }
+
+    /** 组织架构树响应 */
+    interface OrgTreeResponse {
+      /** 校区列表（包含完整的层级结构） */
+      campuses: OrgTreeNode[]
+    }
+
+    /** 宿舍结构树节点 */
+    interface DormTreeNode {
+      /** 节点ID */
+      id: number
+      /** 节点编码 */
+      code: string
+      /** 节点名称 */
+      name: string
+      /** 节点类型 */
+      type: 'campus' | 'floor' | 'room' | 'bed'
+      /** 父节点编码或ID */
+      parentCode?: string
+      /** 状态：1启用 0停用 */
+      status: number
+      /** 床位状态（仅床位节点有效）：1空闲 2已占用 3维修中 4已预订 */
+      bedStatus?: number
+      /** 子节点列表 */
+      children?: DormTreeNode[]
+    }
+
+    /** 宿舍结构树响应 */
+    interface DormTreeResponse {
+      /** 校区列表（包含完整的宿舍层级结构） */
+      campuses: DormTreeNode[]
+    }
+  }
+
   /** 学生导入相关类型 */
   namespace StudentImport {
     /** 导入错误明细 */

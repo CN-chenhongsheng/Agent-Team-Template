@@ -87,7 +87,7 @@ export function fetchBatchDeleteRepair(ids: number[]) {
  * @param id 报修ID
  */
 export function fetchAcceptRepair(id: number) {
-  return request.post({
+  return request.put({
     url: `/api/v1/system/repair/${id}/accept`,
     showSuccessMessage: true
   })
@@ -106,7 +106,7 @@ export function fetchCompleteRepair(id: number, data: Api.RepairManage.CompleteR
     body.repairImages =
       typeof data.repairImages === 'string' ? data.repairImages : JSON.stringify(data.repairImages)
   }
-  return request.post({
+  return request.put({
     url: `/api/v1/system/repair/${id}/complete`,
     data: body,
     showSuccessMessage: true

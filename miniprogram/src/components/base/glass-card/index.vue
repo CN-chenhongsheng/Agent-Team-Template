@@ -28,8 +28,6 @@ const customStyle = computed(() => ({
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-
 .glass-card {
   background: $glass-bg;
   border: 2rpx solid $glass-border;

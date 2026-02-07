@@ -9,7 +9,7 @@
     <!-- 顶部导航 -->
     <page-header title="生活习惯问卷" />
 
-    <view class="page-content" v-if="!loading">
+    <view v-if="!loading" class="page-content">
       <!-- 问卷状态提示 -->
       <view v-if="surveyStatus === 2" class="glass-card status-card locked">
         <u-icon name="lock" size="24" color="#ef4444" />
@@ -34,8 +34,12 @@
       <!-- 问卷进度 -->
       <view class="progress-section">
         <view class="progress-header">
-          <text class="progress-label">完成进度</text>
-          <text class="progress-value">{{ progressPercent }}%</text>
+          <text class="progress-label">
+            完成进度
+          </text>
+          <text class="progress-value">
+            {{ progressPercent }}%
+          </text>
         </view>
         <view class="progress-bar">
           <view class="progress-fill" :style="{ width: `${progressPercent}%` }" />
@@ -53,7 +57,9 @@
 
           <view class="glass-card form-card">
             <view class="form-item">
-              <view class="item-label">作息规律</view>
+              <view class="item-label">
+                作息规律
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in sleepScheduleOptions"
@@ -68,7 +74,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">睡眠质量</view>
+              <view class="item-label">
+                睡眠质量
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in sleepQualityOptions"
@@ -83,7 +91,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">是否打呼噜</view>
+              <view class="item-label">
+                是否打呼噜
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in snoresOptions"
@@ -98,7 +108,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">对光线敏感</view>
+              <view class="item-label">
+                对光线敏感
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in binaryOptions"
@@ -113,7 +125,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">对声音敏感</view>
+              <view class="item-label">
+                对声音敏感
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in binaryOptions"
@@ -138,7 +152,9 @@
 
           <view class="glass-card form-card">
             <view class="form-item">
-              <view class="item-label">是否吸烟</view>
+              <view class="item-label">
+                是否吸烟
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in smokingOptions"
@@ -153,7 +169,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">是否接受室友吸烟</view>
+              <view class="item-label">
+                是否接受室友吸烟
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in smokingToleranceOptions"
@@ -168,7 +186,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">整洁程度</view>
+              <view class="item-label">
+                整洁程度
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in cleanlinessOptions"
@@ -183,7 +203,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">睡前整理习惯</view>
+              <view class="item-label">
+                睡前整理习惯
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in bedtimeCleanupOptions"
@@ -198,7 +220,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">是否在宿舍吃东西</view>
+              <view class="item-label">
+                是否在宿舍吃东西
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in frequencyOptions"
@@ -223,7 +247,9 @@
 
           <view class="glass-card form-card">
             <view class="form-item">
-              <view class="item-label">社交类型</view>
+              <view class="item-label">
+                社交类型
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in socialOptions"
@@ -238,7 +264,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">是否允许访客</view>
+              <view class="item-label">
+                是否允许访客
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in visitorOptions"
@@ -253,7 +281,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">电话习惯</view>
+              <view class="item-label">
+                电话习惯
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in phoneCallOptions"
@@ -278,7 +308,9 @@
 
           <view class="glass-card form-card">
             <view class="form-item">
-              <view class="item-label">在宿舍学习频率</view>
+              <view class="item-label">
+                在宿舍学习频率
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in studyInRoomOptions"
@@ -293,7 +325,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">学习环境偏好</view>
+              <view class="item-label">
+                学习环境偏好
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in studyEnvironmentOptions"
@@ -308,7 +342,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">电脑使用时间</view>
+              <view class="item-label">
+                电脑使用时间
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in computerUsageOptions"
@@ -323,7 +359,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">游戏偏好</view>
+              <view class="item-label">
+                游戏偏好
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in gamingOptions"
@@ -338,7 +376,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">听音乐频率</view>
+              <view class="item-label">
+                听音乐频率
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in musicOptions"
@@ -353,7 +393,9 @@
             </view>
 
             <view class="form-item">
-              <view class="item-label">音乐音量偏好</view>
+              <view class="item-label">
+                音乐音量偏好
+              </view>
               <view class="item-options">
                 <view
                   v-for="option in volumeOptions"
@@ -371,7 +413,7 @@
       </view>
 
       <!-- 底部按钮 -->
-      <view class="bottom-actions" v-if="!isLocked">
+      <view v-if="!isLocked" class="bottom-actions">
         <view class="action-btn submit-btn" :class="{ disabled: submitting }" @click="handleSubmit">
           <text>{{ submitting ? '提交中...' : '提交问卷' }}</text>
         </view>
@@ -384,23 +426,25 @@
     <!-- 加载中 -->
     <view v-else class="loading-container">
       <u-loading-icon mode="circle" size="48" />
-      <text class="loading-text">加载中...</text>
+      <text class="loading-text">
+        加载中...
+      </text>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, onMounted } from 'vue'
-import { getSurveyData, submitSurvey } from '@/api/allocation'
-import type { ISurveyData } from '@/types/api'
+import { computed, onMounted, reactive, ref } from 'vue';
+import { getSurveyData, submitSurvey } from '@/api/allocation';
+import type { ISurveyData } from '@/types/api';
 
 // 加载状态
-const loading = ref(true)
-const submitting = ref(false)
-const surveyStatus = ref(0) // 0-未填写 1-已填写 2-已锁定
+const loading = ref(true);
+const submitting = ref(false);
+const surveyStatus = ref(0); // 0-未填写 1-已填写 2-已锁定
 
 // 是否锁定
-const isLocked = computed(() => surveyStatus.value === 2)
+const isLocked = computed(() => surveyStatus.value === 2);
 
 // 表单数据
 const formData = reactive<ISurveyData>({
@@ -423,7 +467,7 @@ const formData = reactive<ISurveyData>({
   musicPreference: undefined,
   musicVolume: undefined,
   eatInRoom: undefined,
-})
+});
 
 // 选项配置
 const sleepScheduleOptions = [
@@ -431,157 +475,161 @@ const sleepScheduleOptions = [
   { label: '正常作息', value: 1 },
   { label: '晚睡晚起', value: 2 },
   { label: '夜猫子', value: 3 },
-]
+];
 
 const sleepQualityOptions = [
   { label: '浅睡易醒', value: 0 },
   { label: '正常', value: 1 },
   { label: '深睡', value: 2 },
-]
+];
 
 const snoresOptions = [
   { label: '不打呼噜', value: 0 },
   { label: '打呼噜', value: 1 },
-]
+];
 
 const binaryOptions = [
   { label: '不敏感', value: 0 },
   { label: '敏感', value: 1 },
-]
+];
 
 const smokingOptions = [
   { label: '不吸烟', value: 0 },
   { label: '吸烟', value: 1 },
-]
+];
 
 const smokingToleranceOptions = [
   { label: '不接受', value: 0 },
   { label: '可以接受', value: 1 },
-]
+];
 
 const cleanlinessOptions = [
   { label: '非常整洁', value: 1 },
   { label: '整洁', value: 2 },
   { label: '一般', value: 3 },
   { label: '随意', value: 4 },
-]
+];
 
 const bedtimeCleanupOptions = [
   { label: '不整理', value: 0 },
   { label: '偶尔整理', value: 1 },
   { label: '经常整理', value: 2 },
   { label: '总是整理', value: 3 },
-]
+];
 
 const frequencyOptions = [
   { label: '从不', value: 0 },
   { label: '偶尔', value: 1 },
   { label: '经常', value: 2 },
-]
+];
 
 const socialOptions = [
   { label: '喜欢安静', value: 0 },
   { label: '中等', value: 1 },
   { label: '喜欢热闹', value: 2 },
-]
+];
 
 const visitorOptions = [
   { label: '不允许', value: 0 },
   { label: '偶尔可以', value: 1 },
   { label: '可以', value: 2 },
-]
+];
 
 const phoneCallOptions = [
   { label: '不喜欢在宿舍打', value: 0 },
   { label: '偶尔', value: 1 },
   { label: '不介意', value: 2 },
-]
+];
 
 const studyInRoomOptions = [
   { label: '不在宿舍学', value: 0 },
   { label: '偶尔', value: 1 },
   { label: '经常', value: 2 },
   { label: '总是', value: 3 },
-]
+];
 
 const studyEnvironmentOptions = [
   { label: '不需要安静', value: 0 },
   { label: '需要安静', value: 1 },
   { label: '需要轻音乐', value: 2 },
   { label: '可以接受声音', value: 3 },
-]
+];
 
 const computerUsageOptions = [
   { label: '不用电脑', value: 0 },
   { label: '很少', value: 1 },
   { label: '正常', value: 2 },
   { label: '很多', value: 3 },
-]
+];
 
 const gamingOptions = [
   { label: '不玩游戏', value: 0 },
   { label: '偶尔玩', value: 1 },
   { label: '经常玩', value: 2 },
-]
+];
 
 const musicOptions = [
   { label: '不听音乐', value: 0 },
   { label: '偶尔听', value: 1 },
   { label: '经常听', value: 2 },
-]
+];
 
 const volumeOptions = [
   { label: '喜欢小声', value: 0 },
   { label: '中等音量', value: 1 },
   { label: '喜欢大声', value: 2 },
-]
+];
 
 // 计算进度
 const progressPercent = computed(() => {
-  const fields = Object.values(formData)
-  const filled = fields.filter((v) => v !== undefined && v !== null).length
-  return Math.round((filled / fields.length) * 100)
-})
+  const fields = Object.values(formData);
+  const filled = fields.filter(v => v !== undefined && v !== null).length;
+  return Math.round((filled / fields.length) * 100);
+});
 
 // 选择选项
 function selectOption(field: keyof ISurveyData, value: number): void {
-  if (isLocked.value) return
-  ;(formData as any)[field] = value
+  if (isLocked.value) return;
+  const data = formData as Record<string, unknown>;
+  data[field] = value;
 }
 
 // 加载问卷数据
 async function loadSurveyData(): Promise<void> {
   try {
-    loading.value = true
-    const data = await getSurveyData()
+    loading.value = true;
+    const data = await getSurveyData();
     if (data) {
-      surveyStatus.value = data.surveyStatus || 0
+      surveyStatus.value = data.surveyStatus || 0;
       // 填充已有数据
       Object.keys(formData).forEach((key) => {
-        const value = (data as any)[key]
+        const value = (data as any)[key];
         if (value !== undefined && value !== null) {
-          ;(formData as any)[key] = value
+          const fd = formData as Record<string, unknown>;
+          fd[key] = value;
         }
-      })
+      });
     }
-  } catch (error) {
-    console.error('加载问卷数据失败:', error)
-    uni.showToast({ title: '加载失败', icon: 'none' })
-  } finally {
-    loading.value = false
+  }
+  catch (error) {
+    console.error('加载问卷数据失败:', error);
+    uni.showToast({ title: '加载失败', icon: 'none' });
+  }
+  finally {
+    loading.value = false;
   }
 }
 
 // 提交问卷
 async function handleSubmit(): Promise<void> {
-  if (submitting.value || isLocked.value) return
+  if (submitting.value || isLocked.value) return;
 
   // 检查是否填写完整
-  const fields = Object.values(formData)
-  const filled = fields.filter((v) => v !== undefined && v !== null).length
+  const fields = Object.values(formData);
+  const filled = fields.filter(v => v !== undefined && v !== null).length;
   if (filled < fields.length) {
-    uni.showToast({ title: '请完成所有问题', icon: 'none' })
-    return
+    uni.showToast({ title: '请完成所有问题', icon: 'none' });
+    return;
   }
 
   uni.showModal({
@@ -589,33 +637,33 @@ async function handleSubmit(): Promise<void> {
     content: '提交后将用于室友匹配，确定提交吗？',
     success: async (res) => {
       if (res.confirm) {
-        submitting.value = true
+        submitting.value = true;
         try {
-          await submitSurvey(formData)
-          uni.showToast({ title: '提交成功', icon: 'success' })
-          surveyStatus.value = 1
+          await submitSurvey(formData);
+          uni.showToast({ title: '提交成功', icon: 'success' });
+          surveyStatus.value = 1;
           setTimeout(() => {
-            uni.navigateBack()
-          }, 1500)
-        } catch (error) {
-          console.error('提交问卷失败:', error)
-          uni.showToast({ title: '提交失败', icon: 'none' })
-        } finally {
-          submitting.value = false
+            uni.navigateBack();
+          }, 1500);
+        }
+        catch (error) {
+          console.error('提交问卷失败:', error);
+          uni.showToast({ title: '提交失败', icon: 'none' });
+        }
+        finally {
+          submitting.value = false;
         }
       }
     },
-  })
+  });
 }
 
 onMounted(() => {
-  loadSurveyData()
-})
+  loadSurveyData();
+});
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-
 .survey-page {
   position: relative;
   min-height: 100vh;
@@ -662,8 +710,8 @@ onMounted(() => {
 // 状态卡片
 .status-card {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   padding: $spacing-md;
   margin-bottom: $spacing-md;
   gap: $spacing-sm;
@@ -673,8 +721,8 @@ onMounted(() => {
     border: 1rpx solid rgb(239 68 68 / 30%);
 
     text {
-      color: #ef4444;
       font-size: $font-sm;
+      color: #ef4444;
     }
   }
 }
@@ -739,10 +787,10 @@ onMounted(() => {
   }
 
   .progress-bar {
+    overflow: hidden;
     height: 12rpx;
     background: rgb(10 219 195 / 15%);
     border-radius: 6rpx;
-    overflow: hidden;
 
     .progress-fill {
       height: 100%;
@@ -868,22 +916,8 @@ onMounted(() => {
   }
 }
 
-.safe-bottom {
-  height: env(safe-area-inset-bottom);
-}
+// .safe-bottom 使用全局 components.scss 定义
 
 // 加载中
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 60vh;
-  gap: $spacing-md;
-
-  .loading-text {
-    font-size: $font-sm;
-    color: $text-sub;
-  }
-}
+// .loading-container 使用全局 components.scss 定义
 </style>

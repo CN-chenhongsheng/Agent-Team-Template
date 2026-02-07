@@ -11,12 +11,10 @@ const getCSSVar = (varName: string, fallback: string = ''): string => {
   return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || fallback
 }
 
-/**
- * 获取主题色
- */
-const getPrimaryColor = (): string => {
-  return getCSSVar('--el-color-primary', '#5D87FF')
-}
+const getPrimaryColor = (): string => getCSSVar('--el-color-primary', '#5D87FF')
+const getBorderColor = (): string => getCSSVar('--el-border-color', '#dcdfe6')
+const getBoxColor = (): string => getCSSVar('--default-box-color', '#ffffff')
+const getTextSecondary = (): string => getCSSVar('--el-text-color-secondary', '#909399')
 
 /**
  * 计算三次贝塞尔曲线在 t 处的点
@@ -60,7 +58,7 @@ class CustomBezierEdgeModel extends BezierEdgeModel {
 
     return {
       ...style,
-      stroke: isSelected || isHovered ? getPrimaryColor() : '#94a3b8',
+      stroke: isSelected || isHovered ? getPrimaryColor() : getBorderColor(),
       strokeWidth: isSelected || isHovered ? 2.5 : 1.5,
       strokeDasharray: '8, 4'
     }
@@ -71,6 +69,33 @@ class CustomBezierEdgeModel extends BezierEdgeModel {
  * 自定义边 View - 渲染边的视图和+号图标
  */
 class CustomBezierEdgeView extends BezierEdge {
+  /**
+   * 处理+号按钮点击
+   */
+  handleAddClick(e: MouseEvent) {
+    console.log('[CustomBezierEdge] +号按钮被点击')
+    e.stopPropagation()
+    e.preventDefault()
+
+    // 触发自定义事件，通知外部组件
+    const { model } = this.props
+    const edgeData = (model as any).getData()
+
+    // 通过 document 触发全局事件
+    document.dispatchEvent(
+      new CustomEvent('lf-edge-add-node-click', {
+        detail: {
+          edgeId: edgeData.id,
+          sourceNodeId: edgeData.sourceNodeId,
+          targetNodeId: edgeData.targetNodeId,
+          edgeData: edgeData
+        },
+        bubbles: true,
+        cancelable: true
+      })
+    )
+  }
+
   /**
    * 获取边上的+号图标（渲染在贝塞尔曲线的中点）
    */
@@ -98,15 +123,19 @@ class CustomBezierEdgeView extends BezierEdge {
     const isActive = isHovered || isSelected
     const primaryColor = getPrimaryColor()
 
-    return h(
+    // 创建一个唯一的类名用于查找
+    const buttonClass = `lf-edge-add-button-${model.id}`
+
+    const buttonG = h(
       'g',
       {
-        className: 'lf-edge-add-button',
+        className: `lf-edge-add-button ${buttonClass}`,
         transform: `translate(${centerX}, ${centerY})`,
         style: {
           opacity: isActive ? 1 : 0.6,
           transition: 'all 0.25s ease',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          pointerEvents: 'all' // 确保可以接收点击事件
         }
       },
       [
@@ -118,17 +147,19 @@ class CustomBezierEdgeView extends BezierEdge {
           strokeWidth: 1,
           strokeOpacity: isActive ? 0.25 : 0,
           style: {
-            transition: 'all 0.25s ease'
+            transition: 'all 0.25s ease',
+            pointerEvents: 'none' // 不接收点击，让外层 g 处理
           }
         }),
-        // 圆形背景
+        // 圆形背景（可点击区域）
         h('circle', {
           r: 10,
-          fill: isActive ? primaryColor : '#ffffff',
-          stroke: isActive ? primaryColor : '#c0c4cc',
+          fill: isActive ? primaryColor : getBoxColor(),
+          stroke: isActive ? primaryColor : getBorderColor(),
           strokeWidth: isActive ? 1.5 : 1,
           style: {
-            transition: 'all 0.25s ease'
+            transition: 'all 0.25s ease',
+            cursor: 'pointer'
           }
         }),
         // +号（使用两条交叉线而非文字，更精致）
@@ -137,7 +168,7 @@ class CustomBezierEdgeView extends BezierEdge {
           y1: 0,
           x2: 4,
           y2: 0,
-          stroke: isActive ? '#ffffff' : '#909399',
+          stroke: isActive ? getBoxColor() : getTextSecondary(),
           strokeWidth: 1.5,
           strokeLinecap: 'round',
           style: {
@@ -150,7 +181,7 @@ class CustomBezierEdgeView extends BezierEdge {
           y1: -4,
           x2: 0,
           y2: 4,
-          stroke: isActive ? '#ffffff' : '#909399',
+          stroke: isActive ? getBoxColor() : getTextSecondary(),
           strokeWidth: 1.5,
           strokeLinecap: 'round',
           style: {
@@ -160,6 +191,30 @@ class CustomBezierEdgeView extends BezierEdge {
         })
       ]
     )
+
+    // 返回后，在下一个事件循环中绑定真实的 DOM 事件
+    // 因为 h() 函数是虚拟 DOM，需要等它渲染成真实 DOM 后才能绑定事件
+    setTimeout(() => {
+      const button = document.querySelector(`.${buttonClass}`)
+
+      if (button && !(button as any).__hasClickListener) {
+        console.log('[CustomBezierEdge] 为+号按钮绑定点击事件')
+        ;(button as any).__hasClickListener = true
+
+        // 绑定点击事件
+        const clickHandler = this.handleAddClick.bind(this)
+        button.addEventListener('click', clickHandler, true)
+        button.addEventListener(
+          'mousedown',
+          (e: Event) => {
+            e.stopPropagation()
+          },
+          true
+        )
+      }
+    }, 150)
+
+    return buttonG
   }
 
   /**

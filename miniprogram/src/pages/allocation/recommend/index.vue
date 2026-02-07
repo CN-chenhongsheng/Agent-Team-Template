@@ -46,7 +46,9 @@
       <!-- 加载中 -->
       <view v-if="loading" class="loading-container">
         <u-loading-icon mode="circle" size="40" />
-        <text class="loading-text">正在为您匹配...</text>
+        <text class="loading-text">
+          正在为您匹配...
+        </text>
       </view>
 
       <!-- 推荐列表 -->
@@ -72,8 +74,12 @@
               </view>
             </view>
             <view class="match-score">
-              <text class="score-value">{{ item.matchScore || 0 }}</text>
-              <text class="score-label">匹配度</text>
+              <text class="score-value">
+                {{ item.matchScore || 0 }}
+              </text>
+              <text class="score-label">
+                匹配度
+              </text>
             </view>
           </view>
 
@@ -140,71 +146,74 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { getRecommendBeds, getTransferRecommend } from '@/api/allocation'
-import type { IBedRecommend } from '@/types/api'
+import { computed, onMounted, ref } from 'vue';
+import { getRecommendBeds, getTransferRecommend } from '@/api/allocation';
+import type { IBedRecommend } from '@/types/api';
 
 // 推荐类型
-const recommendType = ref<'new' | 'transfer'>('new')
-const loading = ref(true)
-const hasSurvey = ref(true)
+const recommendType = ref<'new' | 'transfer'>('new');
+const loading = ref(true);
+const hasSurvey = ref(true);
 
 // 推荐列表数据
-const recommendList = ref<IBedRecommend[]>([])
+const recommendList = ref<IBedRecommend[]>([]);
 
 // 空状态文案
 const emptyText = computed(() => {
   if (!hasSurvey.value) {
-    return '请先完成问卷'
+    return '请先完成问卷';
   }
-  return recommendType.value === 'transfer' ? '暂无更好的推荐' : '暂无推荐床位'
-})
+  return recommendType.value === 'transfer' ? '暂无更好的推荐' : '暂无推荐床位';
+});
 
 const emptyDesc = computed(() => {
   if (!hasSurvey.value) {
-    return '请先完成生活习惯问卷，系统才能为您推荐合适的床位'
+    return '请先完成生活习惯问卷，系统才能为您推荐合适的床位';
   }
   return recommendType.value === 'transfer'
     ? '您当前的宿舍已经是最佳匹配了'
-    : '暂时没有符合条件的空床位，请稍后再试'
-})
+    : '暂时没有符合条件的空床位，请稍后再试';
+});
 
 // 获取排名样式类
 function getRankClass(index: number): string {
-  if (index === 0) return 'rank-gold'
-  if (index === 1) return 'rank-silver'
-  if (index === 2) return 'rank-bronze'
-  return ''
+  if (index === 0) return 'rank-gold';
+  if (index === 1) return 'rank-silver';
+  if (index === 2) return 'rank-bronze';
+  return '';
 }
 
 // 切换推荐类型
 function switchType(type: 'new' | 'transfer'): void {
-  if (recommendType.value === type) return
-  recommendType.value = type
-  loadRecommendList()
+  if (recommendType.value === type) return;
+  recommendType.value = type;
+  loadRecommendList();
 }
 
 // 加载推荐列表
 async function loadRecommendList(): Promise<void> {
-  loading.value = true
+  loading.value = true;
   try {
     if (recommendType.value === 'transfer') {
-      const data = await getTransferRecommend(10)
-      recommendList.value = data || []
-    } else {
-      const data = await getRecommendBeds(10)
-      recommendList.value = data || []
+      const data = await getTransferRecommend(10);
+      recommendList.value = data || [];
     }
-    hasSurvey.value = true
-  } catch (error: any) {
-    console.error('获取推荐列表失败:', error)
+    else {
+      const data = await getRecommendBeds(10);
+      recommendList.value = data || [];
+    }
+    hasSurvey.value = true;
+  }
+  catch (error: any) {
+    console.error('获取推荐列表失败:', error);
     // 检查是否是因为未填写问卷
     if (error?.message?.includes('问卷') || error?.code === 'SURVEY_REQUIRED') {
-      hasSurvey.value = false
+      hasSurvey.value = false;
     }
-    recommendList.value = []
-  } finally {
-    loading.value = false
+    recommendList.value = [];
+  }
+  finally {
+    loading.value = false;
   }
 }
 
@@ -215,22 +224,20 @@ function handleSelectBed(item: IBedRecommend): void {
     content: `房间：${item.floorCode} - ${item.roomCode}\n床位：${item.bedCode}\n匹配度：${item.matchScore}分\n室友数：${item.roommateCount || 0}人\n\n优势：${item.advantages?.join('、') || '无'}\n\n注意：${item.conflicts?.join('、') || '无'}`,
     confirmText: '知道了',
     showCancel: false,
-  })
+  });
 }
 
 // 跳转填写问卷
 function handleGoSurvey(): void {
-  uni.navigateTo({ url: '/pages/allocation/survey/index' })
+  uni.navigateTo({ url: '/pages/allocation/survey/index' });
 }
 
 onMounted(() => {
-  loadRecommendList()
-})
+  loadRecommendList();
+});
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-
 .recommend-page {
   position: relative;
   min-height: 100vh;
@@ -341,19 +348,7 @@ onMounted(() => {
 }
 
 // 加载中
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 120rpx 0;
-  gap: $spacing-md;
-
-  .loading-text {
-    font-size: $font-sm;
-    color: $text-sub;
-  }
-}
+// .loading-container 使用全局 components.scss 定义
 
 // 推荐列表
 .recommend-list {
@@ -542,8 +537,8 @@ onMounted(() => {
   .empty-desc {
     margin-bottom: $spacing-xl;
     font-size: $font-sm;
-    color: $text-sub;
     text-align: center;
+    color: $text-sub;
     line-height: 1.5;
   }
 
@@ -564,7 +559,5 @@ onMounted(() => {
   }
 }
 
-.safe-bottom {
-  height: calc(env(safe-area-inset-bottom) + $spacing-lg);
-}
+// .safe-bottom 使用全局 components.scss 定义
 </style>

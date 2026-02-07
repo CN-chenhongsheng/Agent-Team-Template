@@ -1,7 +1,9 @@
 package com.project.backend.organization.dto.department;
 
+import com.project.core.dto.BaseQueryDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 院系查询DTO
@@ -10,8 +12,9 @@ import lombok.Data;
  * @since 2025-12-31
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "院系查询条件")
-public class DepartmentQueryDTO {
+public class DepartmentQueryDTO extends BaseQueryDTO {
 
     @Schema(description = "院系编码（模糊查询）")
     private String deptCode;
@@ -24,10 +27,4 @@ public class DepartmentQueryDTO {
 
     @Schema(description = "状态：1启用 0停用")
     private Integer status;
-
-    @Schema(description = "当前页码", example = "1")
-    private Long pageNum = 1L;
-
-    @Schema(description = "每页条数", example = "10")
-    private Long pageSize = 10L;
 }

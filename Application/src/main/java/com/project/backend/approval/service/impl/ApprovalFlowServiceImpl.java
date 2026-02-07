@@ -36,7 +36,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -57,16 +60,10 @@ public class ApprovalFlowServiceImpl extends ServiceImpl<ApprovalFlowMapper, App
     private final UserMapper userMapper;
 
     /**
-     * 业务类型映射
+     * 业务类型映射（从字典动态获取）
      */
     private String getBusinessTypeText(String businessType) {
-        return switch (businessType) {
-            case "check_in" -> "入住申请";
-            case "transfer" -> "调宿申请";
-            case "check_out" -> "退宿申请";
-            case "stay" -> "留宿申请";
-            default -> businessType;
-        };
+        return DictUtils.getLabel("approval_business_type", businessType, businessType);
     }
 
     /**
@@ -95,8 +92,13 @@ public class ApprovalFlowServiceImpl extends ServiceImpl<ApprovalFlowMapper, App
         Page<ApprovalFlow> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         page(page, wrapper);
 
+        // 批量查询所有流程的绑定数量（消除 N+1）
+        Set<Long> flowIds = page.getRecords().stream()
+                .map(ApprovalFlow::getId).collect(Collectors.toSet());
+        Map<Long, Long> bindingCountMap = batchCountBindings(flowIds);
+
         List<ApprovalFlowVO> voList = page.getRecords().stream()
-                .map(this::convertToVO)
+                .map(flow -> convertToVO(flow, bindingCountMap))
                 .collect(Collectors.toList());
 
         return PageResult.build(voList, page.getTotal(), page.getCurrent(), page.getSize());
@@ -160,11 +162,13 @@ public class ApprovalFlowServiceImpl extends ServiceImpl<ApprovalFlowMapper, App
 
                 // 保存审批人
                 if (nodeDTO.getAssignees() != null && !nodeDTO.getAssignees().isEmpty()) {
-                    for (ApprovalAssigneeSaveDTO assigneeDTO : nodeDTO.getAssignees()) {
+                    for (int i = 0; i < nodeDTO.getAssignees().size(); i++) {
+                        ApprovalAssigneeSaveDTO assigneeDTO = nodeDTO.getAssignees().get(i);
                         ApprovalNodeAssignee assignee = new ApprovalNodeAssignee();
                         assignee.setNodeId(node.getId());
                         assignee.setAssigneeType(assigneeDTO.getAssigneeType());
                         assignee.setAssigneeId(assigneeDTO.getAssigneeId());
+                        assignee.setSortOrder(i);
                         assigneeMapper.insert(assignee);
                     }
                 }
@@ -261,14 +265,41 @@ public class ApprovalFlowServiceImpl extends ServiceImpl<ApprovalFlowMapper, App
      */
     private void deleteFlowNodesAndAssignees(Long flowId) {
         List<ApprovalNode> nodes = nodeMapper.selectByFlowId(flowId);
-        for (ApprovalNode node : nodes) {
-            assigneeMapper.deleteByNodeId(node.getId());
+        if (!nodes.isEmpty()) {
+            List<Long> nodeIds = nodes.stream().map(ApprovalNode::getId).toList();
+            assigneeMapper.deleteByNodeIds(nodeIds);
         }
         nodeMapper.deleteByFlowId(flowId);
     }
 
     /**
-     * 转换为VO（不含节点）
+     * 批量统计流程绑定数量
+     */
+    private Map<Long, Long> batchCountBindings(Set<Long> flowIds) {
+        if (flowIds == null || flowIds.isEmpty()) {
+            return Map.of();
+        }
+        LambdaQueryWrapper<ApprovalFlowBinding> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(ApprovalFlowBinding::getFlowId, flowIds);
+        List<ApprovalFlowBinding> bindings = bindingMapper.selectList(wrapper);
+        return bindings.stream()
+                .collect(Collectors.groupingBy(ApprovalFlowBinding::getFlowId, Collectors.counting()));
+    }
+
+    /**
+     * 转换为VO（不含节点，使用预加载的绑定数量）
+     */
+    private ApprovalFlowVO convertToVO(ApprovalFlow flow, Map<Long, Long> bindingCountMap) {
+        ApprovalFlowVO vo = new ApprovalFlowVO();
+        BeanUtil.copyProperties(flow, vo);
+        vo.setBusinessTypeText(getBusinessTypeText(flow.getBusinessType()));
+        vo.setStatusText(flow.getStatus() == 1 ? "启用" : "停用");
+        vo.setBound(bindingCountMap.getOrDefault(flow.getId(), 0L) > 0);
+        return vo;
+    }
+
+    /**
+     * 转换为VO（不含节点，单条查询绑定）
      */
     private ApprovalFlowVO convertToVO(ApprovalFlow flow) {
         ApprovalFlowVO vo = new ApprovalFlowVO();
@@ -280,13 +311,44 @@ public class ApprovalFlowServiceImpl extends ServiceImpl<ApprovalFlowMapper, App
     }
 
     /**
-     * 转换为详情VO（含节点和审批人）
+     * 转换为详情VO（含节点和审批人，批量查询消除 N+1）
      */
     private ApprovalFlowVO convertToDetailVO(ApprovalFlow flow) {
         ApprovalFlowVO vo = convertToVO(flow);
 
         // 加载节点
         List<ApprovalNode> nodes = nodeMapper.selectByFlowId(flow.getId());
+        if (nodes.isEmpty()) {
+            vo.setNodes(new ArrayList<>());
+            return vo;
+        }
+
+        // 1. 收集所有节点的审批人并批量加载
+        Set<Long> roleIdsToLoad = new HashSet<>();
+        Set<Long> userIdsToLoad = new HashSet<>();
+        Map<Long, List<ApprovalNodeAssignee>> assigneesByNode = new java.util.HashMap<>();
+
+        for (ApprovalNode node : nodes) {
+            List<ApprovalNodeAssignee> assignees = assigneeMapper.selectByNodeId(node.getId());
+            assigneesByNode.put(node.getId(), assignees);
+            for (ApprovalNodeAssignee a : assignees) {
+                if (a.getAssigneeType() == 1) {
+                    roleIdsToLoad.add(a.getAssigneeId());
+                } else {
+                    userIdsToLoad.add(a.getAssigneeId());
+                }
+            }
+        }
+
+        // 2. 批量查询角色和用户名称
+        Map<Long, String> roleNameMap = roleIdsToLoad.isEmpty() ? Map.of()
+                : roleMapper.selectBatchIds(roleIdsToLoad).stream()
+                        .collect(Collectors.toMap(Role::getId, Role::getRoleName, (a, b) -> a));
+        Map<Long, String> userNameMap = userIdsToLoad.isEmpty() ? Map.of()
+                : userMapper.selectBatchIds(userIdsToLoad).stream()
+                        .collect(Collectors.toMap(User::getId, User::getNickname, (a, b) -> a));
+
+        // 3. 组装节点 VO
         List<ApprovalNodeVO> nodeVOs = new ArrayList<>();
         for (ApprovalNode node : nodes) {
             ApprovalNodeVO nodeVO = new ApprovalNodeVO();
@@ -294,22 +356,15 @@ public class ApprovalFlowServiceImpl extends ServiceImpl<ApprovalFlowMapper, App
             nodeVO.setNodeTypeText(getNodeTypeText(node.getNodeType()));
             nodeVO.setRejectActionText(getRejectActionText(node.getRejectAction()));
 
-            // 加载审批人
-            List<ApprovalNodeAssignee> assignees = assigneeMapper.selectByNodeId(node.getId());
+            List<ApprovalNodeAssignee> assignees = assigneesByNode.getOrDefault(node.getId(), List.of());
             List<ApprovalAssigneeVO> assigneeVOs = new ArrayList<>();
             for (ApprovalNodeAssignee assignee : assignees) {
                 ApprovalAssigneeVO assigneeVO = new ApprovalAssigneeVO();
                 BeanUtil.copyProperties(assignee, assigneeVO);
-                assigneeVO.setAssigneeTypeText(assignee.getAssigneeType() == 1 ? "角色" : "用户");
-
-                // 获取审批人姓名
-                if (assignee.getAssigneeType() == 1) {
-                    Role role = roleMapper.selectById(assignee.getAssigneeId());
-                    assigneeVO.setAssigneeName(role != null ? role.getRoleName() : "未知角色");
-                } else {
-                    User user = userMapper.selectById(assignee.getAssigneeId());
-                    assigneeVO.setAssigneeName(user != null ? user.getNickname() : "未知用户");
-                }
+                assigneeVO.setAssigneeTypeText(DictUtils.getLabel("approval_assignee_type", assignee.getAssigneeType(), "未知"));
+                assigneeVO.setAssigneeName(assignee.getAssigneeType() == 1
+                        ? roleNameMap.getOrDefault(assignee.getAssigneeId(), "未知角色")
+                        : userNameMap.getOrDefault(assignee.getAssigneeId(), "未知用户"));
                 assigneeVOs.add(assigneeVO);
             }
             nodeVO.setAssignees(assigneeVOs);

@@ -9,9 +9,11 @@ import com.project.core.result.R;
 import com.project.backend.controller.base.BaseCrudController;
 import com.project.backend.controller.base.BatchDeleteController;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/v1/system/stay")
 @RequiredArgsConstructor
+@Tag(name = "留宿管理", description = "留宿申请增删改查")
 public class StayController extends BaseCrudController<StayVO, StayQueryDTO, StaySaveDTO> 
         implements BatchDeleteController {
 
@@ -63,7 +66,7 @@ public class StayController extends BaseCrudController<StayVO, StayQueryDTO, Sta
      * 撤回留宿申请
      */
     @Operation(summary = "撤回留宿申请")
-    @PostMapping("/{id}/cancel")
+    @PutMapping("/{id}/cancel")
     public R<Void> cancel(@PathVariable Long id) {
         boolean success = stayService.cancelStay(id);
         return success ? R.ok() : R.fail("撤回失败");

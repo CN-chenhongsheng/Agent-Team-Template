@@ -1,7 +1,9 @@
 package com.project.backend.room.dto.room;
 
+import com.project.core.dto.BaseQueryDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 房间查询DTO
@@ -10,8 +12,9 @@ import lombok.Data;
  * @since 2026-01-03
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "房间查询条件")
-public class RoomQueryDTO {
+public class RoomQueryDTO extends BaseQueryDTO {
 
     @Schema(description = "房间编码（模糊查询）")
     private String roomCode;
@@ -36,10 +39,4 @@ public class RoomQueryDTO {
 
     @Schema(description = "状态：1启用 0停用")
     private Integer status;
-
-    @Schema(description = "当前页码", example = "1")
-    private Long pageNum = 1L;
-
-    @Schema(description = "每页条数", example = "10")
-    private Long pageSize = 10L;
 }

@@ -280,7 +280,6 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 // 导入公共样式变量
-@import '@/styles/variables.scss';
 
 // ========================================
 // 页面布局
@@ -574,13 +573,5 @@ onMounted(() => {
 // 动画
 // ========================================
 
-@keyframes loading-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
-}
+// @keyframes loading-spin 使用全局 components.scss 定义
 </style>

@@ -6,6 +6,7 @@
     :style="containerStyle"
     @mouseenter="hovered = true"
     @mouseleave="hovered = false"
+    @dblclick.stop="handleToggleExpand"
   >
     <!-- ==================== 折叠态 ==================== -->
     <div v-if="!isExpanded" class="flex items-center gap-3 w-full h-full px-4">
@@ -41,6 +42,7 @@
         :style="{ color: 'var(--el-text-color-placeholder)' }"
         title="展开"
         @click.stop="handleToggleExpand"
+        @mousedown.stop
       >
         <svg
           width="16"
@@ -83,6 +85,7 @@
             :style="deleteBtnStyle"
             title="删除节点"
             @click.stop="handleDelete"
+            @mousedown.stop
           >
             <svg
               width="13"
@@ -105,6 +108,7 @@
             :style="{ color: 'var(--el-text-color-secondary)' }"
             title="折叠"
             @click.stop="handleToggleExpand"
+            @mousedown.stop
           >
             <svg
               width="14"
@@ -137,6 +141,8 @@
             @input="handleNameInput"
             @focus="inputFocused = true"
             @blur="inputFocused = false"
+            @click.stop
+            @mousedown.stop
           />
         </div>
 
@@ -152,6 +158,7 @@
               class="flex-1 h-8 text-xs font-medium rounded-lg border-2 transition-all duration-200 cursor-pointer"
               :style="chipStyle(opt.value, localNodeType, opt.color)"
               @click.stop="handleNodeTypeChange(opt.value)"
+              @mousedown.stop
             >
               {{ opt.label }}
             </button>
@@ -170,6 +177,7 @@
               class="flex-1 h-8 text-xs font-medium rounded-lg border-2 transition-all duration-200 cursor-pointer"
               :style="chipStyle(opt.value, localRejectAction, 'var(--el-color-primary)')"
               @click.stop="handleRejectActionChange(opt.value)"
+              @mousedown.stop
             >
               {{ opt.label }}
             </button>
@@ -197,6 +205,7 @@
                   class="w-4 h-4 rounded-full flex items-center justify-center hover:opacity-100 opacity-60 transition-opacity duration-150"
                   :style="{ color: 'var(--el-text-color-secondary)' }"
                   @click.stop="handleRemoveAssignee(idx)"
+                  @mousedown.stop
                 >
                   <svg
                     width="10"
@@ -226,6 +235,7 @@
             class="w-full h-8 text-xs font-medium rounded-lg border border-dashed transition-colors duration-200 cursor-pointer flex items-center justify-center gap-1"
             :style="addBtnStyle"
             @click.stop="handleSelectApprover"
+            @mousedown.stop
           >
             <svg
               width="14"

@@ -25,9 +25,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.project.backend.room.entity.Bed;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -47,20 +53,20 @@ public class RepairServiceImpl extends ServiceImpl<RepairMapper, Repair> impleme
     private final com.project.backend.room.mapper.BedMapper bedMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public PageResult<RepairVO> pageList(RepairQueryDTO queryDTO) {
         LambdaQueryWrapper<Repair> wrapper = buildQueryWrapper(queryDTO);
 
         Page<Repair> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         page(page, wrapper);
 
-        List<RepairVO> voList = page.getRecords().stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
+        List<RepairVO> voList = convertToVOList(page.getRecords());
 
         return PageResult.build(voList, page.getTotal(), page.getCurrent(), page.getSize());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RepairVO getDetailById(Long id) {
         Repair repair = getById(id);
         if (repair == null) {
@@ -345,9 +351,44 @@ public class RepairServiceImpl extends ServiceImpl<RepairMapper, Repair> impleme
     }
 
     /**
-     * 实体转VO
+     * 批量转换实体到VO（优化版本，避免N+1查询）
      */
-    private RepairVO convertToVO(Repair repair) {
+    private List<RepairVO> convertToVOList(List<Repair> repairs) {
+        if (repairs == null || repairs.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 批量加载所有关联的学生
+        Set<Long> studentIds = repairs.stream()
+                .map(Repair::getStudentId).filter(id -> id != null).collect(Collectors.toSet());
+        Map<Long, Student> studentMap = studentIds.isEmpty() ? Map.of()
+                : studentMapper.selectBatchIds(studentIds).stream()
+                        .collect(Collectors.toMap(Student::getId, s -> s, (a, b) -> a));
+
+        // 批量加载所有关联的房间
+        Set<Long> roomIds = repairs.stream()
+                .map(Repair::getRoomId).filter(id -> id != null).collect(Collectors.toSet());
+        Map<Long, Room> roomMap = roomIds.isEmpty() ? Map.of()
+                : roomMapper.selectBatchIds(roomIds).stream()
+                        .collect(Collectors.toMap(Room::getId, r -> r, (a, b) -> a));
+
+        // 批量加载所有关联的床位
+        Set<Long> bedIds = repairs.stream()
+                .map(Repair::getBedId).filter(id -> id != null).collect(Collectors.toSet());
+        Map<Long, Bed> bedMap = bedIds.isEmpty() ? Map.of()
+                : bedMapper.selectBatchIds(bedIds).stream()
+                        .collect(Collectors.toMap(Bed::getId, b -> b, (a, b) -> a));
+
+        return repairs.stream()
+                .map(repair -> convertToVO(repair, studentMap, roomMap, bedMap))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 实体转VO（优化版本，使用预加载的关联数据）
+     */
+    private RepairVO convertToVO(Repair repair, Map<Long, Student> studentMap,
+                                  Map<Long, Room> roomMap, Map<Long, Bed> bedMap) {
         RepairVO vo = new RepairVO();
         BeanUtil.copyProperties(repair, vo);
 
@@ -358,40 +399,28 @@ public class RepairServiceImpl extends ServiceImpl<RepairMapper, Repair> impleme
         vo.setRatingText(DictUtils.getLabel("repair_rating", repair.getRating()));
 
         // 转换图片JSON为列表
-        if (StrUtil.isNotBlank(repair.getFaultImages())) {
-            try {
-                vo.setFaultImages(JSONUtil.toList(repair.getFaultImages(), String.class));
-            } catch (Exception e) {
-                log.warn("解析故障图片JSON失败: {}", repair.getFaultImages(), e);
-            }
-        }
+        parseImages(repair, vo);
 
-        if (StrUtil.isNotBlank(repair.getRepairImages())) {
-            try {
-                vo.setRepairImages(JSONUtil.toList(repair.getRepairImages(), String.class));
-            } catch (Exception e) {
-                log.warn("解析维修图片JSON失败: {}", repair.getRepairImages(), e);
-            }
-        }
-
-        // 填充学生信息（与 CheckInVO 等接口对齐：姓名/学号/编码/学籍状态等，用于表格姓名列悬浮卡片与详情）
+        // 填充学生信息
         if (repair.getStudentId() != null) {
-            Student student = studentMapper.selectById(repair.getStudentId());
+            Student student = studentMap.get(repair.getStudentId());
             if (student != null) {
                 studentInfoEnricher.enrichStudentInfo(student, vo);
             }
         }
 
-        // 填充报修单上的房间/床位名称与编码（repair 表仅存 room_id/bed_id，由关联表查名称与编码）
+        // 填充房间信息
         if (repair.getRoomId() != null) {
-            Room room = roomMapper.selectById(repair.getRoomId());
+            Room room = roomMap.get(repair.getRoomId());
             if (room != null) {
                 vo.setRoomName(room.getRoomNumber());
                 vo.setRoomCode(room.getRoomCode());
             }
         }
+
+        // 填充床位信息
         if (repair.getBedId() != null) {
-            com.project.backend.room.entity.Bed bed = bedMapper.selectById(repair.getBedId());
+            Bed bed = bedMap.get(repair.getBedId());
             if (bed != null) {
                 vo.setBedName(bed.getBedNumber());
                 vo.setBedCode(bed.getBedCode());
@@ -399,5 +428,49 @@ public class RepairServiceImpl extends ServiceImpl<RepairMapper, Repair> impleme
         }
 
         return vo;
+    }
+
+    /**
+     * 实体转VO（单条，用于详情查询）
+     */
+    private RepairVO convertToVO(Repair repair) {
+        Map<Long, Student> studentMap = new HashMap<>();
+        Map<Long, Room> roomMap = new HashMap<>();
+        Map<Long, Bed> bedMap = new HashMap<>();
+
+        if (repair.getStudentId() != null) {
+            Student student = studentMapper.selectById(repair.getStudentId());
+            if (student != null) studentMap.put(student.getId(), student);
+        }
+        if (repair.getRoomId() != null) {
+            Room room = roomMapper.selectById(repair.getRoomId());
+            if (room != null) roomMap.put(room.getId(), room);
+        }
+        if (repair.getBedId() != null) {
+            Bed bed = bedMapper.selectById(repair.getBedId());
+            if (bed != null) bedMap.put(bed.getId(), bed);
+        }
+
+        return convertToVO(repair, studentMap, roomMap, bedMap);
+    }
+
+    /**
+     * 解析图片JSON为列表
+     */
+    private void parseImages(Repair repair, RepairVO vo) {
+        if (StrUtil.isNotBlank(repair.getFaultImages())) {
+            try {
+                vo.setFaultImages(JSONUtil.toList(repair.getFaultImages(), String.class));
+            } catch (Exception e) {
+                log.warn("解析故障图片JSON失败: {}", repair.getFaultImages(), e);
+            }
+        }
+        if (StrUtil.isNotBlank(repair.getRepairImages())) {
+            try {
+                vo.setRepairImages(JSONUtil.toList(repair.getRepairImages(), String.class));
+            } catch (Exception e) {
+                log.warn("解析维修图片JSON失败: {}", repair.getRepairImages(), e);
+            }
+        }
     }
 }

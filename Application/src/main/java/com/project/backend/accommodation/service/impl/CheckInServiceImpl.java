@@ -207,10 +207,8 @@ public class CheckInServiceImpl extends ServiceImpl<CheckInMapper, CheckIn> impl
             recordWrapper.in(ApprovalRecord::getInstanceId, instanceIds);
             approvalRecordMapper.delete(recordWrapper);
 
-            // 删除审批实例（循环删除，因为 BaseMapper 没有批量删除方法）
-            for (Long instanceId : instanceIds) {
-                approvalInstanceMapper.deleteById(instanceId);
-            }
+            // 批量删除审批实例
+            approvalInstanceMapper.deleteBatchIds(instanceIds);
 
             log.info("批量删除入住记录时同步删除审批实例，入住记录数量：{}，审批实例数量：{}",
                     checkInList.size(), instanceIds.size());
@@ -308,33 +306,6 @@ public class CheckInServiceImpl extends ServiceImpl<CheckInMapper, CheckIn> impl
 
         return vo;
     }
-
-    /**
-     * 实体转VO（保留原方法用于单个对象转换）
-     */
-    private CheckInVO convertToVO(CheckIn checkIn) {
-        CheckInVO vo = new CheckInVO();
-        BeanUtil.copyProperties(checkIn, vo);
-        vo.setStatusText(DictUtils.getLabel("check_in_status", checkIn.getStatus(), "未知"));
-        vo.setCheckInTypeText(DictUtils.getLabel("check_in_type", checkIn.getCheckInType(), "未知"));
-
-        // 填充学生详细信息（studentInfo 中含 campusName 等）
-        if (checkIn.getStudentId() != null) {
-            Student student = studentMapper.selectById(checkIn.getStudentId());
-            if (student != null) {
-                studentInfoEnricher.enrichStudentInfo(student, vo, "campusName");
-            }
-        }
-
-        // 填充审批进度信息
-        if (checkIn.getApprovalInstanceId() != null) {
-            vo.setApprovalInstanceId(checkIn.getApprovalInstanceId());
-            vo.setApprovalProgress(approvalProgressBuilder.buildProgress(checkIn.getApprovalInstanceId(), checkIn.getStatus(), "check_in_status"));
-        }
-
-        return vo;
-    }
-
 
     /**
      * 管理员直接分配床位（跳过审批流程）

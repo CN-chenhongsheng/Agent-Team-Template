@@ -1,7 +1,7 @@
 /**
  * 通用接口
  */
-import type { SendCodeParams, SendCodeResult, UploadFileItem } from './types';
+import type { SendCodeParams, SendCodeResult, UploadFileItem } from '@/types/api';
 import { post } from '@/utils/request';
 import { TokenPrefix, getToken } from '@/utils/auth';
 

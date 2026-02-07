@@ -197,7 +197,7 @@
       <view class="bottom-actions">
         <view
           v-if="canCancel"
-          class="cancel-btn action-btn"
+          class="action-btn cancel-btn"
           @click="handleCancel"
         >
           撤回申请
@@ -525,8 +525,6 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-
 .detail-page {
   position: relative;
   overflow: hidden;

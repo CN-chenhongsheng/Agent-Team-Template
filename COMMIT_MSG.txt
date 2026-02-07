@@ -1,0 +1,7 @@
+feat: 全栈架构重构与代码规范化
+  -后端提取BaseQueryDTO和PageHelper统一分页逻辑，重构审批流程服务、认证拦截器、异常处理和CORS配置，优化各模块Controller和Service实现
+  -管理后台新增流程编辑器组件和权限范围编辑器，重构审批流配置视图和人员选择弹窗，优化useTable和路由守卫
+  -小程序按照组件化规范拆分大页面为独立components和composables，新增通用页面布局与背景装饰组件，统一API类型定义到types/api目录，新增业务服务层和分页composable
+  -清理过时文档文件，添加CLAUDE.md项目指南
+
+提交人：陈鸿昇

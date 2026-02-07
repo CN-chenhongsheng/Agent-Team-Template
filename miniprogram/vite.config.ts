@@ -23,5 +23,13 @@ export default defineConfig((): UserConfig => {
       proxy,
     },
     plugins: createVitePlugins(isBuild),
+    // SCSS 全局变量和 mixins 自动注入，无需每个文件手动 @import
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: `@import "@/styles/variables.scss"; @import "@/styles/mixins.scss";`,
+        },
+      },
+    },
   };
 });

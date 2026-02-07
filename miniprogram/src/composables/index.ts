@@ -3,6 +3,8 @@ export { useDateRangePicker } from './useDateRangePicker';
 export { useFormValidation } from './useFormValidation';
 export { useLoading } from './useLoading';
 export { useModal } from './useModal';
+export { useNotice } from './useNotice';
+export { usePagination } from './usePagination';
 export { useShare } from './useShare';
 export { useSignatureCanvas } from './useSignatureCanvas';
 export { useSubmit } from './useSubmit';

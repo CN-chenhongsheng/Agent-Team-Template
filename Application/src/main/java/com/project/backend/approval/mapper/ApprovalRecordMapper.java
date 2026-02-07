@@ -23,7 +23,7 @@ public interface ApprovalRecordMapper extends BaseMapper<ApprovalRecord> {
      * @param instanceId 审批实例ID
      * @return 审批记录列表
      */
-    @Select("SELECT * FROM sys_approval_record WHERE instance_id = #{instanceId} AND deleted = 0 ORDER BY approve_time ASC")
+    @Select("SELECT id, instance_id, node_id, node_name, approver_id, approver_name, action, opinion, approve_time, create_time FROM sys_approval_record WHERE instance_id = #{instanceId} AND deleted = 0 ORDER BY approve_time ASC")
     List<ApprovalRecord> selectByInstanceId(Long instanceId);
 
     /**
@@ -52,6 +52,6 @@ public interface ApprovalRecordMapper extends BaseMapper<ApprovalRecord> {
      * @param approverId 审批人ID
      * @return 审批记录列表
      */
-    @Select("SELECT * FROM sys_approval_record WHERE approver_id = #{approverId} AND deleted = 0 ORDER BY approve_time DESC")
+    @Select("SELECT id, instance_id, node_id, node_name, approver_id, approver_name, action, opinion, approve_time, create_time FROM sys_approval_record WHERE approver_id = #{approverId} AND deleted = 0 ORDER BY approve_time DESC")
     List<ApprovalRecord> selectByApproverId(Long approverId);
 }

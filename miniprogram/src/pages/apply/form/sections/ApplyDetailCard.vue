@@ -127,12 +127,9 @@ $glass-border: rgb(255 255 255 / 80%);
   gap: 24rpx;
 }
 
+// 使用全局 .glass-card，仅在此页覆盖圆角为 xl
 .glass-card {
-  background: $glass-bg;
-  border: 2rpx solid $glass-border;
   border-radius: 48rpx;
-  box-shadow: 0 8rpx 32rpx rgb(31 38 135 / 7%);
-  backdrop-filter: blur(32rpx);
 }
 
 .section-card {

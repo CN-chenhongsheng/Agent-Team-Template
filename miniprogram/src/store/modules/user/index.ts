@@ -1,16 +1,16 @@
 /**
  * 用户状态管理
  * @module store/modules/user
+ *
+ * 职责：纯状态管理，不包含 mock 判断
+ * Mock 逻辑统一在 AuthService 层处理
  */
 
 import { defineStore } from 'pinia';
 import type { UserState, providerType } from './types';
 import type { ILoginParams, IUser, UserRole } from '@/types';
-import type { IBackendLoginResponse } from '@/types/api';
-import { getUserInfoAPI, loginAPI, logoutAPI, studentLoginAPI, wxLoginAPI } from '@/api';
+import { AuthService } from '@/services';
 import { clearToken, getToken, setToken } from '@/utils/auth';
-import { USE_MOCK, getMockUserByRole, mockLoginResponse } from '@/mock';
-import { UserRole as UserRoleEnum } from '@/types';
 
 const useUserStore = defineStore('user', {
   state: (): UserState => ({
@@ -21,55 +21,24 @@ const useUserStore = defineStore('user', {
   }),
 
   getters: {
-    /**
-     * 用户角色
-     */
+    /** 用户角色 */
     userRole(state): UserRole | undefined {
       return state.userInfo?.role;
     },
-
-    /**
-     * 是否是学生
-     */
+    /** 是否是学生 */
     isStudent(state): boolean {
       return state.userInfo?.role === 'student';
     },
   },
 
   actions: {
-    /**
-     * 将后端登录响应转换为前端格式
-     */
-    transformLoginResponse(res: IBackendLoginResponse) {
-      if (!res || !res.token) {
-        throw new Error('登录失败：服务器返回数据无效');
-      }
-
-      return {
-        accessToken: res.token,
-        refreshToken: '', // 后端通过 Cookie 返回，前端无需处理
-        userInfo: {
-          id: res.userId,
-          username: res.username,
-          nickname: res.nickname,
-          avatar: res.avatar,
-          role: res.role as UserRole,
-          studentInfo: res.studentInfo,
-        },
-      };
-    },
-
-    /**
-     * 设置用户信息
-     */
+    /** 设置用户信息 */
     setUserInfo(userInfo: IUser) {
       this.userInfo = userInfo;
       this.isLoggedIn = true;
     },
 
-    /**
-     * 设置Token
-     */
+    /** 设置 Token */
     setToken(token: string, refreshToken?: string) {
       this.token = token;
       if (refreshToken) {
@@ -78,9 +47,7 @@ const useUserStore = defineStore('user', {
       setToken(token);
     },
 
-    /**
-     * 重置用户信息
-     */
+    /** 重置用户信息 */
     resetInfo() {
       this.userInfo = null;
       this.token = '';
@@ -94,20 +61,10 @@ const useUserStore = defineStore('user', {
      */
     async login(loginForm: ILoginParams) {
       try {
-        // Mock数据模式
-        if (USE_MOCK) {
-          const mockData = mockLoginResponse;
-          this.setToken(mockData.accessToken, mockData.refreshToken);
-          this.setUserInfo(mockData.userInfo);
-          return mockData;
-        }
-
-        // 真实API调用
-        const res = await loginAPI(loginForm);
-        const transformed = this.transformLoginResponse(res);
-        this.setToken(transformed.accessToken, transformed.refreshToken);
-        this.setUserInfo(transformed.userInfo);
-        return transformed;
+        const result = await AuthService.login(loginForm);
+        this.setToken(result.accessToken, result.refreshToken);
+        this.setUserInfo(result.userInfo);
+        return result;
       }
       catch (error) {
         console.error('登录失败:', error);
@@ -120,20 +77,10 @@ const useUserStore = defineStore('user', {
      */
     async studentLogin(studentNo: string, password: string) {
       try {
-        // Mock数据模式
-        if (USE_MOCK) {
-          const mockData = mockLoginResponse;
-          this.setToken(mockData.accessToken, mockData.refreshToken);
-          this.setUserInfo(mockData.userInfo);
-          return mockData;
-        }
-
-        // 真实API调用
-        const res = await studentLoginAPI({ studentNo, password });
-        const transformed = this.transformLoginResponse(res);
-        this.setToken(transformed.accessToken, transformed.refreshToken);
-        this.setUserInfo(transformed.userInfo);
-        return transformed;
+        const result = await AuthService.studentLogin({ studentNo, password });
+        this.setToken(result.accessToken, result.refreshToken);
+        this.setUserInfo(result.userInfo);
+        return result;
       }
       catch (error) {
         console.error('[Store] 学生登录失败:', error);
@@ -148,27 +95,16 @@ const useUserStore = defineStore('user', {
       return new Promise((resolve, reject) => {
         uni.login({
           provider,
-          success: async (result: UniApp.LoginRes) => {
+          success: async (res: UniApp.LoginRes) => {
             try {
-              if (result.code) {
-                // Mock数据模式
-                if (USE_MOCK) {
-                  const mockData = mockLoginResponse;
-                  this.setToken(mockData.accessToken, mockData.refreshToken);
-                  this.setUserInfo(mockData.userInfo);
-                  resolve(mockData);
-                  return;
-                }
-
-                // 真实API调用
-                const res = await wxLoginAPI(result.code);
-                const transformed = this.transformLoginResponse(res);
-                this.setToken(transformed.accessToken, transformed.refreshToken);
-                this.setUserInfo(transformed.userInfo);
-                resolve(transformed);
+              if (res.code) {
+                const result = await AuthService.wxLogin(res.code);
+                this.setToken(result.accessToken, result.refreshToken);
+                this.setUserInfo(result.userInfo);
+                resolve(result);
               }
               else {
-                reject(new Error(result.errMsg));
+                reject(new Error(res.errMsg));
               }
             }
             catch (error) {
@@ -189,15 +125,7 @@ const useUserStore = defineStore('user', {
      */
     async getUserInfo() {
       try {
-        // Mock数据模式
-        if (USE_MOCK) {
-          const mockUser = getMockUserByRole(UserRoleEnum.STUDENT);
-          this.setUserInfo(mockUser);
-          return mockUser;
-        }
-
-        // 真实API调用
-        const userInfo = await getUserInfoAPI();
+        const userInfo = await AuthService.getUserInfo();
         this.setUserInfo(userInfo);
         return userInfo;
       }
@@ -212,14 +140,11 @@ const useUserStore = defineStore('user', {
      */
     async logout() {
       try {
-        if (!USE_MOCK) {
-          await logoutAPI();
-        }
+        await AuthService.logout();
         this.resetInfo();
       }
       catch (error) {
         console.error('登出失败:', error);
-        // 即使登出失败也清除本地信息
         this.resetInfo();
         throw error;
       }
@@ -233,8 +158,7 @@ const useUserStore = defineStore('user', {
         try {
           await this.getUserInfo();
         }
-        catch (error) {
-          // Token无效，清除登录状态
+        catch {
           this.resetInfo();
         }
       }

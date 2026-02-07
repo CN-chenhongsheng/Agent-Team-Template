@@ -355,13 +355,9 @@ $glass-border: rgb(255 255 255 / 80%);
   }
 }
 
+// 使用全局 .glass-card，仅覆盖页面特有属性
 .glass-card {
   margin-bottom: 24rpx;
-  background: $glass-bg;
-  border: 2rpx solid $glass-border;
-  border-radius: 32rpx;
-  box-shadow: 0 8rpx 24rpx rgb(0 0 0 / 5%);
-  backdrop-filter: blur(32rpx);
 }
 
 .avatar-section {

@@ -1,7 +1,9 @@
 package com.project.backend.system.dto;
 
+import com.project.core.dto.BaseQueryDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 用户查询DTO
@@ -10,8 +12,9 @@ import lombok.Data;
  * @since 2026-01-01
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "用户查询条件")
-public class UserQueryDTO {
+public class UserQueryDTO extends BaseQueryDTO {
 
     @Schema(description = "用户名（模糊查询）")
     private String username;
@@ -27,10 +30,4 @@ public class UserQueryDTO {
 
     @Schema(description = "状态：1正常 0停用")
     private Integer status;
-
-    @Schema(description = "当前页码", example = "1")
-    private Long pageNum = 1L;
-
-    @Schema(description = "每页条数", example = "10")
-    private Long pageSize = 10L;
 }

@@ -1,15 +1,15 @@
 /**
  * 全局样式 Mixins
+ * 注意：variables 通过 Vite additionalData 自动注入，无需 @import
  */
 
-@import './variables.scss';
-
-// 毛玻璃卡片
-@mixin glass-card {
-  background: $glass-bg;
+// 毛玻璃卡片（带参数版本，components.scss 中有全局类）
+@mixin glass-card($bg: $glass-bg, $blur: 32rpx) {
+  background: $bg;
   border: 2rpx solid $glass-border;
+  border-radius: $radius-lg;
   box-shadow: $shadow-md;
-  backdrop-filter: blur(32rpx);
+  backdrop-filter: blur($blur);
 }
 
 // Flex 居中

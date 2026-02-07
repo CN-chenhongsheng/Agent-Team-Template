@@ -48,15 +48,30 @@ export default defineConfig({
    * @see https://github.com/unocss/unocss#shortcuts
    */
   shortcuts: {
+    // 基础背景
     'u-bg': 'bg-gray-100 dark:bg-black',
     'u-bg-2': 'bg-white dark:bg-[#1C1C1E]',
     'u-border': 'border-[#EBEDF0] dark:border-[#3A3A3C]',
+    // 交互状态
     'u-active': 'bg-[#F2F3F5] dark:!bg-[#3A3A3C]',
     'u-active-h5': 'active:bg-[#F2F3F5] active:dark:bg-[#3A3A3C]',
+    // 文本颜色
     'u-text-color': 'text-[#323233] dark:text-[#F5F5F5]',
     'u-text-color-2': 'text-[#969799] dark:text-[#707070]',
     'u-text-color-3': 'text-[#C8C9CC] dark:text-[#4D4D4D]',
     'bg-primary': 'bg-light-blue-500 dark:bg-light-blue-600',
+    // ---- 宿管小程序主题快捷类 ----
+    // 主题文本
+    'text-main': 'text-[#111817]',
+    'text-sub': 'text-[#6b7280]',
+    'text-disabled': 'text-[#9ca3af]',
+    // 主题按钮
+    'btn-primary': 'flex items-center justify-center text-white font-bold rounded-48rpx transition-all active:scale-98',
+    'btn-secondary': 'flex items-center justify-center text-[#6b7280] font-medium rounded-48rpx border-1 border-[#e5e7eb] transition-all active:scale-98',
+    // Flex 布局
+    'flex-center': 'flex items-center justify-center',
+    'flex-between': 'flex items-center justify-between',
+    'flex-col-center': 'flex flex-col items-center justify-center',
   },
   transformers: [
     transformerDirectives(), // 启用 @apply 功能

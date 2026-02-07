@@ -9,149 +9,18 @@
 
 import request from '@/utils/http'
 
-/** ==================== 类型定义 ==================== */
+/** ==================== 类型别名（规范类型定义在 types/api/approval/） ==================== */
 
-/** 审批人 */
-export interface ApprovalAssignee {
-  id?: number
-  nodeId?: number
-  assigneeType: number // 1角色 2用户
-  assigneeId: number
-  assigneeName?: string
-  assigneeTypeText?: string
-}
-
-/** 审批节点 */
-export interface ApprovalNode {
-  id?: number
-  flowId?: number
-  nodeName: string
-  nodeOrder: number
-  nodeType: number // 1串行 2会签 3或签
-  nodeTypeText?: string
-  rejectAction: number // 1直接结束 2退回申请人 3退回上一节点
-  rejectActionText?: string
-  remark?: string
-  assignees: ApprovalAssignee[]
-  createTime?: string
-  // 节点位置坐标（用于保存用户自定义布局）
-  x?: number
-  y?: number
-  // 临时唯一标识符（用于新节点追踪，不提交到后端）
-  tempId?: string
-}
-
-/** 审批流程 */
-export interface ApprovalFlow {
-  id?: number
-  flowName: string
-  flowCode: string
-  businessType: string
-  businessTypeText?: string
-  description?: string
-  status: number
-  statusText?: string
-  remark?: string
-  nodes?: ApprovalNode[]
-  bound?: boolean
-  createTime?: string
-  updateTime?: string
-}
-
-/** 流程查询参数 */
-export interface ApprovalFlowQueryParams {
-  flowName?: string
-  flowCode?: string
-  businessType?: string
-  status?: number
-  pageNum?: number
-  pageSize?: number
-}
-
-/** 流程绑定 */
-export interface ApprovalFlowBinding {
-  id?: number
-  businessType: string
-  businessTypeText?: string
-  flowId: number
-  flowName?: string
-  flowCode?: string
-  status: number
-  statusText?: string
-  remark?: string
-  createTime?: string
-  updateTime?: string
-}
-
-/** 审批实例 */
-export interface ApprovalInstance {
-  id: number
-  flowId: number
-  flowName: string
-  businessType: string
-  businessTypeText?: string
-  businessId: number
-  applicantId: number
-  applicantName: string
-  /** 学生基本信息（当业务类型为学生相关业务时返回） */
-  studentInfo?: Api.Common.StudentBasicInfo
-  currentNodeId?: number
-  currentNodeName?: string
-  status: number
-  statusText?: string
-  startTime?: string
-  endTime?: string
-  remark?: string
-  nodes?: ApprovalNode[]
-  records?: ApprovalRecord[]
-  canApprove?: boolean
-  createTime?: string
-}
-
-/** 审批实例查询参数 */
-export interface ApprovalInstanceQueryParams {
-  businessType?: string
-  applicantName?: string
-  flowName?: string
-  status?: number
-  pageNum?: number
-  pageSize?: number
-}
-
-/** 审批记录 */
-export interface ApprovalRecord {
-  id: number
-  instanceId: number
-  nodeId: number
-  nodeName: string
-  approverId: number
-  approverName: string
-  action: number // 1通过 2拒绝
-  actionText?: string
-  opinion?: string
-  approveTime: string
-  businessType?: string
-  businessTypeText?: string
-  applicantName?: string
-  flowName?: string
-}
-
-/** 审批记录查询参数 */
-export interface ApprovalRecordQueryParams {
-  businessType?: string
-  applicantName?: string
-  approverName?: string
-  action?: number
-  pageNum?: number
-  pageSize?: number
-}
-
-/** 审批操作参数 */
-export interface ApprovalActionParams {
-  instanceId: number
-  action: number // 1通过 2拒绝
-  opinion?: string
-}
+export type ApprovalAssignee = Api.ApprovalManage.ApprovalAssignee
+export type ApprovalNode = Api.ApprovalManage.ApprovalNode
+export type ApprovalFlow = Api.ApprovalManage.ApprovalFlow
+export type ApprovalFlowQueryParams = Api.ApprovalManage.ApprovalFlowQueryParams
+export type ApprovalFlowBinding = Api.ApprovalManage.ApprovalFlowBinding
+export type ApprovalInstance = Api.ApprovalManage.ApprovalInstance
+export type ApprovalInstanceQueryParams = Api.ApprovalManage.ApprovalInstanceQueryParams
+export type ApprovalRecord = Api.ApprovalManage.ApprovalRecord
+export type ApprovalRecordQueryParams = Api.ApprovalManage.ApprovalRecordQueryParams
+export type ApprovalActionParams = Api.ApprovalManage.ApprovalActionParams
 
 /** ==================== 流程配置接口 ==================== */
 
@@ -165,7 +34,7 @@ export function fetchGetFlowList(params: ApprovalFlowQueryParams) {
     pageNum: number
     pageSize: number
   }>({
-    url: '/api/v1/system/approval/flow/list',
+    url: '/api/v1/system/approval/flow/page',
     params
   })
 }
@@ -296,7 +165,7 @@ export function fetchGetInstanceByBusiness(businessType: string, businessId: num
  * 执行审批
  */
 export function fetchDoApprove(data: ApprovalActionParams) {
-  return request.post({
+  return request.put({
     url: '/api/v1/system/approval/approve',
     data,
     showSuccessMessage: true
@@ -307,7 +176,7 @@ export function fetchDoApprove(data: ApprovalActionParams) {
  * 撤回审批
  */
 export function fetchWithdrawApproval(instanceId: number) {
-  return request.post({
+  return request.put({
     url: `/api/v1/system/approval/withdraw/${instanceId}`,
     showSuccessMessage: true
   })
@@ -325,7 +194,7 @@ export function fetchGetPendingList(params: ApprovalInstanceQueryParams) {
     pageNum: number
     pageSize: number
   }>({
-    url: '/api/v1/system/approval/pending/list',
+    url: '/api/v1/system/approval/pending/page',
     params
   })
 }
@@ -349,7 +218,7 @@ export function fetchGetRecordList(params: ApprovalRecordQueryParams) {
     pageNum: number
     pageSize: number
   }>({
-    url: '/api/v1/system/approval/record/list',
+    url: '/api/v1/system/approval/record/page',
     params
   })
 }
@@ -364,7 +233,7 @@ export function fetchGetMyRecordList(params: ApprovalRecordQueryParams) {
     pageNum: number
     pageSize: number
   }>({
-    url: '/api/v1/system/approval/record/my',
+    url: '/api/v1/system/approval/record/my-page',
     params
   })
 }

@@ -1,7 +1,9 @@
 package com.project.backend.statistics.dto;
 
+import com.project.core.dto.BaseQueryDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 我的申请查询DTO
@@ -10,8 +12,9 @@ import lombok.Data;
  * @since 2026-01-29
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "我的申请查询条件")
-public class MyApplyQueryDTO {
+public class MyApplyQueryDTO extends BaseQueryDTO {
 
     @Schema(description = "学生ID", required = true)
     private Long studentId;
@@ -21,12 +24,6 @@ public class MyApplyQueryDTO {
 
     @Schema(description = "状态：1待审核 2已通过 3已拒绝 4已完成")
     private Integer status;
-
-    @Schema(description = "当前页码", example = "1")
-    private Long pageNum = 1L;
-
-    @Schema(description = "每页条数", example = "10")
-    private Long pageSize = 10L;
 
     @Schema(description = "限制返回条数（不分页模式，如果设置则忽略pageNum和pageSize）", example = "5")
     private Integer limit;

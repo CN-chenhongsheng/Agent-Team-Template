@@ -6,6 +6,7 @@
     :style="containerStyle"
     @mouseenter="hovered = true"
     @mouseleave="hovered = false"
+    @dblclick.stop="handleToggleExpand"
   >
     <!-- ==================== 折叠态 ==================== -->
     <div v-if="!isExpanded" class="flex items-center gap-3 w-full h-full px-4">
@@ -38,9 +39,10 @@
       <!-- 右侧：展开箭头（仅此处可点击展开） -->
       <div
         class="flex-shrink-0 transition-transform duration-200 cursor-pointer rounded-md w-8 h-8 flex items-center justify-center hover:opacity-100 opacity-60"
-        :style="{ color: 'var(--el-text-color-placeholder)' }"
+        :style="{ color: 'var(--el-text-color-placeholder)', pointerEvents: 'auto' }"
         title="展开"
         @click.stop="handleToggleExpand"
+        @mousedown.stop
       >
         <svg
           width="16"
@@ -80,9 +82,10 @@
         <!-- 折叠按钮 - 简约横线图标 -->
         <button
           class="w-6 h-6 rounded-md flex items-center justify-center transition-colors duration-200 hover:opacity-100 opacity-50 flex-shrink-0"
-          :style="{ color: 'var(--el-text-color-secondary)' }"
+          :style="{ color: 'var(--el-text-color-secondary)', pointerEvents: 'auto' }"
           title="折叠"
           @click.stop="handleToggleExpand"
+          @mousedown.stop
         >
           <svg
             width="14"
@@ -115,6 +118,8 @@
             @input="handleFlowNameInput"
             @focus="focusedField = 'flowName'"
             @blur="focusedField = ''"
+            @click.stop
+            @mousedown.stop
           />
         </div>
 
@@ -135,6 +140,8 @@
             @input="handleFlowCodeInput"
             @focus="focusedField = 'flowCode'"
             @blur="focusedField = ''"
+            @click.stop
+            @mousedown.stop
           />
         </div>
 
@@ -144,21 +151,22 @@
             <span :style="{ color: 'var(--el-color-danger)' }">*</span>
             业务类型
           </label>
-          <select
-            class="w-full h-8 px-3 text-sm rounded-lg border outline-none transition-colors duration-200 appearance-none"
-            :style="selectStyle"
-            :class="{ 'opacity-60 cursor-not-allowed': dialogType === 'edit' }"
-            :value="localBusinessType"
+          <el-select
+            v-model="localBusinessType"
+            placeholder="请选择业务类型"
+            class="w-full"
             :disabled="dialogType === 'edit'"
             @change="handleBusinessTypeChange"
-            @focus="focusedField = 'businessType'"
-            @blur="focusedField = ''"
+            @click.stop
+            @mousedown.stop
           >
-            <option value="" disabled>请选择业务类型</option>
-            <option v-for="opt in businessTypeOptions" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
+            <el-option
+              v-for="opt in businessTypeOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
         </div>
 
         <!-- 备注 -->
@@ -173,6 +181,8 @@
             @input="handleDescriptionInput"
             @focus="focusedField = 'description'"
             @blur="focusedField = ''"
+            @click.stop
+            @mousedown.stop
           ></textarea>
         </div>
       </div>
@@ -207,7 +217,7 @@
   const localDescription = ref(props.description)
 
   const hovered = ref(false)
-  const focusedField = ref('')
+  const focusedField = ref<string>('')
 
   // debounce timers
   let nameDebounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -286,18 +296,8 @@
 
   const inputStyle = computed(() => ({
     background: 'var(--default-box-color)',
-    border: `1px solid var(--default-border)`,
+    border: `1px solid ${focusedField.value ? 'var(--el-color-primary)' : 'var(--default-border)'}`,
     color: 'var(--el-text-color-primary)'
-  }))
-
-  const selectStyle = computed(() => ({
-    background: 'var(--default-box-color)',
-    border: `1px solid var(--default-border)`,
-    color: 'var(--el-text-color-primary)',
-    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'right 10px center',
-    paddingRight: '30px'
   }))
 
   // ==================== 事件处理 ====================
@@ -324,7 +324,14 @@
     })
   }
 
-  const handleToggleExpand = () => {
+  const handleToggleExpand = (e?: Event) => {
+    console.log('[StartNodeCard] 切换展开/折叠状态')
+
+    if (e) {
+      e.stopPropagation()
+      e.preventDefault()
+    }
+
     dispatchEvent('lf-node-toggle-expand', { nodeId: props.nodeId })
   }
 
@@ -344,8 +351,7 @@
     }, 300)
   }
 
-  const handleBusinessTypeChange = (e: Event) => {
-    localBusinessType.value = (e.target as HTMLSelectElement).value
+  const handleBusinessTypeChange = () => {
     dispatchStartNodeUpdate()
   }
 

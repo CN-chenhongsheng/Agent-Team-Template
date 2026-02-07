@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -80,7 +81,7 @@ public class AllocationTaskController
     /**
      * 执行分配任务
      */
-    @PostMapping("/{id}/execute")
+    @PutMapping("/{id}/execute")
     @Operation(summary = "执行分配任务")
     @Log(title = "执行分配任务", businessType = 2)
     public R<Void> execute(@PathVariable Long id) {
@@ -101,7 +102,7 @@ public class AllocationTaskController
     /**
      * 取消任务
      */
-    @PostMapping("/{id}/cancel")
+    @PutMapping("/{id}/cancel")
     @Operation(summary = "取消任务")
     @Log(title = "取消分配任务", businessType = 2)
     public R<Void> cancel(@PathVariable Long id) {

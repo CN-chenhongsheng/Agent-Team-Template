@@ -1,7 +1,9 @@
 package com.project.backend.notice.dto;
 
+import com.project.core.dto.BaseQueryDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
@@ -12,8 +14,9 @@ import java.time.LocalDateTime;
  * @since 2026-01-29
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "通知公告查询条件")
-public class NoticeQueryDTO {
+public class NoticeQueryDTO extends BaseQueryDTO {
 
     @Schema(description = "标题（模糊查询）")
     private String title;
@@ -35,10 +38,4 @@ public class NoticeQueryDTO {
 
     @Schema(description = "用户ID（用于查询已读状态，小程序端传入）")
     private Long userId;
-
-    @Schema(description = "当前页码", example = "1")
-    private Long pageNum = 1L;
-
-    @Schema(description = "每页条数", example = "10")
-    private Long pageSize = 10L;
 }

@@ -120,19 +120,15 @@ export function fetchImportTaskResult(taskId: string) {
   })
 }
 
-/**
- * SSE 阶段事件数据
- */
-export interface SSEStageData {
+/** SSE 阶段事件数据（仅本模块内部使用） */
+interface SSEStageData {
   stage: 'parsing' | 'importing' | 'complete'
   message: string
   totalRows?: number
 }
 
-/**
- * SSE 进度事件数据
- */
-export interface SSEProgressData {
+/** SSE 进度事件数据（仅本模块内部使用） */
+interface SSEProgressData {
   percent: number
   processed: number
   total: number
@@ -140,18 +136,14 @@ export interface SSEProgressData {
   failCount?: number
 }
 
-/**
- * SSE 完成事件数据
- */
-export interface SSECompleteData {
+/** SSE 完成事件数据（仅本模块内部使用） */
+interface SSECompleteData {
   status: 'success' | 'failed'
   result?: Api.StudentImport.ImportResult
 }
 
-/**
- * SSE 订阅回调
- */
-export interface SSEImportCallbacks {
+/** SSE 订阅回调（仅本模块内部使用） */
+interface SSEImportCallbacks {
   onStage: (data: SSEStageData) => void
   onProgress: (data: SSEProgressData) => void
   onComplete: (data: SSECompleteData) => void

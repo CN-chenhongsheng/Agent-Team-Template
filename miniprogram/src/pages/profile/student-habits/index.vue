@@ -742,8 +742,6 @@ async function handleSubmit(): Promise<void> {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-
 .habits-page {
   position: relative;
   overflow: hidden;
@@ -751,37 +749,15 @@ async function handleSubmit(): Promise<void> {
   background-color: $bg-light;
 }
 
-// 背景装饰球
+// .ambient-blob 使用全局 components.scss 定义
+// 此页面 blob-accent/blob-blue 位置有微调，通过 scoped 覆盖
 .ambient-blob {
-  position: absolute;
-  z-index: 0;
-  border-radius: 50%;
-  opacity: 0.6;
-  filter: blur(120rpx);
-  pointer-events: none;
-
-  &.blob-primary {
-    top: -100rpx;
-    right: -100rpx;
-    width: 500rpx;
-    height: 500rpx;
-    background-color: rgb(10 219 195 / 30%);
-  }
-
   &.blob-accent {
     top: 600rpx;
-    left: -200rpx;
-    width: 560rpx;
-    height: 560rpx;
-    background-color: rgb(255 140 66 / 25%);
   }
 
   &.blob-blue {
-    right: -100rpx;
     bottom: 400rpx;
-    width: 500rpx;
-    height: 500rpx;
-    background-color: rgb(59 130 246 / 25%);
   }
 }
 
@@ -830,19 +806,7 @@ async function handleSubmit(): Promise<void> {
 }
 
 // 加载容器
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 200rpx $spacing-lg;
-  gap: $spacing-md;
-
-  .loading-text {
-    font-size: $font-md;
-    color: $text-sub;
-  }
-}
+// .loading-container 使用全局 components.scss 定义
 
 // 表单容器
 .form-container {
@@ -936,9 +900,7 @@ async function handleSubmit(): Promise<void> {
 }
 
 // 底部安全区域
-.safe-bottom {
-  height: 40rpx;
-}
+// .safe-bottom 使用全局 components.scss --sm 变体
 
 // 底部提交按钮
 .footer {

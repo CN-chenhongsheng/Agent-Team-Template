@@ -9,7 +9,7 @@
     <!-- 顶部导航 -->
     <page-header title="分配结果" />
 
-    <view class="page-content" v-if="!loading">
+    <view v-if="!loading" class="page-content">
       <!-- 分配状态卡片 -->
       <view class="glass-card status-card" :class="statusClass">
         <view class="status-icon">
@@ -43,16 +43,28 @@
           </view>
           <view class="dorm-details">
             <view class="detail-item">
-              <text class="detail-label">床位号</text>
-              <text class="detail-value">{{ allocationResult.allocatedBedId ? `${allocationResult.allocatedBedId}号床` : '--' }}</text>
+              <text class="detail-label">
+                床位号
+              </text>
+              <text class="detail-value">
+                {{ allocationResult.allocatedBedId ? `${allocationResult.allocatedBedId}号床` : '--' }}
+              </text>
             </view>
             <view class="detail-item">
-              <text class="detail-label">匹配分数</text>
-              <text class="detail-value score">{{ allocationResult.matchScore || '--' }}分</text>
+              <text class="detail-label">
+                匹配分数
+              </text>
+              <text class="detail-value score">
+                {{ allocationResult.matchScore || '--' }}分
+              </text>
             </view>
             <view class="detail-item">
-              <text class="detail-label">匹配等级</text>
-              <text class="detail-value">{{ allocationResult.matchScoreLevel || '--' }}</text>
+              <text class="detail-label">
+                匹配等级
+              </text>
+              <text class="detail-value">
+                {{ allocationResult.matchScoreLevel || '--' }}
+              </text>
             </view>
           </view>
         </view>
@@ -69,12 +81,14 @@
           </view>
           <view v-else class="roommate-list">
             <view
-              v-for="(mate, index) in roommates"
+              v-for="mate in roommates"
               :key="mate.studentId"
               class="roommate-item"
             >
               <view class="roommate-avatar">
-                <text class="avatar-text">{{ mate.studentName?.charAt(0) || '?' }}</text>
+                <text class="avatar-text">
+                  {{ mate.studentName?.charAt(0) || '?' }}
+                </text>
               </view>
               <view class="roommate-info">
                 <view class="roommate-name">
@@ -85,8 +99,12 @@
                 </view>
               </view>
               <view class="roommate-habits">
-                <view class="habit-tag">{{ mate.sleepScheduleText || '作息未知' }}</view>
-                <view class="habit-tag">{{ mate.socialPreferenceText || '社交未知' }}</view>
+                <view class="habit-tag">
+                  {{ mate.sleepScheduleText || '作息未知' }}
+                </view>
+                <view class="habit-tag">
+                  {{ mate.socialPreferenceText || '社交未知' }}
+                </view>
               </view>
             </view>
           </view>
@@ -162,31 +180,33 @@
     <!-- 加载中 -->
     <view v-else class="loading-container">
       <u-loading-icon mode="circle" size="48" />
-      <text class="loading-text">加载中...</text>
+      <text class="loading-text">
+        加载中...
+      </text>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
-import { getMyAllocationResult, getRoommatesInfo } from '@/api/allocation'
-import type { IAllocationResult, IRoommateInfo } from '@/types/api'
+import { computed, onMounted, ref } from 'vue';
+import { getMyAllocationResult, getRoommatesInfo } from '@/api/allocation';
+import type { IAllocationResult, IRoommateInfo } from '@/types/api';
 
 // 加载状态
-const loading = ref(true)
+const loading = ref(true);
 
 // 分配结果
-const allocationResult = ref<IAllocationResult | null>(null)
+const allocationResult = ref<IAllocationResult | null>(null);
 
 // 室友列表
-const roommates = ref<IRoommateInfo[]>([])
+const roommates = ref<IRoommateInfo[]>([]);
 
 // 分配状态
 const allocationStatus = computed(() => {
-  if (!allocationResult.value) return 'pending'
-  if (allocationResult.value.status === 1) return 'confirmed'
-  return 'allocated'
-})
+  if (!allocationResult.value) return 'pending';
+  if (allocationResult.value.status === 1) return 'confirmed';
+  return 'allocated';
+});
 
 // 状态相关计算属性
 const statusClass = computed(() => {
@@ -194,80 +214,80 @@ const statusClass = computed(() => {
     pending: 'status-pending',
     allocated: 'status-allocated',
     confirmed: 'status-confirmed',
-  }
-  return classMap[allocationStatus.value]
-})
+  };
+  return classMap[allocationStatus.value];
+});
 
 const statusIcon = computed(() => {
   const iconMap = {
     pending: 'clock',
     allocated: 'checkmark-circle',
     confirmed: 'checkmark-circle-fill',
-  }
-  return iconMap[allocationStatus.value]
-})
+  };
+  return iconMap[allocationStatus.value];
+});
 
 const statusColor = computed(() => {
   const colorMap = {
     pending: '#f59e0b',
     allocated: '#0adbc3',
     confirmed: '#10b981',
-  }
-  return colorMap[allocationStatus.value]
-})
+  };
+  return colorMap[allocationStatus.value];
+});
 
 const statusTitle = computed(() => {
   const titleMap = {
     pending: '等待分配中',
     allocated: '已完成分配',
     confirmed: '分配已确认',
-  }
-  return titleMap[allocationStatus.value]
-})
+  };
+  return titleMap[allocationStatus.value];
+});
 
 const statusDesc = computed(() => {
   const descMap = {
     pending: '系统正在为您智能匹配最合适的室友，请耐心等待',
     allocated: '您的宿舍已分配完成，请查看详细信息',
     confirmed: '您已确认分配结果，祝您入住愉快！',
-  }
-  return descMap[allocationStatus.value]
-})
+  };
+  return descMap[allocationStatus.value];
+});
 
 // 加载数据
 async function loadData(): Promise<void> {
-  loading.value = true
+  loading.value = true;
   try {
     // 并行请求分配结果和室友信息
     const [resultData, roommatesData] = await Promise.all([
       getMyAllocationResult(),
       getRoommatesInfo(),
-    ])
+    ]);
 
-    allocationResult.value = resultData || null
-    roommates.value = roommatesData || []
-  } catch (error) {
-    console.error('加载分配结果失败:', error)
-    allocationResult.value = null
-    roommates.value = []
-  } finally {
-    loading.value = false
+    allocationResult.value = resultData || null;
+    roommates.value = roommatesData || [];
+  }
+  catch (error) {
+    console.error('加载分配结果失败:', error);
+    allocationResult.value = null;
+    roommates.value = [];
+  }
+  finally {
+    loading.value = false;
   }
 }
 
 // 跳转填写问卷
 function handleGoSurvey(): void {
-  uni.navigateTo({ url: '/pages/allocation/survey/index' })
+  uni.navigateTo({ url: '/pages/allocation/survey/index' });
 }
 
 onMounted(() => {
-  loadData()
-})
+  loadData();
+});
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-
 .result-page {
   position: relative;
   min-height: 100vh;
@@ -312,19 +332,7 @@ onMounted(() => {
 }
 
 // 加载中
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  min-height: 60vh;
-  gap: $spacing-md;
-
-  .loading-text {
-    font-size: $font-sm;
-    color: $text-sub;
-  }
-}
+// .loading-container 使用全局 components.scss 定义
 
 // 状态卡片
 .status-card {
@@ -371,26 +379,7 @@ onMounted(() => {
   }
 }
 
-// 区块标题
-.section-title {
-  display: flex;
-  align-items: center;
-  padding-left: 4rpx;
-  gap: 12rpx;
-
-  .title-icon {
-    width: 8rpx;
-    height: 32rpx;
-    background: linear-gradient(180deg, $primary 0%, #6366f1 100%);
-    border-radius: 4rpx;
-  }
-
-  text {
-    font-size: $font-lg;
-    color: $text-main;
-    font-weight: $font-bold;
-  }
-}
+// .section-title 使用全局 components.scss 定义
 
 // 宿舍卡片
 .dorm-card {
@@ -530,10 +519,10 @@ onMounted(() => {
       .habit-tag {
         padding: 4rpx 12rpx;
         font-size: 20rpx;
+        text-align: center;
         color: $text-sub;
         background: rgb(0 0 0 / 3%);
         border-radius: 6rpx;
-        text-align: center;
       }
     }
   }
@@ -619,8 +608,8 @@ onMounted(() => {
   .empty-desc {
     margin-bottom: $spacing-xl;
     font-size: $font-sm;
-    color: $text-sub;
     text-align: center;
+    color: $text-sub;
     line-height: 1.5;
   }
 
@@ -641,7 +630,5 @@ onMounted(() => {
   }
 }
 
-.safe-bottom {
-  height: calc(env(safe-area-inset-bottom) + $spacing-lg);
-}
+// .safe-bottom 使用全局 components.scss 定义
 </style>

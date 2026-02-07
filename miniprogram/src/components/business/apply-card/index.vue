@@ -56,8 +56,6 @@ function handleClick() {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-
 .glass-card {
   padding: 24rpx;
   background: $glass-bg;
