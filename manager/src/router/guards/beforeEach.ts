@@ -360,23 +360,26 @@ async function handleDynamicRoutes(
   loadingService.showLoading()
 
   try {
-    // 1. 获取用户信息（如果没有缓存）
-    if (!hasUserInfoCache) {
-      await fetchUserInfo()
-    }
+    // 1. 并行获取用户信息和菜单数据（两者互不依赖，并行可将等待时间减半）
+    const needUserInfo = !hasUserInfoCache
+    const needMenuData = !hasMenuDataCache
 
-    // 2. 获取菜单数据（如果没有缓存）
+    const [, fetchedMenuList] = await Promise.all([
+      needUserInfo ? fetchUserInfo() : Promise.resolve(),
+      needMenuData ? menuProcessor.getMenuList() : Promise.resolve(undefined)
+    ])
+
+    // 2. 处理菜单数据
     let menuList: AppRouteRecord[]
-    if (!hasMenuDataCache) {
-      menuList = await menuProcessor.getMenuList()
-
-      // 3. 验证菜单数据
-      if (!menuProcessor.validateMenuList(menuList)) {
+    if (needMenuData && fetchedMenuList) {
+      // 验证菜单数据
+      if (!menuProcessor.validateMenuList(fetchedMenuList)) {
         throw new Error('获取菜单列表失败，请重新登录')
       }
 
-      // 4. 保存菜单数据到 store（会自动持久化）
-      menuStore.setMenuList(menuList)
+      // 保存菜单数据到 store（会自动持久化）
+      menuStore.setMenuList(fetchedMenuList)
+      menuList = fetchedMenuList
     } else {
       // 使用缓存数据
       menuList = menuStore.menuList
@@ -464,11 +467,9 @@ async function refreshDataInBackground(
   menuStore: ReturnType<typeof useMenuStore>
 ): Promise<void> {
   try {
-    // 刷新用户信息
-    await fetchUserInfo()
+    // 并行刷新用户信息和菜单数据
+    const [, menuList] = await Promise.all([fetchUserInfo(), menuProcessor.getMenuList()])
 
-    // 刷新菜单数据
-    const menuList = await menuProcessor.getMenuList()
     if (menuProcessor.validateMenuList(menuList)) {
       menuStore.setMenuList(menuList)
     }

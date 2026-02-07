@@ -1,7 +1,9 @@
 package com.project.backend.system.dto;
 
+import com.project.core.dto.BaseQueryDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 操作日志查询DTO
@@ -10,8 +12,9 @@ import lombok.Data;
  * @since 2026-01-01
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "操作日志查询条件")
-public class OperLogQueryDTO {
+public class OperLogQueryDTO extends BaseQueryDTO {
 
     @Schema(description = "操作模块（模糊查询）")
     private String title;
@@ -30,10 +33,4 @@ public class OperLogQueryDTO {
 
     @Schema(description = "操作时间结束")
     private String operTimeEnd;
-
-    @Schema(description = "当前页码", example = "1")
-    private Long pageNum = 1L;
-
-    @Schema(description = "每页条数", example = "10")
-    private Long pageSize = 10L;
 }

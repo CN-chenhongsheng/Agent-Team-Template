@@ -7,84 +7,20 @@
     :close-on-click-modal="false"
     @close="handleClose"
   >
-    <ElForm ref="formRef" :model="form" :rules="rules" label-width="100px" label-position="right">
-      <ElFormItem label="楼层编码" prop="floorCode">
-        <ElInput
-          v-model="form.floorCode"
-          placeholder="请输入楼层编码（如：F1、F2）"
-          :disabled="isEdit || hasRooms"
-        />
-      </ElFormItem>
-
-      <ElFormItem label="楼层名称" prop="floorName">
-        <ElInput
-          v-model="form.floorName"
-          placeholder="请输入楼层名称（如：1楼、2楼）"
-          :disabled="hasRooms"
-        />
-      </ElFormItem>
-
-      <ElRow :gutter="20">
-        <ElCol :span="12">
-          <ElFormItem label="所属校区" prop="campusCode">
-            <ElSelect
-              v-model="form.campusCode"
-              placeholder="请选择校区"
-              filterable
-              clearable
-              :disabled="hasRooms"
-            >
-              <ElOption
-                v-for="item in campusList"
-                :key="item.campusCode"
-                :label="item.campusName"
-                :value="item.campusCode"
-              />
-            </ElSelect>
-          </ElFormItem>
-        </ElCol>
-        <ElCol :span="12">
-          <ElFormItem label="楼层数" prop="floorNumber">
-            <ElInputNumber
-              v-model="form.floorNumber"
-              :min="1"
-              :max="999"
-              placeholder="请输入楼层数"
-              :disabled="hasRooms"
-            />
-          </ElFormItem>
-        </ElCol>
-      </ElRow>
-
-      <ElFormItem label="适用类别" prop="genderType">
-        <ElRadioGroup v-model="form.genderType" :disabled="hasRooms">
-          <ElRadio
-            v-for="option in genderTypeOptions"
-            :key="option.value"
-            :label="Number(option.value)"
-          >
-            {{ option.label }}
-          </ElRadio>
-        </ElRadioGroup>
-      </ElFormItem>
-
-      <ElFormItem label="排序序号" prop="sort">
-        <ElInputNumber v-model="form.sort" :min="0" :max="9999" :disabled="hasRooms" />
-      </ElFormItem>
-
-      <ElFormItem label="备注" prop="remark">
-        <ElInput
-          v-model="form.remark"
-          type="textarea"
-          :rows="3"
-          placeholder="请输入备注"
-          :disabled="hasRooms"
-        />
-      </ElFormItem>
-      <ElAlert v-if="hasRooms" type="warning" :closable="false" style="margin-bottom: 20px">
-        该楼层下存在房间，无法编辑
-      </ElAlert>
-    </ElForm>
+    <ArtForm
+      ref="formRef"
+      v-model="form"
+      :items="formItems"
+      :span="24"
+      :gutter="20"
+      label-width="100px"
+      :rules="rules"
+      :showSubmit="false"
+      :showReset="false"
+    />
+    <ElAlert v-if="hasRooms" type="warning" :closable="false" style="margin-bottom: 20px">
+      该楼层下存在房间，无法编辑
+    </ElAlert>
 
     <template #footer>
       <ElButton @click="handleClose">取消</ElButton>
@@ -98,7 +34,9 @@
   import { useDictStore } from '@/store/modules/dict'
   import { useReferenceStore } from '@/store/modules/reference'
   import { ElMessage } from 'element-plus'
-  import type { FormInstance, FormRules } from 'element-plus'
+  import type { FormRules } from 'element-plus'
+  import ArtForm from '@/components/core/forms/art-form/index.vue'
+  import type { FormItem } from '@/components/core/forms/art-form/index.vue'
 
   interface Props {
     visible: boolean
@@ -117,7 +55,7 @@
 
   const emit = defineEmits<Emits>()
 
-  const formRef = ref<FormInstance>()
+  const formRef = ref()
   const loading = ref(false)
   const hasRooms = ref(false)
   const campusList = ref<Api.SystemManage.CampusListItem[]>([])
@@ -139,6 +77,96 @@
     if (isEdit.value) return '编辑楼层'
     return '新增楼层'
   })
+
+  /**
+   * 表单配置项
+   */
+  const formItems = computed<FormItem[]>(() => [
+    {
+      key: 'floorCode',
+      label: '楼层编码',
+      type: 'input',
+      span: 24,
+      props: {
+        placeholder: '请输入楼层编码（如：F1、F2）',
+        disabled: isEdit.value || hasRooms.value
+      }
+    },
+    {
+      key: 'floorName',
+      label: '楼层名称',
+      type: 'input',
+      span: 24,
+      props: {
+        placeholder: '请输入楼层名称（如：1楼、2楼）',
+        disabled: hasRooms.value
+      }
+    },
+    {
+      key: 'campusCode',
+      label: '所属校区',
+      type: 'select',
+      span: 12,
+      props: {
+        placeholder: '请选择校区',
+        filterable: true,
+        clearable: true,
+        disabled: hasRooms.value,
+        options: campusList.value.map((item) => ({
+          label: item.campusName,
+          value: item.campusCode
+        }))
+      }
+    },
+    {
+      key: 'floorNumber',
+      label: '楼层数',
+      type: 'number',
+      span: 12,
+      props: {
+        min: 1,
+        max: 999,
+        placeholder: '请输入楼层数',
+        disabled: hasRooms.value
+      }
+    },
+    {
+      key: 'genderType',
+      label: '适用类别',
+      type: 'radiogroup',
+      span: 24,
+      props: {
+        disabled: hasRooms.value,
+        options: genderTypeOptions.value.map((opt) => ({
+          label: opt.label,
+          value: Number(opt.value)
+        }))
+      }
+    },
+    {
+      key: 'sort',
+      label: '排序序号',
+      type: 'number',
+      span: 24,
+      props: {
+        min: 0,
+        max: 9999,
+        disabled: hasRooms.value
+      }
+    },
+    {
+      key: 'remark',
+      label: '备注',
+      type: 'input',
+      span: 24,
+      props: {
+        type: 'textarea',
+        rows: 3,
+        placeholder: '请输入备注',
+        disabled: hasRooms.value
+      }
+    }
+  ])
 
   const form = reactive<Api.SystemManage.FloorSaveParams>({
     floorCode: '',
@@ -234,7 +262,7 @@
       status: 1,
       remark: undefined
     })
-    formRef.value?.clearValidate()
+    formRef.value?.ref?.clearValidate()
   }
 
   /**
@@ -249,11 +277,10 @@
       return
     }
 
-    const valid = await formRef.value.validate().catch(() => false)
-    if (!valid) return
-
-    loading.value = true
     try {
+      await formRef.value.validate()
+
+      loading.value = true
       if (isEdit.value) {
         await fetchUpdateFloor(form.id!, form)
       } else {

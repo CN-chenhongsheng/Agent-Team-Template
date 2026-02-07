@@ -49,7 +49,8 @@ public class DictUtils implements ApplicationContextAware {
             "check_in_type",
             "approval_business_type",
             "approval_action",
-            "approval_instance_status"
+            "approval_instance_status",
+            "approval_assignee_type"
     };
 
     @Override
@@ -142,6 +143,20 @@ public class DictUtils implements ApplicationContextAware {
             }
         }
         return defaultValue;
+    }
+
+    /**
+     * 获取某字典编码的所有 value 列表
+     *
+     * @param dictCode 字典编码
+     * @return 所有字典值列表
+     */
+    public static List<String> getValues(String dictCode) {
+        if (dictCode == null) {
+            return List.of();
+        }
+        Map<String, String> dictMap = getOrLoadDictMap(dictCode);
+        return List.copyOf(dictMap.keySet());
     }
 
     /**

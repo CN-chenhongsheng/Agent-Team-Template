@@ -23,7 +23,7 @@ public interface ApprovalNodeMapper extends BaseMapper<ApprovalNode> {
      * @param flowId 流程ID
      * @return 节点列表
      */
-    @Select("SELECT * FROM sys_approval_node WHERE flow_id = #{flowId} AND deleted = 0 ORDER BY node_order ASC")
+    @Select("SELECT id, flow_id, node_name, node_order, node_type, reject_action, remark, create_time, update_time, create_by, update_by FROM sys_approval_node WHERE flow_id = #{flowId} AND deleted = 0 ORDER BY node_order ASC")
     List<ApprovalNode> selectByFlowId(Long flowId);
 
     /**
@@ -32,7 +32,7 @@ public interface ApprovalNodeMapper extends BaseMapper<ApprovalNode> {
      * @param flowId 流程ID
      * @return 第一个节点
      */
-    @Select("SELECT * FROM sys_approval_node WHERE flow_id = #{flowId} AND deleted = 0 ORDER BY node_order ASC LIMIT 1")
+    @Select("SELECT id, flow_id, node_name, node_order, node_type, reject_action, remark, create_time, update_time, create_by, update_by FROM sys_approval_node WHERE flow_id = #{flowId} AND deleted = 0 ORDER BY node_order ASC LIMIT 1")
     ApprovalNode selectFirstNode(Long flowId);
 
     /**
@@ -42,7 +42,7 @@ public interface ApprovalNodeMapper extends BaseMapper<ApprovalNode> {
      * @param currentOrder 当前节点顺序
      * @return 下一个节点
      */
-    @Select("SELECT * FROM sys_approval_node WHERE flow_id = #{flowId} AND node_order > #{currentOrder} AND deleted = 0 ORDER BY node_order ASC LIMIT 1")
+    @Select("SELECT id, flow_id, node_name, node_order, node_type, reject_action, remark, create_time, update_time, create_by, update_by FROM sys_approval_node WHERE flow_id = #{flowId} AND node_order > #{currentOrder} AND deleted = 0 ORDER BY node_order ASC LIMIT 1")
     ApprovalNode selectNextNode(Long flowId, Integer currentOrder);
 
     /**
@@ -52,7 +52,7 @@ public interface ApprovalNodeMapper extends BaseMapper<ApprovalNode> {
      * @param currentOrder 当前节点顺序
      * @return 上一个节点
      */
-    @Select("SELECT * FROM sys_approval_node WHERE flow_id = #{flowId} AND node_order < #{currentOrder} AND deleted = 0 ORDER BY node_order DESC LIMIT 1")
+    @Select("SELECT id, flow_id, node_name, node_order, node_type, reject_action, remark, create_time, update_time, create_by, update_by FROM sys_approval_node WHERE flow_id = #{flowId} AND node_order < #{currentOrder} AND deleted = 0 ORDER BY node_order DESC LIMIT 1")
     ApprovalNode selectPrevNode(Long flowId, Integer currentOrder);
 
     /**

@@ -72,7 +72,7 @@ public class RepairController extends BaseCrudController<RepairVO, RepairQueryDT
      */
     @Operation(summary = "接单")
     @Log(title = "接单报修", businessType = 2)
-    @PostMapping("/{id}/accept")
+    @PutMapping("/{id}/accept")
     public R<Void> accept(@PathVariable Long id) {
         boolean success = repairService.acceptRepair(id);
         return success ? R.ok() : R.fail("接单失败");
@@ -83,7 +83,7 @@ public class RepairController extends BaseCrudController<RepairVO, RepairQueryDT
      */
     @Operation(summary = "完成维修")
     @Log(title = "完成报修", businessType = 2)
-    @PostMapping("/{id}/complete")
+    @PutMapping("/{id}/complete")
     public R<Void> complete(
             @PathVariable Long id,
             @RequestBody @Valid CompleteRepairRequest request

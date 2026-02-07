@@ -247,13 +247,27 @@ public class StudentStatisticsServiceImpl implements StudentStatisticsService {
     }
 
     /**
+     * 计算每种类型的查询限制数量
+     * 对于分页模式，每种类型最多查询 (pageNum * pageSize) 条记录，避免全表加载
+     */
+    private long calculateQueryLimit(MyApplyQueryDTO queryDTO) {
+        if (queryDTO.getLimit() != null && queryDTO.getLimit() > 0) {
+            return queryDTO.getLimit();
+        }
+        // 分页模式下，每种类型最多取 pageNum * pageSize 条（足够用于合并排序后分页）
+        return queryDTO.getPageNum() * queryDTO.getPageSize();
+    }
+
+    /**
      * 查询入住申请
      */
     private List<MyApplyVO> queryCheckInApplies(MyApplyQueryDTO queryDTO) {
+        long limit = calculateQueryLimit(queryDTO);
         LambdaQueryWrapper<CheckIn> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(CheckIn::getStudentId, queryDTO.getStudentId())
                .eq(queryDTO.getStatus() != null, CheckIn::getStatus, queryDTO.getStatus())
-               .orderByDesc(CheckIn::getCreateTime);
+               .orderByDesc(CheckIn::getCreateTime)
+               .last("LIMIT " + limit);
 
         List<CheckIn> checkIns = checkInMapper.selectList(wrapper);
         return checkIns.stream().map(this::convertCheckInToVO).collect(Collectors.toList());
@@ -263,10 +277,12 @@ public class StudentStatisticsServiceImpl implements StudentStatisticsService {
      * 查询调宿申请
      */
     private List<MyApplyVO> queryTransferApplies(MyApplyQueryDTO queryDTO) {
+        long limit = calculateQueryLimit(queryDTO);
         LambdaQueryWrapper<Transfer> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Transfer::getStudentId, queryDTO.getStudentId())
                .eq(queryDTO.getStatus() != null, Transfer::getStatus, queryDTO.getStatus())
-               .orderByDesc(Transfer::getCreateTime);
+               .orderByDesc(Transfer::getCreateTime)
+               .last("LIMIT " + limit);
 
         List<Transfer> transfers = transferMapper.selectList(wrapper);
         return transfers.stream().map(this::convertTransferToVO).collect(Collectors.toList());
@@ -276,10 +292,12 @@ public class StudentStatisticsServiceImpl implements StudentStatisticsService {
      * 查询退宿申请
      */
     private List<MyApplyVO> queryCheckOutApplies(MyApplyQueryDTO queryDTO) {
+        long limit = calculateQueryLimit(queryDTO);
         LambdaQueryWrapper<CheckOut> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(CheckOut::getStudentId, queryDTO.getStudentId())
                .eq(queryDTO.getStatus() != null, CheckOut::getStatus, queryDTO.getStatus())
-               .orderByDesc(CheckOut::getCreateTime);
+               .orderByDesc(CheckOut::getCreateTime)
+               .last("LIMIT " + limit);
 
         List<CheckOut> checkOuts = checkOutMapper.selectList(wrapper);
         return checkOuts.stream().map(this::convertCheckOutToVO).collect(Collectors.toList());
@@ -289,10 +307,12 @@ public class StudentStatisticsServiceImpl implements StudentStatisticsService {
      * 查询留宿申请
      */
     private List<MyApplyVO> queryStayApplies(MyApplyQueryDTO queryDTO) {
+        long limit = calculateQueryLimit(queryDTO);
         LambdaQueryWrapper<Stay> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Stay::getStudentId, queryDTO.getStudentId())
                .eq(queryDTO.getStatus() != null, Stay::getStatus, queryDTO.getStatus())
-               .orderByDesc(Stay::getCreateTime);
+               .orderByDesc(Stay::getCreateTime)
+               .last("LIMIT " + limit);
 
         List<Stay> stays = stayMapper.selectList(wrapper);
         return stays.stream().map(this::convertStayToVO).collect(Collectors.toList());
@@ -305,7 +325,7 @@ public class StudentStatisticsServiceImpl implements StudentStatisticsService {
         MyApplyVO vo = new MyApplyVO();
         vo.setId(checkIn.getId());
         vo.setApplyType("check_in");
-        vo.setApplyTypeText("入住申请");
+        vo.setApplyTypeText(DictUtils.getLabel("approval_business_type", "check_in", "入住申请"));
         vo.setStatus(checkIn.getStatus());
         vo.setStatusText(DictUtils.getLabel("check_in_status", checkIn.getStatus(), "未知"));
         vo.setApplyDate(checkIn.getApplyDate());
@@ -330,7 +350,7 @@ public class StudentStatisticsServiceImpl implements StudentStatisticsService {
         MyApplyVO vo = new MyApplyVO();
         vo.setId(transfer.getId());
         vo.setApplyType("transfer");
-        vo.setApplyTypeText("调宿申请");
+        vo.setApplyTypeText(DictUtils.getLabel("approval_business_type", "transfer", "调宿申请"));
         vo.setStatus(transfer.getStatus());
         vo.setStatusText(DictUtils.getLabel("transfer_status", transfer.getStatus(), "未知"));
         vo.setApplyDate(transfer.getApplyDate());
@@ -364,7 +384,7 @@ public class StudentStatisticsServiceImpl implements StudentStatisticsService {
         MyApplyVO vo = new MyApplyVO();
         vo.setId(checkOut.getId());
         vo.setApplyType("check_out");
-        vo.setApplyTypeText("退宿申请");
+        vo.setApplyTypeText(DictUtils.getLabel("approval_business_type", "check_out", "退宿申请"));
         vo.setStatus(checkOut.getStatus());
         vo.setStatusText(DictUtils.getLabel("check_out_status", checkOut.getStatus(), "未知"));
         vo.setApplyDate(checkOut.getApplyDate());
@@ -386,7 +406,7 @@ public class StudentStatisticsServiceImpl implements StudentStatisticsService {
         MyApplyVO vo = new MyApplyVO();
         vo.setId(stay.getId());
         vo.setApplyType("stay");
-        vo.setApplyTypeText("留宿申请");
+        vo.setApplyTypeText(DictUtils.getLabel("approval_business_type", "stay", "留宿申请"));
         vo.setStatus(stay.getStatus());
         vo.setStatusText(DictUtils.getLabel("stay_status", stay.getStatus(), "未知"));
         vo.setApplyDate(stay.getApplyDate());
@@ -504,7 +524,7 @@ public class StudentStatisticsServiceImpl implements StudentStatisticsService {
         ApplyDetailVO vo = new ApplyDetailVO();
         vo.setId(checkIn.getId());
         vo.setApplyType("check_in");
-        vo.setApplyTypeText("入住申请");
+        vo.setApplyTypeText(DictUtils.getLabel("approval_business_type", "check_in", "入住申请"));
         vo.setStatus(checkIn.getStatus());
         vo.setStatusText(DictUtils.getLabel("check_in_status", checkIn.getStatus(), "未知"));
         vo.setApplyDate(checkIn.getApplyDate());
@@ -545,7 +565,7 @@ public class StudentStatisticsServiceImpl implements StudentStatisticsService {
         ApplyDetailVO vo = new ApplyDetailVO();
         vo.setId(transfer.getId());
         vo.setApplyType("transfer");
-        vo.setApplyTypeText("调宿申请");
+        vo.setApplyTypeText(DictUtils.getLabel("approval_business_type", "transfer", "调宿申请"));
         vo.setStatus(transfer.getStatus());
         vo.setStatusText(DictUtils.getLabel("transfer_status", transfer.getStatus(), "未知"));
         vo.setApplyDate(transfer.getApplyDate());
@@ -588,7 +608,7 @@ public class StudentStatisticsServiceImpl implements StudentStatisticsService {
         ApplyDetailVO vo = new ApplyDetailVO();
         vo.setId(checkOut.getId());
         vo.setApplyType("check_out");
-        vo.setApplyTypeText("退宿申请");
+        vo.setApplyTypeText(DictUtils.getLabel("approval_business_type", "check_out", "退宿申请"));
         vo.setStatus(checkOut.getStatus());
         vo.setStatusText(DictUtils.getLabel("check_out_status", checkOut.getStatus(), "未知"));
         vo.setApplyDate(checkOut.getApplyDate());
@@ -620,7 +640,7 @@ public class StudentStatisticsServiceImpl implements StudentStatisticsService {
         ApplyDetailVO vo = new ApplyDetailVO();
         vo.setId(stay.getId());
         vo.setApplyType("stay");
-        vo.setApplyTypeText("留宿申请");
+        vo.setApplyTypeText(DictUtils.getLabel("approval_business_type", "stay", "留宿申请"));
         vo.setStatus(stay.getStatus());
         vo.setStatusText(DictUtils.getLabel("stay_status", stay.getStatus(), "未知"));
         vo.setApplyDate(stay.getApplyDate());

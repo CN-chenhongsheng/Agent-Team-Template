@@ -152,7 +152,7 @@
   const { systemThemeType } = storeToRefs(settingStore)
 
   const miniMapVisible = ref(false)
-  const { isFullscreen, toggle: toggleFullscreen } = useFullscreen(wrapperRef)
+  const { isFullscreen, toggle: toggleFullscreen, exit: exitFullscreen } = useFullscreen(wrapperRef)
 
   // 历史记录栈
   const historyStack = ref<LogicFlowData[]>([])
@@ -227,8 +227,8 @@
     // 注册事件监听
     setupEventListeners()
 
-    // 渲染数据
-    if (props.data && props.data.nodes.length > 0) {
+    // 渲染数据 - 只要数据验证通过就渲染（包括只有开始/结束节点的情况）
+    if (props.data) {
       const validation = validateLogicFlowData(props.data)
       if (validation.valid) {
         // 如果指定了布局方向，先进行自动布局
@@ -305,6 +305,11 @@
 
     // 边点击
     lfInstance.on('edge:click', ({ data, e }: any) => {
+      console.log('[ArtLogicFlow] edge:click 事件触发', {
+        data,
+        e,
+        target: e?.target
+      })
       emit('edge:click', { edge: data, e })
     })
 
@@ -735,7 +740,15 @@
      */
     resetInitState: () => {
       isInitialized.value = false
-    }
+    },
+    /**
+     * 当前是否处于全屏模式
+     */
+    isFullscreen,
+    /**
+     * 退出全屏模式
+     */
+    exitFullscreen
   })
 
   onMounted(() => {
@@ -775,11 +788,11 @@
 
   .art-logic-flow-container {
     position: relative;
-    width: 100%;
-    height: 100%;
+    width: 100% !important;
+    height: 100% !important;
     overflow: hidden;
     background-color: var(--el-fill-color-light) !important;
-    border-radius: 4px;
+    border-radius: 0;
 
     // 强制 LogicFlow 所有内部元素透明
     :deep(.lf-container),

@@ -22,7 +22,7 @@ public interface ApprovalFlowMapper extends BaseMapper<ApprovalFlow> {
      * @param businessType 业务类型
      * @return 流程列表
      */
-    @Select("SELECT * FROM sys_approval_flow WHERE business_type = #{businessType} AND status = 1 AND deleted = 0 ORDER BY create_time DESC")
+    @Select("SELECT id, flow_code, flow_name, business_type, description, status, create_time, update_time, create_by, update_by FROM sys_approval_flow WHERE business_type = #{businessType} AND status = 1 AND deleted = 0 ORDER BY create_time DESC")
     List<ApprovalFlow> selectByBusinessType(String businessType);
 
     /**
@@ -31,6 +31,6 @@ public interface ApprovalFlowMapper extends BaseMapper<ApprovalFlow> {
      * @param flowCode 流程编码
      * @return 流程
      */
-    @Select("SELECT * FROM sys_approval_flow WHERE flow_code = #{flowCode} AND deleted = 0")
+    @Select("SELECT id, flow_code, flow_name, business_type, description, status, create_time, update_time, create_by, update_by FROM sys_approval_flow WHERE flow_code = #{flowCode} AND deleted = 0")
     ApprovalFlow selectByFlowCode(String flowCode);
 }

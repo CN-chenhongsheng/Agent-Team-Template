@@ -30,4 +30,8 @@ public class ApprovalNodeAssignee extends BaseEntity {
     @Schema(description = "角色ID或用户ID")
     @TableField("assignee_id")
     private Long assigneeId;
+
+    @Schema(description = "排序顺序")
+    @TableField("sort_order")
+    private Integer sortOrder;
 }

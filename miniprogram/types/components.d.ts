@@ -9,10 +9,12 @@ declare module 'vue' {
   export interface GlobalComponents {
     AgreePrivacy: typeof import('./../src/components/agree-privacy/index.vue')['default']
     ApplyCard: typeof import('./../src/components/business/apply-card/index.vue')['default']
+    BgDecorations: typeof import('./../src/components/base/bg-decorations/index.vue')['default']
     EmptyState: typeof import('./../src/components/base/empty-state/index.vue')['default']
     GlassCard: typeof import('./../src/components/base/glass-card/index.vue')['default']
     NoticeCard: typeof import('./../src/components/business/notice-card/index.vue')['default']
     PageHeader: typeof import('./../src/components/base/page-header/index.vue')['default']
+    PageLayout: typeof import('./../src/components/base/page-layout/index.vue')['default']
     PageNav: typeof import('./../src/components/page-nav/index.vue')['default']
     QiunUcharts: typeof import('./../src/components/qiun-ucharts/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

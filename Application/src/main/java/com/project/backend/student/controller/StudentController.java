@@ -5,6 +5,7 @@ import com.project.backend.student.dto.student.StudentSaveDTO;
 import com.project.backend.student.service.StudentService;
 import com.project.backend.student.vo.StudentVO;
 import com.project.core.result.PageResult;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.project.backend.controller.base.BaseCrudController;
 import com.project.backend.controller.base.BatchDeleteController;
 import com.project.backend.controller.base.StatusUpdateController;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/v1/student")
 @RequiredArgsConstructor
+@Tag(name = "学生管理", description = "学生信息增删改查")
 public class StudentController extends BaseCrudController<StudentVO, StudentQueryDTO, StudentSaveDTO>
         implements BatchDeleteController, StatusUpdateController {
 

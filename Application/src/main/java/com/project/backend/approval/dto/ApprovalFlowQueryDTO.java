@@ -1,7 +1,9 @@
 package com.project.backend.approval.dto;
 
+import com.project.core.dto.BaseQueryDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 审批流程查询DTO
@@ -10,8 +12,9 @@ import lombok.Data;
  * @since 2026-01-17
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "审批流程查询条件")
-public class ApprovalFlowQueryDTO {
+public class ApprovalFlowQueryDTO extends BaseQueryDTO {
 
     @Schema(description = "流程名称（模糊查询）")
     private String flowName;
@@ -24,10 +27,4 @@ public class ApprovalFlowQueryDTO {
 
     @Schema(description = "状态：0停用 1启用")
     private Integer status;
-
-    @Schema(description = "当前页码", example = "1")
-    private Long pageNum = 1L;
-
-    @Schema(description = "每页条数", example = "10")
-    private Long pageSize = 10L;
 }

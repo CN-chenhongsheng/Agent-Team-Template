@@ -22,10 +22,7 @@
       >
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple>
-              <i class="ri-add-line mr-1"></i>
-              新增流程
-            </ElButton>
+            <ElButton @click="openFlowEditor()" v-ripple> 新增流程 </ElButton>
           </ElSpace>
         </template>
       </ArtTableHeader>
@@ -45,14 +42,6 @@
       />
     </ElCard>
 
-    <!-- 流程编辑弹窗 -->
-    <FlowEditDialog
-      v-model="dialogVisible"
-      :dialog-type="dialogType"
-      :flow-data="editData"
-      @success="handleEditDialogSuccess"
-    />
-
     <!-- 流程绑定弹窗 -->
     <FlowBindingDialog v-model="bindingDialogVisible" @success="refreshData" />
   </div>
@@ -68,11 +57,13 @@
     type ApprovalFlow
   } from '@/api/approval-manage'
   import FlowSearch from './modules/flow-search.vue'
-  import FlowEditDialog from './modules/flow-edit-dialog.vue'
   import FlowBindingDialog from './modules/flow-binding-dialog.vue'
   import { ElMessageBox, ElMessage, ElTag } from 'element-plus'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
+  import ArtStatusDot from '@/components/core/tables/art-status-dot/index.vue'
   import { useBusinessType } from '@/hooks'
+  import { useFlowData } from '@/components/core/flow-editor/composables/useFlowData'
+  import { useFlowCommunication } from '@/components/core/flow-editor/composables/useFlowCommunication'
 
   defineOptions({ name: 'FlowConfig' })
 
@@ -95,9 +86,11 @@
   })
 
   const showSearchBar = ref(false)
-  const dialogVisible = ref(false)
   const bindingDialogVisible = ref(false)
-  const editData = ref<FlowListItem | null>(null)
+
+  // 跨标签页通信和数据缓存
+  const { saveCache } = useFlowData()
+  const { onMessage } = useFlowCommunication()
 
   const {
     columns,
@@ -110,8 +103,6 @@
     handleSizeChange,
     handleCurrentChange,
     refreshData,
-    refreshCreate,
-    refreshUpdate,
     refreshRemove,
     contextMenuItems,
     contextMenuWidth,
@@ -169,14 +160,10 @@
           label: '绑定状态',
           width: 100,
           formatter: (row: FlowListItem) => {
-            return h(
-              ElTag,
-              {
-                type: row.bound ? 'success' : 'info',
-                size: 'small'
-              },
-              () => (row.bound ? '已绑定' : '未绑定')
-            )
+            return h(ArtStatusDot, {
+              text: row.bound ? '已绑定' : '未绑定',
+              type: row.bound ? 'success' : 'info'
+            })
           }
         },
         {
@@ -213,7 +200,7 @@
           fixed: 'right',
           formatter: (row: FlowListItem) => {
             return [
-              { type: 'edit', onClick: () => showDialog('edit', row), label: '编辑' },
+              { type: 'edit', onClick: () => openFlowEditor(row), label: '编辑' },
               {
                 type: 'link',
                 onClick: () => {
@@ -231,8 +218,7 @@
             ]
           }
         }
-      ],
-      immediate: true
+      ]
     },
     adaptive: {
       enabled: true
@@ -242,12 +228,33 @@
     }
   })
 
-  const dialogType = ref<'add' | 'edit'>('add')
+  /**
+   * 打开流程编辑器（新标签页）
+   */
+  const openFlowEditor = (row?: FlowListItem) => {
+    const flowId = row?.id
 
-  const showDialog = (type: 'add' | 'edit', row?: FlowListItem) => {
-    dialogVisible.value = true
-    dialogType.value = type
-    editData.value = row ? { ...row } : null
+    // 如果是编辑模式，保存数据到缓存
+    if (row) {
+      saveCache({
+        flowId: row.id,
+        flowName: row.flowName,
+        flowData: row.nodes || [],
+        isAdd: false
+      })
+    }
+
+    // 构建 URL（hash 模式路由）
+    const baseUrl = window.location.origin
+    const editorPath = flowId ? `/approval/flow-editor/${flowId}` : '/approval/flow-editor'
+    const editorUrl = `${baseUrl}/#${editorPath}`
+
+    // 打开新标签页
+    const newWindow = window.open(editorUrl, '_blank')
+
+    if (!newWindow) {
+      ElMessage.warning('请允许浏览器弹出窗口')
+    }
   }
 
   const handleSearch = async (): Promise<void> => {
@@ -266,13 +273,22 @@
     await resetSearchParams()
   }
 
-  const handleEditDialogSuccess = async () => {
-    if (dialogType.value === 'add') {
-      await refreshCreate()
-    } else {
-      await refreshUpdate()
+  /**
+   * 监听跨标签页消息
+   */
+  onMessage((message) => {
+    if (message.type === 'flow-saved') {
+      // 流程保存成功，刷新列表
+      ElMessage.success(`流程"${message.flowName}"保存成功`)
+      refreshData()
+    } else if (message.type === 'flow-closed') {
+      // 流程编辑器关闭
+      console.log('流程编辑器已关闭')
+    } else if (message.type === 'flow-error') {
+      // 流程编辑器错误
+      ElMessage.error(message.error || '流程编辑器发生错误')
     }
-  }
+  })
 
   const deleteFlow = async (row: FlowListItem) => {
     if (row.bound) {

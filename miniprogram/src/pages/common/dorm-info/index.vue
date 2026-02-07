@@ -151,8 +151,6 @@ onMounted(async () => {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-
 .dorm-info-page {
   position: relative;
   min-height: 100vh;

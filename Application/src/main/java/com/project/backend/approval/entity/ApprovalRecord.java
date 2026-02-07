@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
  * @since 2026-01-17
  */
 @Data
+@EqualsAndHashCode
 @TableName("sys_approval_record")
 @Schema(description = "审批记录实体")
 public class ApprovalRecord implements Serializable {

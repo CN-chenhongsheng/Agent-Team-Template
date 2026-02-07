@@ -340,8 +340,6 @@ function canRate(status: number) {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-
 .repair-list-page {
   position: relative;
   min-height: 100vh;

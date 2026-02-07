@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ import java.time.LocalDateTime;
  * @since 2026-01-01
  */
 @Data
+@EqualsAndHashCode
 @TableName("sys_oper_log")
 @Schema(description = "操作日志实体")
 public class OperLog implements Serializable {

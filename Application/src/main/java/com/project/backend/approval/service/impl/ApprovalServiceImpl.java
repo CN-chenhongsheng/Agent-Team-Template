@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.project.backend.approval.dto.ApprovalActionDTO;
 import com.project.backend.approval.dto.ApprovalInstanceQueryDTO;
 import com.project.backend.approval.dto.ApprovalRecordQueryDTO;
@@ -13,6 +14,14 @@ import com.project.backend.approval.entity.ApprovalInstance;
 import com.project.backend.approval.entity.ApprovalNode;
 import com.project.backend.approval.entity.ApprovalNodeAssignee;
 import com.project.backend.approval.entity.ApprovalRecord;
+import com.project.backend.accommodation.entity.CheckIn;
+import com.project.backend.accommodation.entity.CheckOut;
+import com.project.backend.accommodation.entity.Stay;
+import com.project.backend.accommodation.entity.Transfer;
+import com.project.backend.accommodation.mapper.CheckInMapper;
+import com.project.backend.accommodation.mapper.CheckOutMapper;
+import com.project.backend.accommodation.mapper.StayMapper;
+import com.project.backend.accommodation.mapper.TransferMapper;
 import com.project.backend.approval.mapper.ApprovalFlowBindingMapper;
 import com.project.backend.approval.mapper.ApprovalFlowMapper;
 import com.project.backend.approval.mapper.ApprovalInstanceMapper;
@@ -26,8 +35,10 @@ import com.project.backend.approval.vo.ApprovalNodeVO;
 import com.project.backend.approval.vo.ApprovalRecordVO;
 import com.project.backend.system.entity.Role;
 import com.project.backend.system.entity.User;
+import com.project.backend.system.entity.UserRole;
 import com.project.backend.system.mapper.RoleMapper;
 import com.project.backend.system.mapper.UserMapper;
+import com.project.backend.system.mapper.UserRoleMapper;
 import com.project.backend.student.entity.Student;
 import com.project.backend.student.mapper.StudentMapper;
 import com.project.backend.common.service.StudentInfoEnricher;
@@ -57,18 +68,23 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ApprovalServiceImpl implements ApprovalService {
+public class ApprovalServiceImpl extends ServiceImpl<ApprovalInstanceMapper, ApprovalInstance>
+        implements ApprovalService {
 
     private final ApprovalFlowMapper flowMapper;
     private final ApprovalFlowBindingMapper bindingMapper;
     private final ApprovalNodeMapper nodeMapper;
     private final ApprovalNodeAssigneeMapper assigneeMapper;
-    private final ApprovalInstanceMapper instanceMapper;
     private final ApprovalRecordMapper recordMapper;
     private final RoleMapper roleMapper;
     private final UserMapper userMapper;
+    private final UserRoleMapper userRoleMapper;
     private final StudentMapper studentMapper;
     private final StudentInfoEnricher studentInfoEnricher;
+    private final CheckInMapper checkInMapper;
+    private final CheckOutMapper checkOutMapper;
+    private final StayMapper stayMapper;
+    private final TransferMapper transferMapper;
 
     /**
      * 业务类型映射
@@ -81,7 +97,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Transactional(rollbackFor = Exception.class)
     public Long startApproval(String businessType, Long businessId, Long applicantId, String applicantName) {
         // 检查是否已有审批实例
-        ApprovalInstance existing = instanceMapper.selectByBusiness(businessType, businessId);
+        ApprovalInstance existing = getBaseMapper().selectByBusiness(businessType, businessId);
         if (existing != null) {
             throw new BusinessException("该申请已发起审批，请勿重复提交");
         }
@@ -119,7 +135,7 @@ public class ApprovalServiceImpl implements ApprovalService {
         instance.setStatus(1); // 进行中
         instance.setStartTime(LocalDateTime.now());
 
-        instanceMapper.insert(instance);
+        save(instance);
         log.info("创建审批实例，ID：{}，业务类型：{}，业务ID：{}", instance.getId(), businessType, businessId);
 
         return instance.getId();
@@ -128,7 +144,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean doApprove(ApprovalActionDTO actionDTO, Long approverId, String approverName) {
-        ApprovalInstance instance = instanceMapper.selectById(actionDTO.getInstanceId());
+        ApprovalInstance instance = getById(actionDTO.getInstanceId());
         if (instance == null) {
             throw new BusinessException("审批实例不存在");
         }
@@ -145,6 +161,13 @@ public class ApprovalServiceImpl implements ApprovalService {
         // 验证审批权限
         if (!hasApprovePermission(currentNode.getId(), approverId, null)) {
             throw new BusinessException("您没有权限审批此申请");
+        }
+
+        // 串行节点：校验审批顺序
+        if (currentNode.getNodeType() == 1) {
+            if (!isNextSerialApprover(currentNode.getId(), instance.getId(), approverId)) {
+                throw new BusinessException("当前不是您的审批顺序，请等待前序审批人完成");
+            }
         }
 
         // 检查是否已审批过（同一节点不能重复审批）
@@ -184,19 +207,16 @@ public class ApprovalServiceImpl implements ApprovalService {
      * 处理审批通过
      */
     private void handleApprove(ApprovalInstance instance, ApprovalNode currentNode) {
-        boolean shouldMoveNext = false;
+        boolean shouldMoveNext;
 
-        if (currentNode.getNodeType() == 1) {
-            // 串行：直接流转
+        if (currentNode.getNodeType() == 3) {
+            // 或签：任一人通过即流转
             shouldMoveNext = true;
-        } else if (currentNode.getNodeType() == 2) {
-            // 会签：检查是否所有人都审批通过
+        } else {
+            // 串行(1) / 会签(2)：全部审批人通过后流转
             int totalAssignees = countNodeAssignees(currentNode.getId());
             int approvedCount = recordMapper.countApprovedByInstanceAndNode(instance.getId(), currentNode.getId());
             shouldMoveNext = approvedCount >= totalAssignees;
-        } else if (currentNode.getNodeType() == 3) {
-            // 或签：任一人通过即流转
-            shouldMoveNext = true;
         }
 
         if (shouldMoveNext) {
@@ -206,7 +226,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                 // 流转到下一节点
                 instance.setCurrentNodeId(nextNode.getId());
                 instance.setCurrentNodeName(nextNode.getNodeName());
-                instanceMapper.updateById(instance);
+                updateById(instance);
                 log.info("审批流转，实例ID：{}，从节点 {} 到节点 {}", instance.getId(), currentNode.getNodeName(), nextNode.getNodeName());
             } else {
                 // 没有下一节点，审批完成
@@ -214,7 +234,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                 instance.setEndTime(LocalDateTime.now());
                 instance.setCurrentNodeId(null);
                 instance.setCurrentNodeName("已完成");
-                instanceMapper.updateById(instance);
+                updateById(instance);
                 log.info("审批完成，实例ID：{}，状态：已通过", instance.getId());
 
                 // 更新业务状态
@@ -235,7 +255,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             instance.setEndTime(LocalDateTime.now());
             instance.setCurrentNodeId(null);
             instance.setCurrentNodeName("已拒绝");
-            instanceMapper.updateById(instance);
+            updateById(instance);
             log.info("审批拒绝-直接结束，实例ID：{}", instance.getId());
 
             // 更新业务状态
@@ -245,7 +265,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             ApprovalNode firstNode = nodeMapper.selectFirstNode(instance.getFlowId());
             instance.setCurrentNodeId(firstNode.getId());
             instance.setCurrentNodeName(firstNode.getNodeName());
-            instanceMapper.updateById(instance);
+            updateById(instance);
             log.info("审批拒绝-退回申请人，实例ID：{}", instance.getId());
         } else if (rejectAction == 3) {
             // 退回上一节点
@@ -253,25 +273,63 @@ public class ApprovalServiceImpl implements ApprovalService {
             if (prevNode != null) {
                 instance.setCurrentNodeId(prevNode.getId());
                 instance.setCurrentNodeName(prevNode.getNodeName());
-                instanceMapper.updateById(instance);
+                updateById(instance);
                 log.info("审批拒绝-退回上一节点，实例ID：{}，退回到：{}", instance.getId(), prevNode.getNodeName());
             } else {
                 // 没有上一节点，按退回申请人处理
                 ApprovalNode firstNode = nodeMapper.selectFirstNode(instance.getFlowId());
                 instance.setCurrentNodeId(firstNode.getId());
                 instance.setCurrentNodeName(firstNode.getNodeName());
-                instanceMapper.updateById(instance);
+                updateById(instance);
             }
         }
     }
 
     /**
-     * 更新业务状态
+     * 更新业务状态（审批通过/拒绝时同步更新对应业务表）
+     *
+     * @param businessType 业务类型
+     * @param businessId   业务数据ID
+     * @param status       目标状态：2-已通过 3-已拒绝
      */
     private void updateBusinessStatus(String businessType, Long businessId, Integer status) {
-        // 这里需要根据业务类型更新对应表的状态
-        // 由于涉及多个表，建议通过事件或回调方式处理
-        log.info("更新业务状态，类型：{}，ID：{}，状态：{}", businessType, businessId, status);
+        try {
+            switch (businessType) {
+                case "check_in" -> {
+                    CheckIn checkIn = checkInMapper.selectById(businessId);
+                    if (checkIn != null) {
+                        checkIn.setStatus(status);
+                        checkInMapper.updateById(checkIn);
+                    }
+                }
+                case "check_out" -> {
+                    CheckOut checkOut = checkOutMapper.selectById(businessId);
+                    if (checkOut != null) {
+                        checkOut.setStatus(status);
+                        checkOutMapper.updateById(checkOut);
+                    }
+                }
+                case "transfer" -> {
+                    Transfer transfer = transferMapper.selectById(businessId);
+                    if (transfer != null) {
+                        transfer.setStatus(status);
+                        transferMapper.updateById(transfer);
+                    }
+                }
+                case "stay" -> {
+                    Stay stay = stayMapper.selectById(businessId);
+                    if (stay != null) {
+                        stay.setStatus(status);
+                        stayMapper.updateById(stay);
+                    }
+                }
+                default -> log.warn("未知的业务类型：{}，无法更新状态", businessType);
+            }
+            log.info("更新业务状态成功，类型：{}，ID：{}，状态：{}", businessType, businessId, status);
+        } catch (Exception e) {
+            log.error("更新业务状态失败，类型：{}，ID：{}，状态：{}", businessType, businessId, status, e);
+            throw new BusinessException("更新业务状态失败：" + e.getMessage());
+        }
     }
 
     /**
@@ -284,10 +342,35 @@ public class ApprovalServiceImpl implements ApprovalService {
         return assignees.size();
     }
 
+    /**
+     * 检查当前用户是否是串行节点的下一个审批人
+     */
+    private boolean isNextSerialApprover(Long nodeId, Long instanceId, Long userId) {
+        List<ApprovalNodeAssignee> assignees = assigneeMapper.selectByNodeId(nodeId);
+        int approvedCount = recordMapper.countApprovedByInstanceAndNode(instanceId, nodeId);
+
+        if (approvedCount >= assignees.size()) {
+            return false;
+        }
+
+        ApprovalNodeAssignee nextAssignee = assignees.get(approvedCount);
+
+        if (nextAssignee.getAssigneeType() == 2) {
+            // 用户类型：直接比较 ID
+            return nextAssignee.getAssigneeId().equals(userId);
+        } else {
+            // 角色类型：通过 UserRoleMapper 检查用户是否拥有该角色
+            LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(UserRole::getUserId, userId)
+                   .eq(UserRole::getRoleId, nextAssignee.getAssigneeId());
+            return userRoleMapper.selectCount(wrapper) > 0;
+        }
+    }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean withdraw(Long instanceId, Long applicantId) {
-        ApprovalInstance instance = instanceMapper.selectById(instanceId);
+        ApprovalInstance instance = getById(instanceId);
         if (instance == null) {
             throw new BusinessException("审批实例不存在");
         }
@@ -302,7 +385,7 @@ public class ApprovalServiceImpl implements ApprovalService {
         instance.setEndTime(LocalDateTime.now());
         instance.setCurrentNodeId(null);
         instance.setCurrentNodeName("已撤回");
-        instanceMapper.updateById(instance);
+        updateById(instance);
 
         log.info("撤回审批，实例ID：{}", instanceId);
         return true;
@@ -310,7 +393,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     public ApprovalInstanceVO getInstanceDetail(Long instanceId) {
-        ApprovalInstance instance = instanceMapper.selectById(instanceId);
+        ApprovalInstance instance = getById(instanceId);
         if (instance == null) {
             return null;
         }
@@ -319,7 +402,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     public ApprovalInstanceVO getInstanceByBusiness(String businessType, Long businessId) {
-        ApprovalInstance instance = instanceMapper.selectByBusiness(businessType, businessId);
+        ApprovalInstance instance = getBaseMapper().selectByBusiness(businessType, businessId);
         if (instance == null) {
             return null;
         }
@@ -344,7 +427,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                .orderByDesc(ApprovalInstance::getCreateTime);
 
         Page<ApprovalInstance> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
-        instanceMapper.selectPage(page, wrapper);
+        page(page, wrapper);
 
         List<ApprovalInstanceVO> voList = page.getRecords().stream()
                 .map(this::convertInstanceToVO)
@@ -364,8 +447,16 @@ public class ApprovalServiceImpl implements ApprovalService {
         Page<ApprovalRecord> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         recordMapper.selectPage(page, wrapper);
 
+        // 批量加载关联实例信息（消除 N+1）
+        Set<Long> instanceIds = page.getRecords().stream()
+                .map(ApprovalRecord::getInstanceId)
+                .collect(Collectors.toSet());
+        Map<Long, ApprovalInstance> instanceMap = instanceIds.isEmpty() ? Map.of()
+                : listByIds(instanceIds).stream()
+                        .collect(Collectors.toMap(ApprovalInstance::getId, i -> i, (a, b) -> a));
+
         List<ApprovalRecordVO> voList = page.getRecords().stream()
-                .map(this::convertRecordToVO)
+                .map(record -> convertRecordToVO(record, instanceMap.get(record.getInstanceId())))
                 .collect(Collectors.toList());
 
         return PageResult.build(voList, page.getTotal(), page.getCurrent(), page.getSize());
@@ -381,7 +472,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     public boolean canApprove(Long instanceId, Long userId, List<Long> roleIds) {
-        ApprovalInstance instance = instanceMapper.selectById(instanceId);
+        ApprovalInstance instance = getById(instanceId);
         if (instance == null || instance.getStatus() != 1 || instance.getCurrentNodeId() == null) {
             return false;
         }
@@ -397,15 +488,12 @@ public class ApprovalServiceImpl implements ApprovalService {
             return countMap;
         }
 
-        // 按业务类型统计
-        String[] businessTypes = {"check_in", "transfer", "check_out", "stay"};
-        for (String businessType : businessTypes) {
-            LambdaQueryWrapper<ApprovalInstance> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(ApprovalInstance::getStatus, 1)
-                   .eq(ApprovalInstance::getBusinessType, businessType)
-                   .in(ApprovalInstance::getCurrentNodeId, nodeIds);
-            long count = instanceMapper.selectCount(wrapper);
-            countMap.put(businessType, count);
+        // 使用单条 GROUP BY 查询消除 N+1（替代逐类型循环查询）
+        List<Map<String, Object>> rows = getBaseMapper().countPendingGroupByBusinessType(nodeIds);
+        for (Map<String, Object> row : rows) {
+            String businessType = (String) row.get("business_type");
+            Long cnt = ((Number) row.get("cnt")).longValue();
+            countMap.put(businessType, cnt);
         }
 
         return countMap;
@@ -421,12 +509,10 @@ public class ApprovalServiceImpl implements ApprovalService {
         List<Long> userNodeIds = assigneeMapper.selectNodeIdsByUserId(userId);
         nodeIds.addAll(userNodeIds);
 
-        // 查询用户角色指派的节点
+        // 批量查询用户角色指派的节点（消除 N+1）
         if (roleIds != null && !roleIds.isEmpty()) {
-            for (Long roleId : roleIds) {
-                List<Long> roleNodeIds = assigneeMapper.selectNodeIdsByRoleId(roleId);
-                nodeIds.addAll(roleNodeIds);
-            }
+            List<Long> roleNodeIds = assigneeMapper.selectNodeIdsByRoleIds(roleIds);
+            nodeIds.addAll(roleNodeIds);
         }
 
         return nodeIds;
@@ -461,35 +547,56 @@ public class ApprovalServiceImpl implements ApprovalService {
         List<ApprovalRecordVO> records = getRecordsByInstance(instance.getId());
         vo.setRecords(records);
 
-        // 加载流程节点
+        // 加载流程节点及审批人（批量查询消除 N+1）
         List<ApprovalNode> nodes = nodeMapper.selectByFlowId(instance.getFlowId());
-        List<ApprovalNodeVO> nodeVOs = nodes.stream().map(node -> {
-            ApprovalNodeVO nodeVO = new ApprovalNodeVO();
-            BeanUtil.copyProperties(node, nodeVO);
-            
-            // 加载审批人列表
-            List<ApprovalNodeAssignee> assignees = assigneeMapper.selectByNodeId(node.getId());
-            List<ApprovalAssigneeVO> assigneeVOs = new ArrayList<>();
-            for (ApprovalNodeAssignee assignee : assignees) {
-                ApprovalAssigneeVO assigneeVO = new ApprovalAssigneeVO();
-                BeanUtil.copyProperties(assignee, assigneeVO);
-                assigneeVO.setAssigneeTypeText(assignee.getAssigneeType() == 1 ? "角色" : "用户");
-                
-                // 获取审批人姓名
-                if (assignee.getAssigneeType() == 1) {
-                    Role role = roleMapper.selectById(assignee.getAssigneeId());
-                    assigneeVO.setAssigneeName(role != null ? role.getRoleName() : "未知角色");
-                } else {
-                    User user = userMapper.selectById(assignee.getAssigneeId());
-                    assigneeVO.setAssigneeName(user != null ? user.getNickname() : "未知用户");
+        if (!nodes.isEmpty()) {
+            // 1. 收集所有节点的审批人
+            List<Long> allNodeIds = nodes.stream().map(ApprovalNode::getId).toList();
+            Map<Long, List<ApprovalNodeAssignee>> assigneesByNode = new HashMap<>();
+            Set<Long> roleIdsToLoad = new HashSet<>();
+            Set<Long> userIdsToLoad = new HashSet<>();
+
+            for (Long nodeId : allNodeIds) {
+                List<ApprovalNodeAssignee> assignees = assigneeMapper.selectByNodeId(nodeId);
+                assigneesByNode.put(nodeId, assignees);
+                for (ApprovalNodeAssignee a : assignees) {
+                    if (a.getAssigneeType() == 1) {
+                        roleIdsToLoad.add(a.getAssigneeId());
+                    } else {
+                        userIdsToLoad.add(a.getAssigneeId());
+                    }
                 }
-                assigneeVOs.add(assigneeVO);
             }
-            nodeVO.setAssignees(assigneeVOs);
-            
-            return nodeVO;
-        }).collect(Collectors.toList());
-        vo.setNodes(nodeVOs);
+
+            // 2. 批量查询角色和用户名称
+            Map<Long, String> roleNameMap = roleIdsToLoad.isEmpty() ? Map.of()
+                    : roleMapper.selectBatchIds(roleIdsToLoad).stream()
+                            .collect(Collectors.toMap(Role::getId, Role::getRoleName, (a, b) -> a));
+            Map<Long, String> userNameMap = userIdsToLoad.isEmpty() ? Map.of()
+                    : userMapper.selectBatchIds(userIdsToLoad).stream()
+                            .collect(Collectors.toMap(User::getId, User::getNickname, (a, b) -> a));
+
+            // 3. 组装节点 VO
+            List<ApprovalNodeVO> nodeVOs = nodes.stream().map(node -> {
+                ApprovalNodeVO nodeVO = new ApprovalNodeVO();
+                BeanUtil.copyProperties(node, nodeVO);
+
+                List<ApprovalNodeAssignee> assignees = assigneesByNode.getOrDefault(node.getId(), List.of());
+                List<ApprovalAssigneeVO> assigneeVOs = assignees.stream().map(assignee -> {
+                    ApprovalAssigneeVO assigneeVO = new ApprovalAssigneeVO();
+                    BeanUtil.copyProperties(assignee, assigneeVO);
+                    assigneeVO.setAssigneeTypeText(DictUtils.getLabel("approval_assignee_type", assignee.getAssigneeType(), "未知"));
+                    assigneeVO.setAssigneeName(assignee.getAssigneeType() == 1
+                            ? roleNameMap.getOrDefault(assignee.getAssigneeId(), "未知角色")
+                            : userNameMap.getOrDefault(assignee.getAssigneeId(), "未知用户"));
+                    return assigneeVO;
+                }).toList();
+                nodeVO.setAssignees(assigneeVOs);
+
+                return nodeVO;
+            }).toList();
+            vo.setNodes(nodeVOs);
+        }
 
         // 填充学生详细信息（当业务类型为学生相关业务时）
         if (isStudentBusinessType(instance.getBusinessType()) && instance.getApplicantId() != null) {
@@ -503,25 +610,21 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     /**
-     * 判断是否为学生相关业务类型
+     * 判断是否为学生相关业务类型（从字典动态判断）
      */
     private boolean isStudentBusinessType(String businessType) {
-        return "check_in".equals(businessType) 
-            || "check_out".equals(businessType)
-            || "transfer".equals(businessType)
-            || "stay".equals(businessType);
+        List<String> studentTypes = DictUtils.getValues("approval_business_type");
+        return studentTypes.contains(businessType);
     }
 
     /**
-     * 记录转换为VO
+     * 记录转换为VO（带预加载的实例信息）
      */
-    private ApprovalRecordVO convertRecordToVO(ApprovalRecord record) {
+    private ApprovalRecordVO convertRecordToVO(ApprovalRecord record, ApprovalInstance instance) {
         ApprovalRecordVO vo = new ApprovalRecordVO();
         BeanUtil.copyProperties(record, vo);
         vo.setActionText(DictUtils.getLabel("approval_action", record.getAction(), "未知"));
 
-        // 获取实例信息
-        ApprovalInstance instance = instanceMapper.selectById(record.getInstanceId());
         if (instance != null) {
             vo.setBusinessType(instance.getBusinessType());
             vo.setBusinessTypeText(getBusinessTypeText(instance.getBusinessType()));
@@ -530,6 +633,13 @@ public class ApprovalServiceImpl implements ApprovalService {
         }
 
         return vo;
+    }
+
+    /**
+     * 记录转换为VO（单条，懒加载实例信息）
+     */
+    private ApprovalRecordVO convertRecordToVO(ApprovalRecord record) {
+        return convertRecordToVO(record, getById(record.getInstanceId()));
     }
 
     /**

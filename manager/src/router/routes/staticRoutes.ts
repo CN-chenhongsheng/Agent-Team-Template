@@ -37,6 +37,18 @@ export const staticRoutes: AppRouteRecordRaw[] = [
     meta: { title: 'menus.forgetPassword.title', isHideTab: true }
   },
   {
+    path: '/approval/flow-editor/:flowId?',
+    name: 'ApprovalFlowEditor',
+    component: () => import('@views/approval/flow-editor/index.vue'),
+    meta: { title: '流程编辑器', isHideTab: true }
+  },
+  {
+    path: '/system/scope-editor/:userId',
+    name: 'SystemScopeEditor',
+    component: () => import('@views/system/scope-editor/index.vue'),
+    meta: { title: '管理范围编辑器', isHideTab: true }
+  },
+  {
     path: '/403',
     name: 'Exception403',
     component: () => import('@views/exception/403/index.vue'),

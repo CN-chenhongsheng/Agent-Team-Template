@@ -1,5 +1,5 @@
-@use '../../styles/variables' as *;
-@use '../../styles/components' as *;
+// variables 通过 Vite additionalData 自动注入
+@import '../../styles/components.scss';
 
 page {
 	font-size: 28rpx;

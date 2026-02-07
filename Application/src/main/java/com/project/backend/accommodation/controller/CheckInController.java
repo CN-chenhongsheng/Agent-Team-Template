@@ -9,9 +9,11 @@ import com.project.core.result.R;
 import com.project.backend.controller.base.BaseCrudController;
 import com.project.backend.controller.base.BatchDeleteController;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/v1/system/check-in")
 @RequiredArgsConstructor
+@Tag(name = "入住管理", description = "入住申请增删改查")
 public class CheckInController extends BaseCrudController<CheckInVO, CheckInQueryDTO, CheckInSaveDTO> 
         implements BatchDeleteController {
 
@@ -64,7 +67,7 @@ public class CheckInController extends BaseCrudController<CheckInVO, CheckInQuer
      * 撤回入住申请
      */
     @Operation(summary = "撤回入住申请")
-    @PostMapping("/{id}/cancel")
+    @PutMapping("/{id}/cancel")
     public R<Void> cancel(@PathVariable Long id) {
         boolean success = checkInService.cancelCheckIn(id);
         return success ? R.ok() : R.fail("撤回失败");

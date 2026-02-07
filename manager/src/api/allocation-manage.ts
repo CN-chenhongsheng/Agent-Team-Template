@@ -162,7 +162,7 @@ export function fetchPreviewTask(data: Api.Allocation.TaskPreviewParams) {
  * @param id 任务ID
  */
 export function fetchExecuteTask(id: number) {
-  return request.post({
+  return request.put({
     url: `/api/v1/system/allocation/task/${id}/execute`,
     showSuccessMessage: true
   })
@@ -183,7 +183,7 @@ export function fetchGetTaskProgress(id: number) {
  * @param id 任务ID
  */
 export function fetchCancelTask(id: number) {
-  return request.post({
+  return request.put({
     url: `/api/v1/system/allocation/task/${id}/cancel`,
     showSuccessMessage: true
   })
@@ -208,7 +208,7 @@ export function fetchGetResultPage(params: Api.Allocation.ResultSearchParams) {
  * @param resultIds 结果ID列表
  */
 export function fetchConfirmResults(taskId: number, resultIds: number[]) {
-  return request.post({
+  return request.put({
     url: '/api/v1/system/allocation/result/confirm',
     params: { taskId },
     data: resultIds,
@@ -221,7 +221,7 @@ export function fetchConfirmResults(taskId: number, resultIds: number[]) {
  * @param taskId 任务ID
  */
 export function fetchConfirmAllResults(taskId: number) {
-  return request.post({
+  return request.put({
     url: '/api/v1/system/allocation/result/confirm-all',
     params: { taskId },
     showSuccessMessage: true
@@ -235,7 +235,7 @@ export function fetchConfirmAllResults(taskId: number) {
  * @param reason 拒绝原因
  */
 export function fetchRejectResults(taskId: number, resultIds: number[], reason?: string) {
-  return request.post({
+  return request.put({
     url: '/api/v1/system/allocation/result/reject',
     params: { taskId, reason },
     data: resultIds,
@@ -250,7 +250,7 @@ export function fetchRejectResults(taskId: number, resultIds: number[], reason?:
  * @param reason 调整原因
  */
 export function fetchAdjustResult(resultId: number, newBedId: number, reason?: string) {
-  return request.post({
+  return request.put({
     url: '/api/v1/system/allocation/result/adjust',
     data: { resultId, newBedId, reason },
     showSuccessMessage: true

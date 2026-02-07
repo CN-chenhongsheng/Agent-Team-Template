@@ -77,8 +77,6 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@import '@/styles/variables.scss';
-
 .notice-detail-page {
   position: relative;
   min-height: 100vh;

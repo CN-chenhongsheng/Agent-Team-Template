@@ -49,7 +49,7 @@ public class ApprovalController {
 
     // ==================== 流程配置接口 ====================
 
-    @GetMapping("/flow/list")
+    @GetMapping("/flow/page")
     @Operation(summary = "查询流程列表（分页）")
     public R<PageResult<ApprovalFlowVO>> listFlows(ApprovalFlowQueryDTO queryDTO) {
         log.info("查询审批流程列表，参数：{}", queryDTO);
@@ -189,7 +189,7 @@ public class ApprovalController {
         return R.ok(vo);
     }
 
-    @PostMapping("/approve")
+    @PutMapping("/approve")
     @Operation(summary = "执行审批")
     @Log(title = "执行审批", businessType = 0)
     public R<Void> doApprove(@Valid @RequestBody ApprovalActionDTO actionDTO) {
@@ -207,7 +207,7 @@ public class ApprovalController {
         return success ? R.ok("审批成功", null) : R.fail("审批失败");
     }
 
-    @PostMapping("/withdraw/{instanceId}")
+    @PutMapping("/withdraw/{instanceId}")
     @Operation(summary = "撤回审批")
     @Parameter(name = "instanceId", description = "审批实例ID", required = true)
     @Log(title = "撤回审批", businessType = 0)
@@ -220,7 +220,7 @@ public class ApprovalController {
 
     // ==================== 待办/已办查询接口 ====================
 
-    @GetMapping("/pending/list")
+    @GetMapping("/pending/page")
     @Operation(summary = "查询待办审批列表（分页）")
     public R<PageResult<ApprovalInstanceVO>> listPending(ApprovalInstanceQueryDTO queryDTO) {
         Long userId = StpUtil.getLoginIdAsLong();
@@ -240,7 +240,7 @@ public class ApprovalController {
         return R.ok(countMap);
     }
 
-    @GetMapping("/record/list")
+    @GetMapping("/record/page")
     @Operation(summary = "查询审批记录列表（分页）")
     public R<PageResult<ApprovalRecordVO>> listRecords(ApprovalRecordQueryDTO queryDTO) {
         log.info("查询审批记录列表，参数：{}", queryDTO);
@@ -249,7 +249,7 @@ public class ApprovalController {
         return R.ok(result);
     }
 
-    @GetMapping("/record/my")
+    @GetMapping("/record/my-page")
     @Operation(summary = "查询我的审批记录（分页）")
     public R<PageResult<ApprovalRecordVO>> listMyRecords(ApprovalRecordQueryDTO queryDTO) {
         Long userId = StpUtil.getLoginIdAsLong();

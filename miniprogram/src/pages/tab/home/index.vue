@@ -688,7 +688,6 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 // 导入公共样式变量
-@import '@/styles/variables.scss';
 
 .home-page {
   position: relative;
@@ -698,39 +697,7 @@ onMounted(async () => {
   background-color: $bg-light;
 }
 
-// 背景装饰球
-.ambient-blob {
-  position: absolute;
-  z-index: 0;
-  border-radius: 50%;
-  opacity: 0.6;
-  filter: blur(120rpx);
-  pointer-events: none;
-
-  &.blob-primary {
-    top: -100rpx;
-    right: -100rpx;
-    width: 500rpx;
-    height: 500rpx;
-    background-color: rgb(10 219 195 / 30%);
-  }
-
-  &.blob-accent {
-    top: 400rpx;
-    left: -200rpx;
-    width: 560rpx;
-    height: 560rpx;
-    background-color: rgb(255 140 66 / 25%);
-  }
-
-  &.blob-blue {
-    right: -100rpx;
-    bottom: 200rpx;
-    width: 500rpx;
-    height: 500rpx;
-    background-color: rgb(59 130 246 / 25%);
-  }
-}
+// .ambient-blob 使用全局 components.scss 定义
 
 // 顶部导航
 .header {

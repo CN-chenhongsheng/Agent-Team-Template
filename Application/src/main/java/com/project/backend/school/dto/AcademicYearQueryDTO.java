@@ -1,7 +1,9 @@
 package com.project.backend.school.dto;
 
+import com.project.core.dto.BaseQueryDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 学年查询DTO
@@ -10,8 +12,9 @@ import lombok.Data;
  * @since 2026-01-01
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "学年查询条件")
-public class AcademicYearQueryDTO {
+public class AcademicYearQueryDTO extends BaseQueryDTO {
 
     @Schema(description = "学年编码（模糊查询）")
     private String yearCode;
@@ -21,10 +24,4 @@ public class AcademicYearQueryDTO {
 
     @Schema(description = "状态：1启用 0停用")
     private Integer status;
-
-    @Schema(description = "当前页码", example = "1")
-    private Long pageNum = 1L;
-
-    @Schema(description = "每页条数", example = "10")
-    private Long pageSize = 10L;
 }

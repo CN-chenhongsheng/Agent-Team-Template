@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -64,7 +65,7 @@ public class AllocationResultController {
     /**
      * 确认分配结果
      */
-    @PostMapping("/confirm")
+    @PutMapping("/confirm")
     @Operation(summary = "确认分配结果")
     @Log(title = "确认分配结果", businessType = 2)
     public R<Void> confirmResults(@RequestParam Long taskId, @RequestBody List<Long> resultIds) {
@@ -75,7 +76,7 @@ public class AllocationResultController {
     /**
      * 确认全部分配结果
      */
-    @PostMapping("/confirm-all")
+    @PutMapping("/confirm-all")
     @Operation(summary = "确认全部分配结果")
     @Log(title = "确认全部分配结果", businessType = 2)
     public R<Void> confirmAll(@RequestParam Long taskId) {
@@ -86,7 +87,7 @@ public class AllocationResultController {
     /**
      * 拒绝分配结果
      */
-    @PostMapping("/reject")
+    @PutMapping("/reject")
     @Operation(summary = "拒绝分配结果")
     @Log(title = "拒绝分配结果", businessType = 2)
     public R<Void> rejectResults(
@@ -100,7 +101,7 @@ public class AllocationResultController {
     /**
      * 调整分配
      */
-    @PostMapping("/adjust")
+    @PutMapping("/adjust")
     @Operation(summary = "调整分配")
     @Log(title = "调整分配结果", businessType = 2)
     public R<Void> adjustResult(@Valid @RequestBody AllocationResultAdjustDTO adjustDTO) {

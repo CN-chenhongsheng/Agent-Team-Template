@@ -82,42 +82,30 @@ $glass-bg: rgb(255 255 255 / 65%);
   background-attachment: fixed;
 }
 
-// 背景装饰
-.bg-decorations {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
+// .bg-decorations 容器使用全局定义，仅覆盖 blob 位置
+.bg-decorations .blob {
+  &.blob-1 {
+    top: -200rpx;
+    right: -100rpx;
+    width: 600rpx;
+    height: 600rpx;
+    background: rgb(10 219 195 / 15%);
+  }
 
-  .blob {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80rpx);
+  &.blob-2 {
+    top: 40%;
+    left: -200rpx;
+    width: 500rpx;
+    height: 500rpx;
+    background: rgb(234 179 8 / 20%);
+  }
 
-    &.blob-1 {
-      top: -200rpx;
-      right: -100rpx;
-      width: 600rpx;
-      height: 600rpx;
-      background: rgb(10 219 195 / 15%);
-    }
-
-    &.blob-2 {
-      top: 40%;
-      left: -200rpx;
-      width: 500rpx;
-      height: 500rpx;
-      background: rgb(234 179 8 / 20%);
-    }
-
-    &.blob-3 {
-      bottom: -100rpx;
-      left: 40%;
-      width: 700rpx;
-      height: 700rpx;
-      background: rgb(96 165 250 / 20%);
-    }
+  &.blob-3 {
+    bottom: -100rpx;
+    left: 40%;
+    width: 700rpx;
+    height: 700rpx;
+    background: rgb(96 165 250 / 20%);
   }
 }
 

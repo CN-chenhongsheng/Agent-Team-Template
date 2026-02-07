@@ -62,13 +62,6 @@
         @submit="handleDialogSubmit"
       />
 
-      <!-- 管理范围分配弹窗 -->
-      <UserScopeDialog
-        v-model:visible="scopeDialogVisible"
-        :user-data="currentScopeUser"
-        @submit="handleScopeSubmit"
-      />
-
       <!-- 权限分配弹窗 -->
       <UserPermissionDialog
         v-model="permissionDialogVisible"
@@ -87,13 +80,13 @@
     fetchDeleteUser,
     fetchBatchDeleteUser,
     fetchUpdateUserStatus,
-    fetchResetUserPassword,
-    fetchUpdateUser
+    fetchResetUserPassword
   } from '@/api/system-manage'
   import UserSearch from './modules/user-search.vue'
   import UserDialog from './modules/user-dialog.vue'
-  import UserScopeDialog from './modules/user-scope-dialog.vue'
   import UserPermissionDialog from './modules/user-permission-dialog.vue'
+  import { useScopeCache } from '@/views/system/scope-editor/composables/useScopeCache'
+  import { useScopeCommunication } from '@/views/system/scope-editor/composables/useScopeCommunication'
   import { ElTag, ElMessageBox, ElImage, ElMessage, ElTooltip } from 'element-plus'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
   import { DialogType } from '@/types'
@@ -119,8 +112,6 @@
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
   const editData = ref<Partial<UserListItem>>({})
-  const scopeDialogVisible = ref(false)
-  const currentScopeUser = ref<Partial<UserListItem>>({})
   const permissionDialogVisible = ref(false)
   const currentPermissionUser = ref<UserListItem | undefined>(undefined)
 
@@ -142,7 +133,7 @@
   let showDialog: (type: DialogType, row?: UserListItem) => void
   let deleteUser: (row: UserListItem) => Promise<void>
   let handleResetPassword: (row: UserListItem) => Promise<void>
-  let showScopeDialog: (row: UserListItem) => void
+  let openScopeEditor: (row: UserListItem) => void
   let showPermissionDialog: (row: UserListItem) => void
 
   /**
@@ -164,7 +155,7 @@
     {
       type: 'share',
       label: '分配范围',
-      onClick: () => showScopeDialog(row),
+      onClick: () => openScopeEditor(row),
       auth: 'system:user:assign-scope'
     },
     {
@@ -567,15 +558,40 @@
     }
   }
 
+  // ========== 管理范围编辑器（多标签页模式） ==========
+  const { saveCache: saveScopeCache } = useScopeCache()
+  const { onMessage: onScopeMessage } = useScopeCommunication()
+
   /**
-   * 显示管理范围分配对话框
+   * 打开管理范围编辑器（新标签页）
    */
-  showScopeDialog = (row: UserListItem): void => {
-    currentScopeUser.value = { ...row }
-    nextTick(() => {
-      scopeDialogVisible.value = true
+  openScopeEditor = (row: UserListItem): void => {
+    // 缓存用户数据到 sessionStorage
+    saveScopeCache({
+      userId: row.id,
+      username: row.username || '',
+      nickname: row.nickname || '',
+      manageScope: row.manageScope || '',
+      userData: { ...row }
     })
+
+    // 构建 URL（hash 模式路由）
+    const baseUrl = window.location.origin
+    const editorUrl = `${baseUrl}/#/system/scope-editor/${row.id}`
+
+    const newWindow = window.open(editorUrl, '_blank')
+    if (!newWindow) {
+      ElMessage.warning('请允许浏览器弹出窗口')
+    }
   }
+
+  // 监听编辑器跨标签页消息
+  onScopeMessage((message) => {
+    if (message.type === 'scope-saved') {
+      ElMessage.success(`用户"${message.nickname}"的管理范围已更新`)
+      refreshData()
+    }
+  })
 
   /**
    * 显示权限分配弹窗
@@ -592,36 +608,6 @@
    */
   const handlePermissionSuccess = (): void => {
     refreshData()
-  }
-
-  /**
-   * 处理管理范围分配提交
-   */
-  const handleScopeSubmit = async (manageScope: string): Promise<void> => {
-    if (!currentScopeUser.value.id) {
-      ElMessage.error('用户ID不存在')
-      return
-    }
-
-    try {
-      // 使用完整的用户数据，只更新 manageScope 字段
-      const updateData: Api.SystemManage.UserSaveParams = {
-        id: currentScopeUser.value.id,
-        username: currentScopeUser.value.username || '',
-        nickname: currentScopeUser.value.nickname || '',
-        email: currentScopeUser.value.email,
-        phone: currentScopeUser.value.phone,
-        gender: currentScopeUser.value.gender,
-        status: currentScopeUser.value.status,
-        roleIds: currentScopeUser.value.roleIds,
-        manageScope // 更新管理范围
-      }
-
-      await fetchUpdateUser(currentScopeUser.value.id, updateData)
-      await refreshUpdate()
-    } catch (error) {
-      console.error('分配管理范围失败:', error)
-    }
   }
 
   /**

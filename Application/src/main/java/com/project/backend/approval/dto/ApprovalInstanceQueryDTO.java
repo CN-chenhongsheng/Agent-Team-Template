@@ -1,7 +1,9 @@
 package com.project.backend.approval.dto;
 
+import com.project.core.dto.BaseQueryDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 审批实例查询DTO
@@ -10,8 +12,9 @@ import lombok.Data;
  * @since 2026-01-17
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "审批实例查询条件")
-public class ApprovalInstanceQueryDTO {
+public class ApprovalInstanceQueryDTO extends BaseQueryDTO {
 
     @Schema(description = "业务类型")
     private String businessType;
@@ -24,10 +27,4 @@ public class ApprovalInstanceQueryDTO {
 
     @Schema(description = "状态：1进行中 2已通过 3已拒绝 4已撤回")
     private Integer status;
-
-    @Schema(description = "当前页码", example = "1")
-    private Long pageNum = 1L;
-
-    @Schema(description = "每页条数", example = "10")
-    private Long pageSize = 10L;
 }

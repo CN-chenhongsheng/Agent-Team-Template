@@ -358,36 +358,40 @@ function useTableImpl<TApiFn extends (params: any) => Promise<any>>(
           return
         }
 
-        // 确保新值是有效的数字
-        if (typeof newSize === 'number' && !isNaN(newSize) && newSize > 0) {
-          // 更新 pagination 和 searchParams（即使值相同，确保状态一致）
-          if (newSize !== pagination.size) {
-            logger.log(`自适应 pageSize 变化: ${pagination.size} -> ${newSize}`)
-          }
-          pagination.size = newSize
-          ;(searchParams as Record<string, unknown>)[sizeKey] = newSize
+        // 处理 pageSize 计算结果
+        // 当 newSize 为 0 时（容器高度未就绪），使用默认值并在首次加载时触发请求
+        const effectiveSize =
+          typeof newSize === 'number' && !isNaN(newSize) && newSize > 0
+            ? newSize
+            : pagination.size || initialPageSize
 
-          // 如果启用了 immediate 且还未加载数据，则由 watch 触发首次加载
-          // 这样可以确保使用正确计算的 pageSize，而不是初始的 fallback 值
-          if (immediate && !hasLoadedData && !isLoadingFirstData) {
-            isLoadingFirstData = true
-            nextTick(async () => {
-              // 再次检查是否已停用
-              if (isInactive) {
-                return
-              }
-              await getData()
-              // 数据加载完成后，标记首次加载已完成
-              hasLoadedData = true
-              isLoadingFirstData = false
-            })
-            return
-          }
+        // 更新 pagination 和 searchParams
+        if (effectiveSize !== pagination.size) {
+          pagination.size = effectiveSize
+          ;(searchParams as Record<string, unknown>)[sizeKey] = effectiveSize
+        }
 
-          // 后续的 pageSize 变化（用户手动调整或容器尺寸变化）则正常触发请求
-          if (hasLoadedData) {
-            getData()
-          }
+        // 如果启用了 immediate 且还未加载数据，则由 watch 触发首次加载
+        // 即使 newSize 为 0，也使用 effectiveSize（默认值）进行首次加载
+        if (immediate && !hasLoadedData && !isLoadingFirstData) {
+          isLoadingFirstData = true
+          nextTick(async () => {
+            // 再次检查是否已停用
+            if (isInactive) {
+              return
+            }
+            await getData()
+            // 数据加载完成后，标记首次加载已完成
+            hasLoadedData = true
+            isLoadingFirstData = false
+          })
+          return
+        }
+
+        // 后续的 pageSize 变化（用户手动调整或容器尺寸变化）则正常触发请求
+        // 但只有在 newSize > 0 时才触发（避免容器高度为 0 时的无效请求）
+        if (hasLoadedData && newSize > 0) {
+          getData()
         }
       },
       { immediate: true }

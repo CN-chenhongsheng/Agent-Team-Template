@@ -56,7 +56,8 @@
   import { fetchGetSurveyPage } from '@/api/allocation-manage'
   import SurveySearch from './modules/survey-search.vue'
   import SurveyDrawer from './modules/survey-drawer.vue'
-  import { ElMessageBox, ElTag } from 'element-plus'
+  import { ElMessageBox } from 'element-plus'
+  import ArtStatusDot from '@/components/core/tables/art-status-dot/index.vue'
 
   defineOptions({ name: 'AllocationSurvey' })
 
@@ -140,8 +141,8 @@
           width: 100,
           formatter: (row: SurveyListItem) => {
             const type = row.fillStatus === 'filled' ? 'success' : 'danger'
-            const label = row.fillStatus === 'filled' ? '已填写' : '未填写'
-            return h(ElTag, { type }, () => label)
+            const text = row.fillStatus === 'filled' ? '已填写' : '未填写'
+            return h(ArtStatusDot, { type, text })
           }
         },
         {

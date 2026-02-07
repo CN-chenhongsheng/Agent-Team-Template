@@ -34,4 +34,7 @@ public class ApprovalAssigneeVO implements Serializable {
 
     @Schema(description = "指派对象名称")
     private String assigneeName;
+
+    @Schema(description = "排序顺序")
+    private Integer sortOrder;
 }

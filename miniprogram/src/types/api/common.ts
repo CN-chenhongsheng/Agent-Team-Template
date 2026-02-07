@@ -119,5 +119,39 @@ export const UserRoleText: Record<UserRole, string> = {
   [UserRole.ADMIN]: '管理员',
 };
 
+/**
+ * 通用结果
+ */
+export interface CommonResult {
+  [key: string]: any;
+}
+
+/**
+ * 文件上传返回对象（单个文件）
+ */
+export interface UploadFileItem {
+  /** 文件访问URL */
+  url: string;
+  /** 原始文件名 */
+  name: string;
+  /** 文件大小（字节） */
+  size: number;
+}
+
+/**
+ * 发送验证码参数
+ */
+export interface SendCodeParams {
+  phone: number;
+  code: number;
+}
+
+/**
+ * 发送验证码结果
+ */
+export interface SendCodeResult {
+  code: number;
+}
+
 // 导出响应类型
 export type { IPageResult, IResponse };

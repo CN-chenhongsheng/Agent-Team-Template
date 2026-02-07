@@ -2,7 +2,6 @@
  * 申请相关的工具函数和常量
  */
 
-import { extractDate } from '../date';
 import type { ApplyStatus } from '@/types';
 import { ApplyStatusColor, ApplyStatusText } from '@/types';
 
@@ -82,14 +81,4 @@ export function getStatusText(status: ApplyStatus): string {
  */
 export function getStatusColor(status: ApplyStatus): string {
   return ApplyStatusColor[status] || '#999';
-}
-
-/**
- * 格式化时间（提取日期部分）
- * @param time 时间字符串
- * @returns 格式化后的时间
- * @deprecated 请直接使用 extractDate from '@/utils/date'
- */
-export function formatTime(time: string): string {
-  return extractDate(time);
 }

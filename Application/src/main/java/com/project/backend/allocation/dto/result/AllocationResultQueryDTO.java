@@ -1,9 +1,10 @@
 package com.project.backend.allocation.dto.result;
 
+import com.project.core.dto.BaseQueryDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
@@ -13,10 +14,9 @@ import java.math.BigDecimal;
  * @since 2026-02-02
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "分配结果查询请求")
-public class AllocationResultQueryDTO implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class AllocationResultQueryDTO extends BaseQueryDTO {
 
     @Schema(description = "任务ID", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long taskId;
@@ -41,10 +41,4 @@ public class AllocationResultQueryDTO implements Serializable {
 
     @Schema(description = "是否只查看问题记录（低于阈值的）")
     private Boolean problemOnly;
-
-    @Schema(description = "当前页码", example = "1")
-    private Long pageNum = 1L;
-
-    @Schema(description = "每页条数", example = "10")
-    private Long pageSize = 10L;
 }

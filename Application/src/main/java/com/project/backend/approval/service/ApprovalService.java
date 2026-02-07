@@ -1,8 +1,10 @@
 package com.project.backend.approval.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.project.backend.approval.dto.ApprovalActionDTO;
 import com.project.backend.approval.dto.ApprovalInstanceQueryDTO;
 import com.project.backend.approval.dto.ApprovalRecordQueryDTO;
+import com.project.backend.approval.entity.ApprovalInstance;
 import com.project.backend.approval.vo.ApprovalInstanceVO;
 import com.project.backend.approval.vo.ApprovalRecordVO;
 import com.project.core.result.PageResult;
@@ -16,7 +18,7 @@ import java.util.Map;
  * @author 陈鸿昇
  * @since 2026-01-17
  */
-public interface ApprovalService {
+public interface ApprovalService extends IService<ApprovalInstance> {
 
     /**
      * 发起审批（创建审批实例）

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
  * @since 2026-02-02
  */
 @Data
+@EqualsAndHashCode
 @TableName("sys_lifestyle_survey")
 @Schema(description = "生活习惯问卷状态实体")
 public class LifestyleSurvey implements Serializable {

@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -24,6 +25,7 @@ import java.util.Map;
  * @since 2026-02-02
  */
 @Data
+@EqualsAndHashCode
 @TableName(value = "sys_allocation_result", autoResultMap = true)
 @Schema(description = "分配结果实体")
 public class AllocationResult implements Serializable {

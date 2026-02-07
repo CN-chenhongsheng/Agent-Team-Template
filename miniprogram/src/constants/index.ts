@@ -74,10 +74,8 @@ export const ROUTE_CONSTANTS = {
   LOGIN: '/pages/common/login/index',
   // 通知详情页
   NOTICE_DETAIL: '/pages/service/notice-detail/index',
-  // 学生生活习惯页（原生活方式页）
+  // 学生生活习惯页
   STUDENT_HABITS: '/pages/profile/student-habits/index',
-  // 兼容旧的路由常量（已废弃，使用 STUDENT_HABITS）
-  LIFESTYLE: '/pages/profile/student-habits/index',
   // 智能分配 - 生活习惯问卷
   ALLOCATION_SURVEY: '/pages/allocation/survey/index',
   // 智能分配 - 分配结果
