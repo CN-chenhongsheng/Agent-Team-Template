@@ -12,11 +12,11 @@ import type {
   LogicFlowEdge
 } from '@/components/core/charts/art-logic-flow/types'
 
-/** 节点间距配置 */
+/** 节点间距配置（水平布局：从左到右） */
 const NODE_SPACING = {
-  vertical: 120, // 垂直间距
-  startY: 80, // 起始Y坐标
-  centerX: 400 // 中心X坐标
+  horizontal: 550, // 节点中心间距（节点宽320，间隙230）
+  startX: 200, // 起始X坐标
+  centerY: 300 // 中心Y坐标（所有节点在同一水平线上）
 }
 
 /** 节点尺寸 */
@@ -39,6 +39,10 @@ interface FlowInfo {
   flowName?: string
   businessType?: string
   status?: number
+  flowCode?: string
+  description?: string
+  dialogType?: 'add' | 'edit'
+  businessTypeOptions?: Array<{ label: string; value: string }>
 }
 
 /**
@@ -64,25 +68,30 @@ export function approvalNodesToLogicFlow(
     return 0
   })
 
-  // 计算节点位置
-  let currentY = NODE_SPACING.startY
+  // 计算节点位置（水平布局：从左到右）
+  let currentX = NODE_SPACING.startX
 
   // 1. 添加开始节点
   const startNodeId = 'start-node'
   lfNodes.push({
     id: startNodeId,
     type: 'start-node',
-    x: NODE_SPACING.centerX,
-    y: currentY,
+    x: currentX,
+    y: NODE_SPACING.centerY,
     properties: {
       isSelected: selectedNodeId === startNodeId,
+      isExpanded: true,
       flowName: flowInfo?.flowName || '',
-      businessType: flowInfo?.businessType || ''
+      flowCode: flowInfo?.flowCode || '',
+      businessType: flowInfo?.businessType || '',
+      description: flowInfo?.description || '',
+      dialogType: flowInfo?.dialogType || 'add',
+      businessTypeOptions: flowInfo?.businessTypeOptions || []
     }
   })
 
   let prevNodeId = startNodeId
-  currentY += NODE_SPACING.vertical
+  currentX += NODE_SPACING.horizontal
 
   // 2. 添加审批节点 - 优先使用保存的坐标
   sortedNodes.forEach((node) => {
@@ -95,14 +104,14 @@ export function approvalNodesToLogicFlow(
 
     // 优先级1：使用保存的坐标（如果存在）
     // 优先级2：使用默认间距计算
-    const nodeX = node.x !== undefined ? node.x : NODE_SPACING.centerX
-    const nodeY = node.y !== undefined ? node.y : currentY
+    const nodeX = node.x !== undefined ? node.x : currentX
+    const nodeY = node.y !== undefined ? node.y : NODE_SPACING.centerY
 
     lfNodes.push({
       id: nodeId,
       type: 'approval-node',
-      x: nodeX, // 使用优先级坐标
-      y: nodeY, // 使用优先级坐标
+      x: nodeX,
+      y: nodeY,
       properties: {
         // 原始数据 - 保存 originalId 和 tempId 到 properties
         originalId: node.id,
@@ -114,11 +123,12 @@ export function approvalNodesToLogicFlow(
         assignees: node.assignees || [],
         // 显示数据
         assigneeCount: node.assignees?.length || 0,
-        isSelected: selectedNodeId === nodeId || selectedNodeId === node.id
+        isSelected: selectedNodeId === nodeId || selectedNodeId === node.id,
+        isExpanded: true
       }
     })
 
-    // 添加边：从上一个节点到当前节点
+    // 添加边：从左侧节点到当前节点
     lfEdges.push({
       id: `edge-${prevNodeId}-${nodeId}`,
       sourceNodeId: prevNodeId,
@@ -129,24 +139,24 @@ export function approvalNodesToLogicFlow(
 
     prevNodeId = nodeId
 
-    // 仅在使用默认坐标时递增 currentY
-    if (node.y === undefined) {
-      currentY += NODE_SPACING.vertical
+    // 仅在使用默认坐标时递增 currentX
+    if (node.x === undefined) {
+      currentX += NODE_SPACING.horizontal
     }
   })
 
   // 3. 添加结束节点
   // 计算结束节点位置：基于最后一个审批节点
   const lastApprovalNode = sortedNodes[sortedNodes.length - 1]
-  const endY =
-    lastApprovalNode?.y !== undefined ? lastApprovalNode.y + NODE_SPACING.vertical : currentY
+  const endX =
+    lastApprovalNode?.x !== undefined ? lastApprovalNode.x + NODE_SPACING.horizontal : currentX
 
   const endNodeId = 'end-node'
   lfNodes.push({
     id: endNodeId,
     type: 'end-node',
-    x: NODE_SPACING.centerX,
-    y: endY,
+    x: endX,
+    y: NODE_SPACING.centerY,
     properties: {
       isSelected: selectedNodeId === endNodeId
     }
@@ -172,10 +182,10 @@ export function approvalNodesToLogicFlow(
 export function logicFlowToApprovalNodes(data: LogicFlowData): ApprovalNode[] {
   const approvalNodes: ApprovalNode[] = []
 
-  // 筛选出审批节点并按Y坐标排序
+  // 筛选出审批节点并按X坐标排序（水平布局）
   const lfApprovalNodes = data.nodes
     .filter((node) => node.type === 'approval-node')
-    .sort((a, b) => a.y - b.y)
+    .sort((a, b) => a.x - b.x)
 
   lfApprovalNodes.forEach((node, index) => {
     const props = node.properties || {}

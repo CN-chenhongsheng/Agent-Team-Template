@@ -249,6 +249,18 @@
         lfInstance.resize()
         // 然后居中适应视图
         lfInstance.fitView(50) // 50px 边距
+        // 限制最大缩放比例为 0.8（80%），防止节点少时被过度放大
+        const tm = lfInstance.graphModel.transformModel
+        if (tm.SCALE_X > 0.8) {
+          const { width, height } = lfInstance.graphModel
+          const centerX = width / 2
+          const centerY = height / 2
+          const ratio = 0.8 / tm.SCALE_X
+          tm.SCALE_X = 0.8
+          tm.SCALE_Y = 0.8
+          tm.TRANSLATE_X = centerX - (centerX - tm.TRANSLATE_X) * ratio
+          tm.TRANSLATE_Y = centerY - (centerY - tm.TRANSLATE_Y) * ratio
+        }
         // 初始化历史记录
         saveToHistory()
         // 标记为已初始化
@@ -448,6 +460,21 @@
         } else {
           // 首次渲染，自动居中
           lfInstance.fitView(50)
+          // 限制最大缩放比例为 0.8（80%），防止节点少时被过度放大
+          const tm = lfInstance.graphModel.transformModel
+          if (tm.SCALE_X > 0.8) {
+            // fitView 已经计算好了居中的偏移量，但缩放过大。
+            // 按比例缩小缩放并调整偏移，保持节点在画布中心。
+            const { width, height } = lfInstance.graphModel
+            const centerX = width / 2
+            const centerY = height / 2
+            const ratio = 0.8 / tm.SCALE_X
+            tm.SCALE_X = 0.8
+            tm.SCALE_Y = 0.8
+            // 以画布中心为基准缩放偏移量
+            tm.TRANSLATE_X = centerX - (centerX - tm.TRANSLATE_X) * ratio
+            tm.TRANSLATE_Y = centerY - (centerY - tm.TRANSLATE_Y) * ratio
+          }
           isInitialized.value = true
         }
       }
@@ -486,6 +513,18 @@
         lfInstance.render(dataToRender)
         await nextTick()
         lfInstance.fitView(50)
+        // 限制最大缩放比例为 0.8（80%）
+        const tm = lfInstance.graphModel.transformModel
+        if (tm.SCALE_X > 0.8) {
+          const { width, height } = lfInstance.graphModel
+          const centerX = width / 2
+          const centerY = height / 2
+          const ratio = 0.8 / tm.SCALE_X
+          tm.SCALE_X = 0.8
+          tm.SCALE_Y = 0.8
+          tm.TRANSLATE_X = centerX - (centerX - tm.TRANSLATE_X) * ratio
+          tm.TRANSLATE_Y = centerY - (centerY - tm.TRANSLATE_Y) * ratio
+        }
       }
     }
   )
@@ -690,6 +729,12 @@
      */
     resize: () => {
       resizeLogicFlow()
+    },
+    /**
+     * 重置初始化状态，使下次 data 变化时走 fitView 分支而非恢复旧 transform
+     */
+    resetInitState: () => {
+      isInitialized.value = false
     }
   })
 
