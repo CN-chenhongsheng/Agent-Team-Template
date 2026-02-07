@@ -129,7 +129,7 @@
             <view class="item-footer">
               <view class="item-meta">
                 <text class="meta-text">
-                  {{ formatTime(item.createTime) }}
+                  {{ extractDate(item.createTime) }}
                 </text>
               </view>
               <u-icon name="arrow-right" size="16" color="#9ca3af" />
@@ -148,12 +148,12 @@ import type { IApplyListItem } from '@/types';
 import { ApplyStatus } from '@/types';
 import useUserStore from '@/store/modules/user';
 import {
-  formatTime,
   getApplyTypeIcon,
   getApplyTypeName,
   getStatusColor,
   getStatusText,
 } from '@/utils/apply';
+import { extractDate } from '@/utils/date';
 import { ROUTE_CONSTANTS } from '@/constants';
 import { getMyAppliesAPI } from '@/api';
 import { transformMyApplyToListItem } from '@/utils/apply-transform';

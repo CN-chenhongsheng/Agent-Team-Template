@@ -74,7 +74,6 @@
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
   import ClassDialog from './modules/class-dialog.vue'
   import ClassSearch from './modules/class-search.vue'
-  import { ElMessageBox, ElMessage } from 'element-plus'
   import { DialogType } from '@/types'
   import { h } from 'vue'
 

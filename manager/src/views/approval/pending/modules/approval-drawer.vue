@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
   import { ref, watch, computed } from 'vue'
-  import { ElTabs, ElTabPane, ElMessage } from 'element-plus'
+  import { ElTabs, ElTabPane } from 'element-plus'
   import ArtDrawer from '@/components/core/layouts/art-drawer/index.vue'
   import ArtBasicInfo from '@/components/core/layouts/art-basic-info/index.vue'
   import ArtStudentHeaderCard from '@/components/core/cards/art-student-header-card/index.vue'

@@ -189,7 +189,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
-import { getMyAllocationResult, getRoommatesInfo } from '@/api/allocation';
+import { getMyAllocationResultAPI, getRoommatesInfoAPI } from '@/api/allocation';
 import type { IAllocationResult, IRoommateInfo } from '@/types/api';
 
 // 加载状态
@@ -260,8 +260,8 @@ async function loadData(): Promise<void> {
   try {
     // 并行请求分配结果和室友信息
     const [resultData, roommatesData] = await Promise.all([
-      getMyAllocationResult(),
-      getRoommatesInfo(),
+      getMyAllocationResultAPI(),
+      getRoommatesInfoAPI(),
     ]);
 
     allocationResult.value = resultData || null;

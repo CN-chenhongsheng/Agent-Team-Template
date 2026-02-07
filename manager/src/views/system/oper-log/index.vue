@@ -69,7 +69,6 @@
   } from '@/api/system-manage'
   import OperLogSearch from './modules/oper-log-search.vue'
   import OperLogDetail from './modules/oper-log-detail.vue'
-  import { ElTag, ElMessageBox, ElMessage } from 'element-plus'
   import { h } from 'vue'
 
   defineOptions({ name: 'OperLog' })

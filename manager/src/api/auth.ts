@@ -1,3 +1,12 @@
+/**
+ * 认证模块 API
+ * 包含登录、登出、Token 刷新、用户信息等接口
+ *
+ * @module api/auth
+ * @author 陈鸿昇
+ * @date 2025-12-30
+ */
+
 import request from '@/utils/http'
 
 /**

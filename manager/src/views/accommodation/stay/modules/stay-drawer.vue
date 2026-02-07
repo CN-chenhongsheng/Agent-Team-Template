@@ -40,7 +40,6 @@
   import ArtStudentHeaderCard from '@/components/core/cards/art-student-header-card/index.vue'
   import StayApprovalInfo from './stay-approval-info.vue'
   import { fetchGetStayDetail, fetchGetStudentDetail } from '@/api/accommodation-manage'
-  import { ElMessage } from 'element-plus'
 
   defineOptions({ name: 'StayDrawer' })
 

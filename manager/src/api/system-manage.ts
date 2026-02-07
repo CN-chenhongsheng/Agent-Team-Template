@@ -15,7 +15,7 @@ import request from '@/utils/http'
  * 获取用户分页列表
  * @param params 查询参数
  */
-export function fetchGetUserList(params: Api.SystemManage.UserSearchParams) {
+export function fetchGetUserPage(params: Api.SystemManage.UserSearchParams) {
   return request.get<Api.SystemManage.UserPageResponse>({
     url: '/api/v1/system/user/page',
     params

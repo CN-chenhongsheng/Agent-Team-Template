@@ -35,7 +35,6 @@
   import ArtStudentHeaderCard from '@/components/core/cards/art-student-header-card/index.vue'
   import StudentLifestyleInfo from './student-lifestyle-info.vue'
   import { fetchGetStudentDetail } from '@/api/student-manage'
-  import { ElMessage } from 'element-plus'
 
   defineOptions({ name: 'StudentDrawer' })
 

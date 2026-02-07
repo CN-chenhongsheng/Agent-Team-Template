@@ -1,90 +1,69 @@
 <!-- 待办审批搜索组件 -->
 <template>
-  <ElCard class="art-search-card" shadow="never">
-    <ElForm :model="localModel" label-width="80px">
-      <ElRow :gutter="16">
-        <ElCol :xs="24" :sm="12" :md="8" :lg="6">
-          <ElFormItem label="业务类型">
-            <ElSelect
-              v-model="localModel.businessType"
-              placeholder="请选择业务类型"
-              clearable
-              style="width: 100%"
-            >
-              <ElOption
-                v-for="item in businessTypeOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </ElSelect>
-          </ElFormItem>
-        </ElCol>
-        <ElCol :xs="24" :sm="12" :md="8" :lg="6">
-          <ElFormItem label="申请人">
-            <ElInput
-              v-model="localModel.applicantName"
-              placeholder="请输入申请人姓名"
-              clearable
-              @keyup.enter="handleSearch"
-            />
-          </ElFormItem>
-        </ElCol>
-        <ElCol :xs="24" :sm="12" :md="8" :lg="6">
-          <ElFormItem label=" ">
-            <ElSpace>
-              <ElButton type="primary" @click="handleSearch" v-ripple>
-                <i class="ri-search-line mr-1"></i>
-                查询
-              </ElButton>
-              <ElButton @click="handleReset" v-ripple>
-                <i class="ri-refresh-line mr-1"></i>
-                重置
-              </ElButton>
-            </ElSpace>
-          </ElFormItem>
-        </ElCol>
-      </ElRow>
-    </ElForm>
-  </ElCard>
+  <ArtSearchBar
+    ref="searchBarRef"
+    v-model="formData"
+    :items="formItems"
+    :rules="{}"
+    @reset="handleReset"
+    @search="handleSearch"
+  />
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted } from 'vue'
+  import { onMounted } from 'vue'
   import { useBusinessType } from '@/hooks'
 
-  interface SearchParams {
-    businessType?: string
-    applicantName?: string
+  interface Props {
+    modelValue: Record<string, any>
   }
 
-  const props = defineProps<{
-    modelValue: SearchParams
-  }>()
+  interface Emits {
+    (e: 'update:modelValue', value: Record<string, any>): void
+    (e: 'search', params: Record<string, any>): void
+    (e: 'reset'): void
+  }
 
-  const emit = defineEmits<{
-    'update:modelValue': [value: SearchParams]
-    search: []
-    reset: []
-  }>()
+  const props = defineProps<Props>()
+  const emit = defineEmits<Emits>()
 
-  // 业务类型（从字典获取）
+  const searchBarRef = ref()
   const { businessTypeOptions, fetchBusinessTypes } = useBusinessType()
 
-  onMounted(() => {
-    fetchBusinessTypes()
-  })
-
-  const localModel = computed({
+  const formData = computed({
     get: () => props.modelValue,
-    set: (value) => emit('update:modelValue', value)
+    set: (val) => emit('update:modelValue', val)
   })
 
-  const handleSearch = () => {
-    emit('search')
+  const formItems = computed(() => [
+    {
+      label: '业务类型',
+      key: 'businessType',
+      type: 'select',
+      props: {
+        clearable: true,
+        placeholder: '请选择业务类型',
+        options: businessTypeOptions.value
+      }
+    },
+    {
+      label: '申请人',
+      key: 'applicantName',
+      type: 'input',
+      props: { clearable: true, placeholder: '请输入申请人姓名' }
+    }
+  ])
+
+  const handleSearch = async () => {
+    await searchBarRef.value.validate()
+    emit('search', formData.value)
   }
 
   const handleReset = () => {
     emit('reset')
   }
+
+  onMounted(() => {
+    fetchBusinessTypes()
+  })
 </script>

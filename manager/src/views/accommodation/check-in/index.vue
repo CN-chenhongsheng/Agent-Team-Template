@@ -74,7 +74,7 @@
     fetchDeleteCheckIn,
     fetchBatchDeleteCheckIn
   } from '@/api/accommodation-manage'
-  import { ElMessageBox, ElPopover } from 'element-plus'
+  import { ElPopover } from 'element-plus'
   import CheckInSearch from './modules/check-in-search.vue'
   import CheckInDrawer from './modules/check-in-drawer.vue'
   import ApprovalProgressTag from '@/components/core/approval/approval-progress-tag/index.vue'

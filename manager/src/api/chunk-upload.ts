@@ -3,16 +3,11 @@
  *
  * @module api/chunk-upload
  * @author 陈鸿昇
+ * @date 2026-02-04
  */
 
 import request from '@/utils/http'
-import {
-  API_PRECHECK,
-  API_CHUNK,
-  API_VERIFY,
-  API_MERGE,
-  API_ABORT
-} from '@/utils/upload/constants'
+import { API_PRECHECK, API_CHUNK, API_VERIFY, API_MERGE, API_ABORT } from '@/utils/upload/constants'
 import type {
   PrecheckRequest,
   PrecheckResponse,

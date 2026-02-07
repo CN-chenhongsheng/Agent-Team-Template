@@ -435,7 +435,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue';
-import { getSurveyData, submitSurvey } from '@/api/allocation';
+import { getSurveyDataAPI, submitSurveyAPI } from '@/api/allocation';
 import type { ISurveyData } from '@/types/api';
 
 // 加载状态

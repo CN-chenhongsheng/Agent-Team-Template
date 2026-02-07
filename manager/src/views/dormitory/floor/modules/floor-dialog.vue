@@ -33,7 +33,6 @@
   import { fetchAddFloor, fetchUpdateFloor, fetchCheckFloorHasRooms } from '@/api/dormitory-manage'
   import { useDictStore } from '@/store/modules/dict'
   import { useReferenceStore } from '@/store/modules/reference'
-  import { ElMessage } from 'element-plus'
   import type { FormRules } from 'element-plus'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
   import type { FormItem } from '@/components/core/forms/art-form/index.vue'

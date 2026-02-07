@@ -255,7 +255,7 @@
 
 <script setup lang="ts">
   import { ref, watch, computed } from 'vue'
-  import { ElCard, ElTag, ElTooltip } from 'element-plus'
+  import { ElCard, ElTooltip } from 'element-plus'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import ArtApprovalInfo from '@/components/core/layouts/art-approval-info/index.vue'
   import {

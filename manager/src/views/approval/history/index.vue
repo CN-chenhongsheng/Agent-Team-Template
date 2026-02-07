@@ -52,7 +52,6 @@
   } from '@/api/approval-manage'
   import HistorySearch from './modules/history-search.vue'
   import ArtViewSwitcher from '@/components/core/base/art-view-switcher/index.vue'
-  import { ElTag } from 'element-plus'
 
   defineOptions({ name: 'ApprovalHistory' })
 

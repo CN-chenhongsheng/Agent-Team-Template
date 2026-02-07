@@ -191,7 +191,6 @@
 
 <script setup lang="ts">
   import { fetchGetAllRoles, fetchGetUsersByRoleCodes } from '@/api/system-manage'
-  import { ElMessage } from 'element-plus'
 
   interface RoleItem {
     id: number

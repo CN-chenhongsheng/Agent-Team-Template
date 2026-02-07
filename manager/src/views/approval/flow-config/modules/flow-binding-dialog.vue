@@ -125,7 +125,6 @@
     type ApprovalFlowBinding,
     type ApprovalFlow
   } from '@/api/approval-manage'
-  import { ElMessageBox, ElMessage } from 'element-plus'
   import { useBusinessType } from '@/hooks'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
 

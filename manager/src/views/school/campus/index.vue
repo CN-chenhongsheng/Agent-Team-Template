@@ -133,7 +133,6 @@
   } from '@/api/school-manage'
   import { useReferenceStore } from '@/store/modules/reference'
   import DrillDownDialog from '@/components/school/DrillDownDialog.vue'
-  import { ElMessageBox, ElMessage } from 'element-plus'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
   import { h, nextTick } from 'vue'
 

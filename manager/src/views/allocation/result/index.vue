@@ -8,78 +8,72 @@
     <template v-else>
       <!-- 任务摘要 -->
       <ElCard shadow="never" class="mb-3" v-if="taskInfo.id">
-      <div class="flex justify-between items-center">
-        <div>
-          <span class="text-lg font-bold">{{ taskInfo.taskName }}</span>
-          <ElTag class="ml-2">{{ taskInfo.statusName }}</ElTag>
+        <div class="flex justify-between items-center">
+          <div>
+            <span class="text-lg font-bold">{{ taskInfo.taskName }}</span>
+            <ElTag class="ml-2">{{ taskInfo.statusName }}</ElTag>
+          </div>
+          <div class="text-gray-500 text-sm">
+            <span>总学生: {{ taskInfo.totalStudents }}</span>
+            <span class="ml-4">已分配: {{ taskInfo.allocatedCount }}</span>
+            <span class="ml-4">已确认: {{ taskInfo.confirmedCount }}</span>
+            <span class="ml-4">平均分: {{ taskInfo.avgMatchScore }}</span>
+          </div>
         </div>
-        <div class="text-gray-500 text-sm">
-          <span>总学生: {{ taskInfo.totalStudents }}</span>
-          <span class="ml-4">已分配: {{ taskInfo.allocatedCount }}</span>
-          <span class="ml-4">已确认: {{ taskInfo.confirmedCount }}</span>
-          <span class="ml-4">平均分: {{ taskInfo.avgMatchScore }}</span>
-        </div>
-      </div>
-    </ElCard>
+      </ElCard>
 
-    <!-- 搜索栏 -->
-    <ResultSearch
-      v-show="showSearchBar"
-      v-model="searchForm"
-      @search="handleSearch"
-      @reset="handleReset"
-    />
-
-    <ElCard
-      class="art-table-card"
-      shadow="never"
-      :style="{ 'margin-top': showSearchBar ? '12px' : '0' }"
-    >
-      <!-- 表格头部 -->
-      <ArtTableHeader
-        v-model:columns="columnChecks"
-        v-model:showSearchBar="showSearchBar"
-        :loading="loading"
-        @refresh="refreshData"
-      >
-        <template #left>
-          <ElSpace wrap>
-            <ElButton
-              :disabled="selectedCount === 0"
-              @click="handleConfirmSelected"
-            >
-              确认选中 ({{ selectedCount }})
-            </ElButton>
-            <ElButton @click="handleConfirmAll">确认全部</ElButton>
-            <ElButton
-              :disabled="selectedCount === 0"
-              @click="handleRejectSelected"
-            >
-              拒绝选中
-            </ElButton>
-            <ElButton @click="handleProblemList">问题清单</ElButton>
-          </ElSpace>
-        </template>
-      </ArtTableHeader>
-
-      <!-- 表格 -->
-      <ArtTable
-        :loading="loading"
-        :data="data"
-        :columns="columns"
-        :pagination="pagination"
-        :contextMenuItems="contextMenuItems"
-        :contextMenuWidth="contextMenuWidth"
-        :onRowContextmenu="handleRowContextmenu as any"
-        :onContextMenuSelect="handleContextMenuSelect"
-        @selection-change="handleSelectionChange"
-        @pagination:size-change="handleSizeChange"
-        @pagination:current-change="handleCurrentChange"
+      <!-- 搜索栏 -->
+      <ResultSearch
+        v-show="showSearchBar"
+        v-model="searchForm"
+        @search="handleSearch"
+        @reset="handleReset"
       />
-    </ElCard>
 
-    <!-- 详情抽屉 -->
-    <ResultDrawer v-model:visible="drawerVisible" :result-data="currentResult" />
+      <ElCard
+        class="art-table-card"
+        shadow="never"
+        :style="{ 'margin-top': showSearchBar ? '12px' : '0' }"
+      >
+        <!-- 表格头部 -->
+        <ArtTableHeader
+          v-model:columns="columnChecks"
+          v-model:showSearchBar="showSearchBar"
+          :loading="loading"
+          @refresh="refreshData"
+        >
+          <template #left>
+            <ElSpace wrap>
+              <ElButton :disabled="selectedCount === 0" @click="handleConfirmSelected">
+                确认选中 ({{ selectedCount }})
+              </ElButton>
+              <ElButton @click="handleConfirmAll">确认全部</ElButton>
+              <ElButton :disabled="selectedCount === 0" @click="handleRejectSelected">
+                拒绝选中
+              </ElButton>
+              <ElButton @click="handleProblemList">问题清单</ElButton>
+            </ElSpace>
+          </template>
+        </ArtTableHeader>
+
+        <!-- 表格 -->
+        <ArtTable
+          :loading="loading"
+          :data="data"
+          :columns="columns"
+          :pagination="pagination"
+          :contextMenuItems="contextMenuItems"
+          :contextMenuWidth="contextMenuWidth"
+          :onRowContextmenu="handleRowContextmenu as any"
+          :onContextMenuSelect="handleContextMenuSelect"
+          @selection-change="handleSelectionChange"
+          @pagination:size-change="handleSizeChange"
+          @pagination:current-change="handleCurrentChange"
+        />
+      </ElCard>
+
+      <!-- 详情抽屉 -->
+      <ResultDrawer v-model:visible="drawerVisible" :result-data="currentResult" />
     </template>
   </div>
 </template>
@@ -96,7 +90,7 @@
   } from '@/api/allocation-manage'
   import ResultSearch from './modules/result-search.vue'
   import ResultDrawer from './modules/result-drawer.vue'
-  import { ElMessageBox, ElTag, ElEmpty } from 'element-plus'
+  import { ElEmpty } from 'element-plus'
   import type { ActionButtonConfig } from '@/types/component'
 
   defineOptions({ name: 'AllocationResult' })
@@ -122,7 +116,10 @@
   const selectedCount = computed(() => selectedRows.value.length)
 
   // 状态映射
-  const statusMap: Record<number, { label: string; type: 'warning' | 'success' | 'danger' | 'info' }> = {
+  const statusMap: Record<
+    number,
+    { label: string; type: 'warning' | 'success' | 'danger' | 'info' }
+  > = {
     0: { label: '待确认', type: 'warning' },
     1: { label: '已确认', type: 'success' },
     2: { label: '已拒绝', type: 'danger' },
@@ -228,9 +225,11 @@
           minWidth: 150,
           formatter: (row: ResultListItem) => {
             if (row.conflictReasons && row.conflictReasons.length) {
-              const tags = row.conflictReasons.slice(0, 2).map((c, i) =>
-                h(ElTag, { type: 'danger', size: 'small', class: 'mr-1', key: i }, () => c)
-              )
+              const tags = row.conflictReasons
+                .slice(0, 2)
+                .map((c, i) =>
+                  h(ElTag, { type: 'danger', size: 'small', class: 'mr-1', key: i }, () => c)
+                )
               if (row.conflictReasons.length > 2) {
                 tags.push(
                   h('span', { class: 'text-gray-400' }, `+${row.conflictReasons.length - 2}`)
@@ -335,10 +334,7 @@
       return
     }
     try {
-      await ElMessageBox.confirm(
-        `确定要确认选中的 ${selectedRows.value.length} 条记录吗？`,
-        '提示'
-      )
+      await ElMessageBox.confirm(`确定要确认选中的 ${selectedRows.value.length} 条记录吗？`, '提示')
       const ids = selectedRows.value.map((r) => r.id)
       await fetchConfirmResults(id, ids)
       await refreshData()

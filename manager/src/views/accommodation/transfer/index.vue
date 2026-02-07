@@ -75,7 +75,7 @@
     fetchDeleteTransfer,
     fetchBatchDeleteTransfer
   } from '@/api/accommodation-manage'
-  import { ElMessageBox, ElPopover } from 'element-plus'
+  import { ElPopover } from 'element-plus'
   import TransferSearch from './modules/transfer-search.vue'
   import TransferDrawer from './modules/transfer-drawer.vue'
   import ApprovalProgressTag from '@/components/core/approval/approval-progress-tag/index.vue'

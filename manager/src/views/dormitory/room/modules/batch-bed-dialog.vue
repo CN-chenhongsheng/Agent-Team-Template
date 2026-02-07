@@ -134,7 +134,6 @@
 <script setup lang="ts">
   import { fetchBatchCreateBeds } from '@/api/dormitory-manage'
   import { useDictStore } from '@/store/modules/dict'
-  import { ElMessage } from 'element-plus'
   import type { FormInstance, FormRules } from 'element-plus'
 
   interface Props {

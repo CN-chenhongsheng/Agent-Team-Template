@@ -4,6 +4,7 @@
  * 报错由 http 拦截器统一处理，可配置 showErrorMessage / showSuccessMessage。
  *
  * @module api/repair-manage
+ * @author 陈鸿昇
  * @date 2026-01-29
  */
 
