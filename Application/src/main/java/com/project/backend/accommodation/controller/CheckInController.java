@@ -8,6 +8,7 @@ import com.project.core.result.PageResult;
 import com.project.core.result.R;
 import com.project.backend.controller.base.BaseCrudController;
 import com.project.backend.controller.base.BatchDeleteController;
+import com.project.core.annotation.Log;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +68,7 @@ public class CheckInController extends BaseCrudController<CheckInVO, CheckInQuer
      * 撤回入住申请
      */
     @Operation(summary = "撤回入住申请")
+    @Log(title = "撤回入住申请", businessType = 2)
     @PutMapping("/{id}/cancel")
     public R<Void> cancel(@PathVariable Long id) {
         boolean success = checkInService.cancelCheckIn(id);
@@ -78,6 +80,7 @@ public class CheckInController extends BaseCrudController<CheckInVO, CheckInQuer
      * 用于可视化视图中管理员直接将学生分配到空床位
      */
     @Operation(summary = "管理员直接分配床位", description = "管理员直接将学生分配到空床位，跳过审批流程")
+    @Log(title = "管理员直接分配床位", businessType = 1)
     @PostMapping("/admin-assign")
     public R<Void> adminAssignBed(@RequestBody CheckInSaveDTO saveDTO) {
         boolean success = checkInService.adminAssignBed(saveDTO);

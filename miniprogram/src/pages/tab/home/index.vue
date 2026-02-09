@@ -127,7 +127,7 @@
         </view>
         <view class="utility-stats">
           <!-- 用电统计 -->
-          <view class="glass-card utility-card">
+          <view class="glass-card utility-card utility-card--electric">
             <view class="utility-bg-blob utility-bg-electric" />
             <view class="utility-header">
               <view class="utility-info">
@@ -149,26 +149,22 @@
                 </view>
               </view>
               <view class="utility-trend" :class="electricityData.trendClass">
-                <u-icon :name="electricityData.trendIcon" size="14" :color="electricityData.trendColor" />
-                <text>
-                  {{ electricityData.trendText }}
-                </text>
+                <u-icon :name="electricityData.trendIcon" size="12" :color="electricityData.trendColor" />
+                <text>{{ electricityData.trendText }}</text>
               </view>
             </view>
             <view class="utility-chart">
-              <view class="chart-container">
-                <qiun-ucharts
-                  type="line"
-                  :opts="electricityChartOpts"
-                  :chart-data="electricityChartData"
-                  canvas-id="electricity-chart"
-                />
-              </view>
+              <qiun-ucharts
+                type="area"
+                :opts="electricityChartOpts"
+                :chart-data="electricityChartData"
+                canvas-id="electricity-chart"
+              />
             </view>
           </view>
 
           <!-- 用水统计 -->
-          <view class="glass-card utility-card">
+          <view class="glass-card utility-card utility-card--water">
             <view class="utility-bg-blob utility-bg-water" />
             <view class="utility-header">
               <view class="utility-info">
@@ -190,21 +186,17 @@
                 </view>
               </view>
               <view class="utility-trend" :class="waterData.trendClass">
-                <u-icon :name="waterData.trendIcon" size="14" :color="waterData.trendColor" />
-                <text>
-                  {{ waterData.trendText }}
-                </text>
+                <u-icon :name="waterData.trendIcon" size="12" :color="waterData.trendColor" />
+                <text>{{ waterData.trendText }}</text>
               </view>
             </view>
             <view class="utility-chart">
-              <view class="chart-container">
-                <qiun-ucharts
-                  type="line"
-                  :opts="waterChartOpts"
-                  :chart-data="waterChartData"
-                  canvas-id="water-chart"
-                />
-              </view>
+              <qiun-ucharts
+                type="area"
+                :opts="waterChartOpts"
+                :chart-data="waterChartData"
+                canvas-id="water-chart"
+              />
             </view>
           </view>
         </view>
@@ -268,17 +260,9 @@ import type { IApplyDisplay, INoticeDisplay, IQuickService } from '@/types';
 import useUserStore from '@/store/modules/user';
 import { ROUTE_CONSTANTS } from '@/constants';
 import { USE_MOCK } from '@/mock';
-import { getCheckInPageAPI } from '@/api/accommodation/check-in';
-import { getTransferPageAPI } from '@/api/accommodation/transfer';
-import { getCheckOutPageAPI } from '@/api/accommodation/check-out';
-import { getStayPageAPI } from '@/api/accommodation/stay';
-import { getMyAppliesAPI, getStudentHomeStatisticsAPI } from '@/api';
+import { getMyAppliesAPI } from '@/api';
 import {
-  transformCheckInToDisplay,
-  transformCheckOutToDisplay,
-  transformMyApplyToDisplay,
-  transformStayToDisplay,
-  transformTransferToDisplay,
+  transformMyApplyToDisplay
 } from '@/utils/apply-transform';
 import { useNotice } from '@/composables/useNotice';
 
@@ -372,39 +356,63 @@ const waterData = ref({
 // 用电图表配置
 const electricityChartOpts = ref({
   color: ['#0adbc3'],
-  padding: [15, 2, 0, 2], // 增加顶部 padding，为数据标签留出空间
+  padding: [15, 15, 5, 15],
   enableScroll: false,
-  legend: {
-    show: false,
-  },
+  animation: true,
+  timing: 'easeOut',
+  duration: 800,
+  legend: { show: false },
+  dataLabel: false,
+  dataPointShape: true,
+  dataPointShapeType: 'solid',
   xAxis: {
     disableGrid: true,
+    fontColor: '#94a3b8',
+    fontSize: 11,
+    rotateLabel: false,
+    itemCount: 6,
+    boundaryGap: 'justify',
+    axisLine: false,
   },
   yAxis: {
     gridType: 'dash',
-    dashLength: 2,
-    // 手动设置 Y 轴范围，确保图表完整显示
-    dataMin: 100, // 数据最小值
-    dataMax: 200, // 数据最大值
-    splitNumber: 5, // 分割数
+    gridColor: '#e2e8f0',
+    dashLength: 4,
+    splitNumber: 4,
+    fontColor: '#94a3b8',
+    fontSize: 10,
+    showTitle: false,
+    data: [{ min: 80, max: 210 }],
   },
   extra: {
     line: {
       type: 'curve',
       width: 3,
       activeType: 'hollow',
-      activeRadius: 6,
+      activeRadius: 5,
+      linearType: 'custom',
+      onShadow: true,
+      animation: 'horizontal',
+    },
+    area: {
+      type: 'curve',
+      opacity: 0.15,
+      addLine: true,
+      width: 3,
+      gradient: true,
     },
   },
 });
 
-// 用电图表数据
+// 用电图表数据 - 区域渐变填充
 const electricityChartData = computed(() => ({
-  categories: ['1月', '4月', '8月', '12月'],
+  categories: ['1月', '2月', '3月', '4月', '5月', '6月'],
   series: [
     {
       name: '用电量',
-      data: [120, 180, 140, 160],
+      data: [120, 145, 180, 155, 140, 160],
+      color: '#0adbc3',
+      textColor: '#0adbc3',
     },
   ],
 }));
@@ -412,34 +420,63 @@ const electricityChartData = computed(() => ({
 // 用水图表配置
 const waterChartOpts = ref({
   color: ['#60a5fa'],
-  padding: [15, 2, 0, 2], // 增加顶部 padding，为数据标签留出空间
+  padding: [15, 15, 5, 15],
   enableScroll: false,
-  legend: {
-    show: false,
-  },
+  animation: true,
+  timing: 'easeOut',
+  duration: 800,
+  legend: { show: false },
+  dataLabel: false,
+  dataPointShape: true,
+  dataPointShapeType: 'solid',
   xAxis: {
     disableGrid: true,
+    fontColor: '#94a3b8',
+    fontSize: 11,
+    rotateLabel: false,
+    itemCount: 6,
+    boundaryGap: 'justify',
+    axisLine: false,
   },
   yAxis: {
     gridType: 'dash',
-    dashLength: 2,
+    gridColor: '#e2e8f0',
+    dashLength: 4,
+    splitNumber: 4,
+    fontColor: '#94a3b8',
+    fontSize: 10,
+    showTitle: false,
+    data: [{ min: 50, max: 130 }],
   },
   extra: {
     line: {
       type: 'curve',
       width: 3,
       activeType: 'hollow',
+      activeRadius: 5,
+      linearType: 'custom',
+      onShadow: true,
+      animation: 'horizontal',
+    },
+    area: {
+      type: 'curve',
+      opacity: 0.12,
+      addLine: true,
+      width: 3,
+      gradient: true,
     },
   },
 });
 
-// 用水图表数据
+// 用水图表数据 - 区域渐变填充
 const waterChartData = computed(() => ({
-  categories: ['1月', '4月', '8月', '12月'],
+  categories: ['1月', '2月', '3月', '4月', '5月', '6月'],
   series: [
     {
       name: '用水量',
-      data: [110, 95, 85, 75],
+      data: [110, 102, 95, 88, 85, 75],
+      color: '#60a5fa',
+      textColor: '#60a5fa',
     },
   ],
 }));
@@ -1124,35 +1161,64 @@ onMounted(async () => {
 }
 
 // 水电统计
+// ========================================
+// 水电统计区域
+// ========================================
+
 .utility-stats {
   display: flex;
   flex-direction: column;
-  gap: $spacing-md;
+  gap: $spacing-lg;
 }
 
 .utility-card {
   position: relative;
-  overflow: visible;
-  padding: $spacing-lg;
+  overflow: hidden;
+  padding: $spacing-lg $spacing-lg 0;
+
+  // 用电卡片顶部渐变线条
+  &--electric::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6rpx;
+    background: linear-gradient(90deg, #0adbc3 0%, #14b8a6 40%, transparent 100%);
+    border-radius: 3rpx 3rpx 0 0;
+  }
+
+  // 用水卡片顶部渐变线条
+  &--water::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6rpx;
+    background: linear-gradient(90deg, #60a5fa 0%, #3b82f6 40%, transparent 100%);
+    border-radius: 3rpx 3rpx 0 0;
+  }
 }
 
 .utility-bg-blob {
   position: absolute;
-  top: -96rpx;
-  right: -96rpx;
+  top: -80rpx;
+  right: -80rpx;
   z-index: 0;
-  width: 320rpx;
-  height: 320rpx;
+  width: 280rpx;
+  height: 280rpx;
   border-radius: 50%;
-  filter: blur(64rpx);
+  filter: blur(56rpx);
   pointer-events: none;
+  opacity: 0.8;
 
   &.utility-bg-electric {
-    background: rgb(10 219 195 / 10%);
+    background: rgb(10 219 195 / 12%);
   }
 
   &.utility-bg-water {
-    background: rgb(96 165 250 / 10%);
+    background: rgb(96 165 250 / 12%);
   }
 }
 
@@ -1162,102 +1228,93 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: $spacing-md;
+  margin-bottom: $spacing-sm;
 }
 
 .utility-info {
   display: flex;
   flex-direction: column;
-  gap: $spacing-xs;
+  gap: 4rpx;
 }
 
 .utility-title-row {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: 12rpx;
 }
 
 .utility-icon-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 12rpx;
-  border-radius: 50%;
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 14rpx;
 
   &.utility-icon-electric {
-    background: rgb(10 219 195 / 10%);
+    background: linear-gradient(135deg, rgb(10 219 195 / 15%) 0%, rgb(10 219 195 / 5%) 100%);
   }
 
   &.utility-icon-water {
-    background: rgb(96 165 250 / 10%);
+    background: linear-gradient(135deg, rgb(96 165 250 / 15%) 0%, rgb(96 165 250 / 5%) 100%);
   }
 }
 
 .utility-title {
-  font-size: $font-lg;
-  font-weight: $font-bold;
-  color: $text-main;
+  font-size: $font-md;
+  font-weight: $font-semibold;
+  color: $text-sub;
   letter-spacing: 0.5rpx;
 }
 
 .utility-value-row {
   display: flex;
   align-items: baseline;
-  gap: $spacing-xs;
-  margin-top: $spacing-sm;
+  gap: 8rpx;
+  margin-top: 12rpx;
 }
 
 .utility-value {
-  font-size: 90rpx;
+  font-size: 72rpx;
   line-height: 1;
   font-weight: $font-bold;
   color: $text-main;
-  letter-spacing: -2rpx;
+  letter-spacing: -3rpx;
 }
 
 .utility-unit {
-  font-size: $font-md;
-  color: $text-sub;
+  font-size: $font-sm;
+  color: $text-disabled;
   font-weight: $font-medium;
-  transform: translateY(-4rpx);
+  transform: translateY(-2rpx);
 }
 
 .utility-trend {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  padding: 12rpx 20rpx;
-  font-size: $font-sm;
-  border-radius: $radius-sm;
-  gap: $spacing-xs;
+  padding: 8rpx 16rpx;
+  font-size: 22rpx;
+  border-radius: 20rpx;
+  gap: 4rpx;
   font-weight: $font-semibold;
+  margin-top: 8rpx;
 
   &.trend-down {
-    color: #22c55e;
-    background: rgb(34 197 94 / 10%);
-    border: 2rpx solid rgb(34 197 94 / 20%);
+    color: #16a34a;
+    background: linear-gradient(135deg, rgb(34 197 94 / 12%) 0%, rgb(34 197 94 / 6%) 100%);
   }
 
   &.trend-up {
-    color: #ef4444;
-    background: rgb(239 68 68 / 10%);
-    border: 2rpx solid rgb(239 68 68 / 20%);
+    color: #dc2626;
+    background: linear-gradient(135deg, rgb(239 68 68 / 12%) 0%, rgb(239 68 68 / 6%) 100%);
   }
 }
 
 .utility-chart {
   position: relative;
   z-index: 10;
-  overflow: visible;
-  margin-top: $spacing-md;
-  margin-bottom: $spacing-xs;
-  width: 100%;
-  height: 240rpx;
-}
-
-.chart-container {
-  position: relative;
-  overflow: visible;
-  width: 100%;
-  height: 100%;
+  margin: 0 #{-$spacing-lg};
+  width: calc(100% + #{$spacing-lg} * 2);
+  height: 280rpx;
 }
 </style>

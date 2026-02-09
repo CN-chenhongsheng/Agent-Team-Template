@@ -44,20 +44,31 @@
 
     <!-- 进度弹窗 -->
     <TaskProgressDialog
+      ref="progressDialogRef"
       v-model:visible="progressVisible"
       :task-id="currentTaskId"
       @completed="handleProgressCompleted"
+      @minimize="handleMinimize"
     />
 
     <!-- 创建任务弹窗 -->
-    <TaskCreateDialog v-model:visible="createDialogVisible" @submit="handleCreateSubmit" />
+    <TaskCreateDialog
+      v-model:visible="createDialogVisible"
+      :task="editingTask"
+      @submit="handleCreateSubmit"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
   import { useRouter } from 'vue-router'
   import { useTable } from '@/hooks/core/useTable'
-  import { fetchGetTaskPage, fetchExecuteTask, fetchCancelTask } from '@/api/allocation-manage'
+  import {
+    fetchGetTaskPage,
+    fetchGetTaskDetail,
+    fetchExecuteTask,
+    fetchCancelTask
+  } from '@/api/allocation-manage'
   import TaskSearch from './modules/task-search.vue'
   import TaskProgressDialog from './modules/task-progress-dialog.vue'
   import TaskCreateDialog from './modules/task-create-dialog.vue'
@@ -73,6 +84,92 @@
   const progressVisible = ref(false)
   const createDialogVisible = ref(false)
   const currentTaskId = ref<number | undefined>(undefined)
+  const editingTask = ref<TaskListItem | undefined>(undefined)
+  const progressDialogRef = ref<InstanceType<typeof TaskProgressDialog>>()
+
+  // ========== 进度通知栏 ==========
+  let progressNotification: ReturnType<typeof ElNotification> | null = null
+  let notificationTimer: ReturnType<typeof setInterval> | null = null
+
+  /** 最小化进度弹窗 -> 显示通知栏 */
+  const handleMinimize = () => {
+    progressVisible.value = false
+    showProgressNotification()
+  }
+
+  /** 显示进度通知（只创建一次，后续原地更新 DOM） */
+  const showProgressNotification = () => {
+    closeProgressNotification()
+
+    const pct = progressDialogRef.value?.progressData?.progressPercent || 0
+    const stage = progressDialogRef.value?.progressData?.currentStage || '处理中...'
+
+    progressNotification = ElNotification({
+      title: '分配任务执行中',
+      dangerouslyUseHTMLString: true,
+      customClass: 'task-progress-notification',
+      message: `
+        <div class="tpn-body">
+          <div class="tpn-row">
+            <span class="tpn-stage" id="__tpn_stage">${stage}</span>
+            <span class="tpn-pct" id="__tpn_pct">${pct}%</span>
+          </div>
+          <div class="tpn-track">
+            <div class="tpn-bar" id="__tpn_bar" style="width:${pct}%"></div>
+          </div>
+          <a id="__tpn_detail_btn" class="tpn-link">查看详情</a>
+        </div>
+      `,
+      duration: 0,
+      position: 'bottom-right',
+      showClose: false,
+      onClose: () => {
+        progressNotification = null
+      }
+    })
+
+    // 绑定"查看详情"点击
+    nextTick(() => {
+      const btn = document.getElementById('__tpn_detail_btn')
+      if (btn) {
+        btn.onclick = () => {
+          closeProgressNotification()
+          progressVisible.value = true
+        }
+      }
+    })
+
+    // 定时原地更新 DOM 内容（不重建通知）
+    notificationTimer = setInterval(() => {
+      const data = progressDialogRef.value?.progressData
+      if (!data) return
+
+      if (data.completed) {
+        closeProgressNotification()
+        handleProgressCompleted()
+        return
+      }
+
+      const stageEl = document.getElementById('__tpn_stage')
+      const pctEl = document.getElementById('__tpn_pct')
+      const barEl = document.getElementById('__tpn_bar')
+      if (stageEl) stageEl.textContent = data.currentStage || '处理中...'
+      if (pctEl) pctEl.textContent = `${data.progressPercent || 0}%`
+      if (barEl) barEl.style.width = `${data.progressPercent || 0}%`
+    }, 2000)
+  }
+
+  /** 关闭进度通知 */
+  const closeProgressNotification = () => {
+    if (notificationTimer) {
+      clearInterval(notificationTimer)
+      notificationTimer = null
+    }
+    if (progressNotification) {
+      progressNotification.close()
+      progressNotification = null
+    }
+  }
 
   // 任务类型映射
   const taskTypeMap: Record<number, string> = {
@@ -103,6 +200,7 @@
   })
 
   // 前置声明函数
+  let handleEdit: (row: TaskListItem) => Promise<void>
   let handleExecute: (row: TaskListItem) => Promise<void>
   let handleCancel: (row: TaskListItem) => Promise<void>
   let handleViewProgress: (row: TaskListItem) => void
@@ -117,13 +215,19 @@
     if (row.status === 0) {
       // 待执行
       actions.push({
+        type: 'edit',
+        label: '编辑',
+        onClick: () => handleEdit(row),
+        auth: 'allocation:task:edit'
+      })
+      actions.push({
         type: 'play',
         label: '执行',
         onClick: () => handleExecute(row),
         auth: 'allocation:task:execute'
       })
       actions.push({
-        type: 'delete',
+        type: 'cancel',
         label: '取消',
         onClick: () => handleCancel(row),
         danger: true,
@@ -191,29 +295,62 @@
           formatter: (row: TaskListItem) => {
             const parts: string[] = []
             if (row.targetEnrollmentYear) parts.push(`${row.targetEnrollmentYear}级`)
-            if (row.targetGender) parts.push(row.targetGender === 'male' ? '男' : '女')
-            if (row.targetCampusName) parts.push(row.targetCampusName)
+            if (row.targetGender) {
+              const genderMap: Record<string, string> = { '1': '男', '2': '女', '3': '混合', male: '男', female: '女' }
+              parts.push(genderMap[row.targetGender] || row.targetGender)
+            }
+            if (row.targetCampusCode) parts.push(row.targetCampusCode)
             return parts.length > 0 ? parts.join(' · ') : '--'
           }
         },
         {
           prop: 'progress',
           label: '进度',
-          width: 180,
+          width: 160,
           formatter: (row: TaskListItem) => {
-            if (row.status < 2) return h('span', { class: 'text-gray-400' }, '--')
+            const total = row.totalStudents || 0
+            const done = row.allocatedCount || 0
 
-            const percent = row.totalStudents
-              ? Math.round((row.allocatedCount * 100) / row.totalStudents)
-              : 0
-            return h('div', [
-              h('span', { class: 'text-sm' }, `${row.allocatedCount}/${row.totalStudents}`),
-              h(ElProgress, {
-                percentage: percent,
-                strokeWidth: 6,
-                class: 'mt-1'
-              })
-            ])
+            // 未执行或无数据
+            if (row.status < 2 || total === 0) {
+              return h('span', { class: 'text-gray-400 text-sm' }, '--')
+            }
+
+            const percent = Math.round((done * 100) / total)
+            const color = percent >= 100 ? '#10b981' : percent >= 50 ? '#3b82f6' : '#f59e0b'
+
+            return h(
+              'div',
+              { style: 'display:flex;align-items:center;gap:8px' },
+              [
+                // 迷你进度条（竖向填充块）
+                h(
+                  'div',
+                  {
+                    style:
+                      'position:relative;width:4px;height:28px;border-radius:2px;background:var(--el-fill-color-light);overflow:hidden;flex-shrink:0'
+                  },
+                  [
+                    h('div', {
+                      style: `position:absolute;bottom:0;width:100%;height:${percent}%;background:${color};border-radius:2px;transition:height 0.3s`
+                    })
+                  ]
+                ),
+                // 数字和标签
+                h('div', { style: 'display:flex;flex-direction:column;gap:0' }, [
+                  h(
+                    'span',
+                    { style: `font-size:13px;font-weight:600;color:${color};line-height:1.4` },
+                    `${done} / ${total}`
+                  ),
+                  h(
+                    'span',
+                    { style: 'font-size:11px;color:var(--el-text-color-placeholder);line-height:1.3' },
+                    `${percent}%${percent >= 100 ? ' 已完成' : ''}`
+                  )
+                ])
+              ]
+            )
           }
         },
         {
@@ -241,7 +378,7 @@
         {
           prop: 'action',
           label: '操作',
-          width: 150,
+          width: 180,
           fixed: 'right',
           formatter: (row: TaskListItem) => getRowActions(row)
         }
@@ -275,7 +412,20 @@
 
   // 创建任务
   const handleCreate = () => {
+    editingTask.value = undefined
     createDialogVisible.value = true
+  }
+
+  // 编辑任务
+  handleEdit = async (row: TaskListItem) => {
+    try {
+      const detail = await fetchGetTaskDetail(row.id)
+      editingTask.value = detail || row
+      createDialogVisible.value = true
+    } catch {
+      editingTask.value = row
+      createDialogVisible.value = true
+    }
   }
 
   // 创建任务提交回调
@@ -325,6 +475,71 @@
 
   // 进度完成回调
   const handleProgressCompleted = async () => {
+    closeProgressNotification()
     await refreshData()
   }
+
+  // 页面卸载时清理
+  onUnmounted(() => {
+    closeProgressNotification()
+  })
 </script>
+
+<!-- 通知栏样式必须全局，因为 ElNotification 挂载在 body -->
+<style lang="scss">
+  .task-progress-notification {
+    // 使用系统圆角变量
+    border-radius: var(--el-border-radius-base, 8px) !important;
+    overflow: hidden;
+    box-shadow: var(--el-box-shadow-light) !important;
+
+    .tpn-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .tpn-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tpn-stage {
+      font-size: 13px;
+      color: var(--el-text-color-regular);
+    }
+
+    .tpn-pct {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--el-color-primary);
+    }
+
+    .tpn-track {
+      height: 4px;
+      border-radius: 2px;
+      background: var(--el-fill-color-light);
+      overflow: hidden;
+    }
+
+    .tpn-bar {
+      height: 100%;
+      border-radius: 2px;
+      background: var(--el-color-primary);
+      transition: width 0.4s ease;
+    }
+
+    .tpn-link {
+      font-size: 12px;
+      color: var(--el-color-primary);
+      cursor: pointer;
+      text-align: right;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+</style>

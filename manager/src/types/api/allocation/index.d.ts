@@ -136,14 +136,14 @@ declare namespace Api {
       targetEnrollmentYear?: number
       /** 目标性别 */
       targetGender?: string
-      /** 目标校区ID */
-      targetCampusId?: number
-      /** 目标校区名称 */
-      targetCampusName?: string
-      /** 目标楼栋ID */
-      targetBuildingId?: number
-      /** 目标楼栋名称 */
-      targetBuildingName?: string
+      /** 目标校区编码 */
+      targetCampusCode?: string
+      /** 目标院系编码 */
+      targetDeptCode?: string
+      /** 目标专业编码 */
+      targetMajorCode?: string
+      /** 目标楼层ID列表 */
+      targetFloorIds?: number[]
       /** 总学生数 */
       totalStudents: number
       /** 已分配数 */
@@ -179,26 +179,54 @@ declare namespace Api {
       configId: number
       targetEnrollmentYear?: number
       targetGender?: string
-      targetCampusId?: number
-      targetBuildingId?: number
+      targetCampusCode?: string
+      targetDeptCode?: string
+      targetMajorCode?: string
+      targetFloorIds?: number[]
       remark?: string
     }
 
-    /** 任务预览参数 */
+    /** 任务预览参数（与 TaskSaveParams 一致，后端接收同一个 DTO） */
     interface TaskPreviewParams {
+      taskName?: string
+      taskType?: number
       configId: number
       targetEnrollmentYear?: number
       targetGender?: string
-      targetCampusId?: number
-      targetBuildingId?: number
+      targetCampusCode?: string
+      targetDeptCode?: string
+      targetMajorCode?: string
+      targetFloorIds?: number[]
     }
 
-    /** 任务预览结果 */
+    /** 任务预览结果（对应后端 AllocationPreviewVO） */
     interface TaskPreviewResult {
-      studentCount: number
-      bedCount: number
-      estimatedTime: number
+      /** 符合条件的学生总数 */
+      totalStudents: number
+      /** 已填写问卷的学生数 */
+      surveyFilledCount: number
+      /** 未填写问卷的学生数 */
+      surveyUnfilledCount: number
+      /** 问卷填写率（百分比） */
+      surveyFillRate: number
+      /** 已分配床位的学生数 */
+      alreadyAllocatedCount: number
+      /** 待分配学生数 */
+      toBeAllocatedCount: number
+      /** 目标范围内的房间总数 */
+      totalRooms: number
+      /** 可用床位总数 */
+      totalAvailableBeds: number
+      /** 床位是否充足 */
+      bedsEnough: boolean
+      /** 差额数量（正数表示多余，负数表示不足） */
+      bedDifference: number
+      /** 警告信息列表 */
       warnings?: string[]
+      /** 是否可以执行分配 */
+      canExecute: boolean
+      /** 不能执行的原因 */
+      cannotExecuteReason?: string
     }
 
     /** 任务进度 */

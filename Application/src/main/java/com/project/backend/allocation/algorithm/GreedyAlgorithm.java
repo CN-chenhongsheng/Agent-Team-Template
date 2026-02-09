@@ -12,12 +12,14 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
- * 贪心分配算法
+ * 贪心分配算法（优化版）
  * 策略：依次为每个学生找当前最优的床位
+ * 优化：性别分桶、空房间快速路径、早停、分片并行
  *
  * @author 陈鸿昇
  * @since 2026-02-02
@@ -28,6 +30,9 @@ import java.util.stream.Collectors;
 public class GreedyAlgorithm implements AllocationAlgorithm {
 
     private final CompatibilityService compatibilityService;
+
+    /** 早停阈值：匹配分 >= 此值时停止搜索 */
+    private static final BigDecimal EARLY_STOP_SCORE = BigDecimal.valueOf(90);
 
     @Override
     public String getAlgorithmType() {
@@ -56,13 +61,11 @@ public class GreedyAlgorithm implements AllocationAlgorithm {
 
     @Override
     public String getEstimatedTime(int studentCount) {
-        if (studentCount <= 1000) {
-            return "约2-5秒";
-        } else if (studentCount <= 5000) {
-            return "约10-20秒";
-        } else {
-            return "约30-60秒";
-        }
+        if (studentCount <= 1000) return "约1-2秒";
+        if (studentCount <= 10000) return "约3-5秒";
+        if (studentCount <= 50000) return "约5-10秒";
+        if (studentCount <= 200000) return "约15-30秒";
+        return "约30-60秒";
     }
 
     @Override
@@ -73,102 +76,143 @@ public class GreedyAlgorithm implements AllocationAlgorithm {
             AllocationConfig config,
             Consumer<AllocationProgress> progressCallback) {
 
-        log.info("开始贪心分配，学生数：{}，可用房间数：{}", students.size(), roomBedMap.size());
+        int tier = AlgorithmHelper.determineTier(students.size());
+        log.info("开始贪心分配，学生数：{}，可用房间数：{}，使用 Tier {}", students.size(), roomBedMap.size(), tier);
+
+        if (tier >= 2) {
+            return allocatePartitioned(students, roomBedMap, roomStudentMap, config, progressCallback);
+        }
+
+        return allocateDirect(students, roomBedMap, roomStudentMap, config, progressCallback);
+    }
+
+    /**
+     * Tier 2/3: 分片并行
+     */
+    private List<AllocationResultDTO> allocatePartitioned(
+            List<Student> students,
+            Map<Long, List<Bed>> roomBedMap,
+            Map<Long, List<Student>> roomStudentMap,
+            AllocationConfig config,
+            Consumer<AllocationProgress> progressCallback) {
+
+        List<AlgorithmHelper.Partition> partitions = AlgorithmHelper.partitionStudentsAndRooms(
+                students, roomBedMap, roomStudentMap);
+
+        if (progressCallback != null) {
+            progressCallback.accept(new AllocationProgress(
+                    students.size(), 0, 0, 0,
+                    String.format("已分为 %d 个分片，开始并行执行", partitions.size())));
+        }
+
+        ForkJoinPool pool = new ForkJoinPool(Math.min(partitions.size(), Runtime.getRuntime().availableProcessors()));
+        try {
+            List<AllocationResultDTO> allResults = pool.submit(() ->
+                    partitions.parallelStream()
+                            .flatMap(p -> allocateDirect(p.students, p.roomBedMap, p.roomStudentMap, config, null).stream())
+                            .collect(Collectors.toList())
+            ).get();
+
+            int success = (int) allResults.stream().filter(AllocationResultDTO::isSuccess).count();
+            int failed = allResults.size() - success;
+            if (progressCallback != null) {
+                progressCallback.accept(new AllocationProgress(
+                        students.size(), students.size(), success, failed, "分片并行执行完成"));
+            }
+            return allResults;
+        } catch (Exception e) {
+            log.error("分片并行执行失败，回退到单线程", e);
+            return allocateDirect(students, roomBedMap, roomStudentMap, config, progressCallback);
+        } finally {
+            pool.shutdown();
+        }
+    }
+
+    /**
+     * Tier 1: 直接贪心分配（性别分桶 + 空房间快速路径 + 早停）
+     */
+    private List<AllocationResultDTO> allocateDirect(
+            List<Student> students,
+            Map<Long, List<Bed>> roomBedMap,
+            Map<Long, List<Student>> roomStudentMap,
+            AllocationConfig config,
+            Consumer<AllocationProgress> progressCallback) {
 
         List<AllocationResultDTO> results = new ArrayList<>();
         int totalStudents = students.size();
-        int processedCount = 0;
-        int successCount = 0;
-        int failedCount = 0;
+        int processedCount = 0, successCount = 0, failedCount = 0;
 
-        // 复制床位映射，避免修改原始数据
+        // 复制可用床位和室友映射
         Map<Long, List<Bed>> availableBedMap = new HashMap<>();
         for (Map.Entry<Long, List<Bed>> entry : roomBedMap.entrySet()) {
             availableBedMap.put(entry.getKey(), new ArrayList<>(entry.getValue()));
         }
-
-        // 复制室友映射
         Map<Long, List<Student>> currentRoomStudentMap = new HashMap<>();
         for (Map.Entry<Long, List<Student>> entry : roomStudentMap.entrySet()) {
             currentRoomStudentMap.put(entry.getKey(), new ArrayList<>(entry.getValue()));
         }
 
-        // 按习惯特征明显程度排序学生（可选优化）
+        // 性别分桶
+        Map<Integer, Set<Long>> genderBuckets = AlgorithmHelper.bucketRoomsByGender(availableBedMap, currentRoomStudentMap);
+
+        // 维护空房间集合（用于快速路径）
+        Set<Long> emptyRoomIds = new HashSet<>();
+        for (Long roomId : availableBedMap.keySet()) {
+            if (!currentRoomStudentMap.containsKey(roomId) || currentRoomStudentMap.get(roomId).isEmpty()) {
+                emptyRoomIds.add(roomId);
+            }
+        }
+
+        // 按习惯特征明显程度排序（难匹配的优先）
         List<Student> sortedStudents = sortStudentsByDistinctiveness(students);
 
-        // 遍历每个学生
         for (Student student : sortedStudents) {
             processedCount++;
 
-            // 报告进度
             if (progressCallback != null && processedCount % 100 == 0) {
                 progressCallback.accept(new AllocationProgress(
                         totalStudents, processedCount, successCount, failedCount,
-                        "正在分配第 " + processedCount + " 个学生"
-                ));
+                        "正在分配第 " + processedCount + " 个学生"));
             }
 
-            // 为该学生找最佳床位
-            BedMatch bestMatch = findBestBed(student, availableBedMap, currentRoomStudentMap, config);
+            // 获取该学生的候选房间（同性别 + 空房间）
+            Set<Long> candidateRoomIds = AlgorithmHelper.getCandidateRoomIds(student.getGender(), genderBuckets);
+
+            BedMatch bestMatch = findBestBed(student, candidateRoomIds, emptyRoomIds,
+                    availableBedMap, currentRoomStudentMap, config);
 
             if (bestMatch != null && bestMatch.bed != null) {
-                // 分配成功
                 Bed bed = bestMatch.bed;
-                RoomMatchResult matchResult = bestMatch.matchResult;
+                Long roomId = bed.getRoomId();
+                boolean wasEmpty = emptyRoomIds.contains(roomId);
 
-                AllocationResultDTO result = AllocationResultDTO.builder()
-                        .studentId(student.getId())
-                        .studentNo(student.getStudentNo())
-                        .studentName(student.getStudentName())
-                        .gender(student.getGender() != null ? (student.getGender() == 1 ? "male" : "female") : null)
-                        .deptCode(student.getDeptCode())
-                        .majorCode(student.getMajorCode())
-                        .classCode(student.getClassCode())
-                        .bedId(bed.getId())
-                        .roomId(bed.getRoomId())
-                        .roomCode(bed.getRoomCode())
-                        .floorId(bed.getFloorId())
-                        .floorCode(bed.getFloorCode())
-                        .matchScore(matchResult.getAvgScore())
-                        .conflictReasons(matchResult.getOverallConflicts())
-                        .advantages(matchResult.getOverallAdvantages())
-                        .roommateIds(matchResult.getRoommateMatches().stream()
-                                .map(m -> m.getStudentBId())
-                                .collect(Collectors.toList()))
-                        .success(true)
-                        .build();
-
-                results.add(result);
+                results.add(AlgorithmHelper.buildSuccess(student, bed, bestMatch.matchResult));
                 successCount++;
 
-                // 更新状态：移除已分配床位，添加学生到房间
-                availableBedMap.get(bed.getRoomId()).remove(bed);
-                if (availableBedMap.get(bed.getRoomId()).isEmpty()) {
-                    availableBedMap.remove(bed.getRoomId());
+                // 更新状态
+                availableBedMap.get(roomId).remove(bed);
+                if (availableBedMap.get(roomId).isEmpty()) {
+                    availableBedMap.remove(roomId);
+                    // 从所有桶中移除满员房间
+                    genderBuckets.values().forEach(set -> set.remove(roomId));
                 }
-                currentRoomStudentMap.computeIfAbsent(bed.getRoomId(), k -> new ArrayList<>()).add(student);
+                currentRoomStudentMap.computeIfAbsent(roomId, k -> new ArrayList<>()).add(student);
 
+                // 如果之前是空房间，更新桶
+                if (wasEmpty) {
+                    emptyRoomIds.remove(roomId);
+                    AlgorithmHelper.updateGenderBucket(roomId, student.getGender(), genderBuckets);
+                }
             } else {
-                // 分配失败
-                AllocationResultDTO result = AllocationResultDTO.builder()
-                        .studentId(student.getId())
-                        .studentNo(student.getStudentNo())
-                        .studentName(student.getStudentName())
-                        .success(false)
-                        .failReason(bestMatch != null ? bestMatch.failReason : "无可用床位")
-                        .build();
-
-                results.add(result);
+                results.add(AlgorithmHelper.buildFail(student,
+                        bestMatch != null ? bestMatch.failReason : "无可用床位"));
                 failedCount++;
             }
         }
 
-        // 最终进度
         if (progressCallback != null) {
             progressCallback.accept(new AllocationProgress(
-                    totalStudents, processedCount, successCount, failedCount,
-                    "分配完成"
-            ));
+                    totalStudents, processedCount, successCount, failedCount, "分配完成"));
         }
 
         log.info("贪心分配完成，成功：{}，失败：{}", successCount, failedCount);
@@ -176,10 +220,12 @@ public class GreedyAlgorithm implements AllocationAlgorithm {
     }
 
     /**
-     * 为学生找最佳床位
+     * 为学生找最佳床位（性别分桶 + 空房间快速路径 + 早停）
      */
     private BedMatch findBestBed(
             Student student,
+            Set<Long> candidateRoomIds,
+            Set<Long> emptyRoomIds,
             Map<Long, List<Bed>> availableBedMap,
             Map<Long, List<Student>> roomStudentMap,
             AllocationConfig config) {
@@ -187,59 +233,58 @@ public class GreedyAlgorithm implements AllocationAlgorithm {
         BedMatch bestMatch = null;
         BigDecimal bestScore = BigDecimal.valueOf(-1);
 
-        for (Map.Entry<Long, List<Bed>> entry : availableBedMap.entrySet()) {
-            Long roomId = entry.getKey();
-            List<Bed> beds = entry.getValue();
+        // 快速路径：如果有空房间且候选中包含，直接取一个（匹配分固定100）
+        for (Long emptyRoomId : emptyRoomIds) {
+            if (candidateRoomIds.contains(emptyRoomId)) {
+                List<Bed> beds = availableBedMap.get(emptyRoomId);
+                if (beds != null && !beds.isEmpty()) {
+                    RoomMatchResult emptyResult = compatibilityService.calculateRoomCompatibility(
+                            student, List.of(), config);
+                    return new BedMatch(beds.get(0), emptyResult, null);
+                }
+            }
+        }
 
-            if (beds.isEmpty()) continue;
+        // 正常路径：遍历候选房间
+        for (Long roomId : candidateRoomIds) {
+            List<Bed> beds = availableBedMap.get(roomId);
+            if (beds == null || beds.isEmpty()) continue;
 
-            // 获取房间现有室友
-            List<Student> roommates = roomStudentMap.getOrDefault(roomId, new ArrayList<>());
-
-            // 计算与该房间的匹配度
+            List<Student> roommates = roomStudentMap.getOrDefault(roomId, List.of());
             RoomMatchResult matchResult = compatibilityService.calculateRoomCompatibility(
                     student, roommates, config);
 
-            // 跳过有硬约束冲突的房间
-            if (Boolean.TRUE.equals(matchResult.getHasHardConflict())) {
-                continue;
-            }
+            if (Boolean.TRUE.equals(matchResult.getHasHardConflict())) continue;
 
-            // 选择匹配分最高的房间
             if (matchResult.getAvgScore().compareTo(bestScore) > 0) {
                 bestScore = matchResult.getAvgScore();
-                Bed bestBed = beds.get(0); // 取该房间的第一个可用床位
-                bestMatch = new BedMatch(bestBed, matchResult, null);
+                bestMatch = new BedMatch(beds.get(0), matchResult, null);
+
+                // 早停：分数够好就不继续找了
+                if (bestScore.compareTo(EARLY_STOP_SCORE) >= 0) break;
             }
         }
 
         if (bestMatch == null) {
             return new BedMatch(null, null, "没有符合条件的床位（可能存在硬约束冲突）");
         }
-
         return bestMatch;
     }
 
     /**
-     * 按习惯特征明显程度排序（可选优化）
-     * 特征越明显的学生越难匹配，优先处理
+     * 按习惯特征明显程度排序（难匹配的优先处理）
      */
     private List<Student> sortStudentsByDistinctiveness(List<Student> students) {
-        // 简单实现：吸烟者、夜猫子、对声音敏感的优先
         return students.stream()
-                .sorted((a, b) -> {
-                    int scoreA = getDistinctivenessScore(a);
-                    int scoreB = getDistinctivenessScore(b);
-                    return Integer.compare(scoreB, scoreA); // 降序
-                })
+                .sorted(Comparator.comparingInt(this::getDistinctivenessScore).reversed())
                 .collect(Collectors.toList());
     }
 
     private int getDistinctivenessScore(Student s) {
         int score = 0;
         if (Integer.valueOf(1).equals(s.getSmokingStatus())) score += 10;
-        if (Integer.valueOf(3).equals(s.getSleepSchedule())) score += 8; // 夜猫子
-        if (Integer.valueOf(0).equals(s.getSleepSchedule())) score += 8; // 早睡早起
+        if (Integer.valueOf(3).equals(s.getSleepSchedule())) score += 8;
+        if (Integer.valueOf(0).equals(s.getSleepSchedule())) score += 8;
         if (Integer.valueOf(1).equals(s.getSensitiveToSound())) score += 5;
         if (Integer.valueOf(1).equals(s.getSnores())) score += 5;
         return score;

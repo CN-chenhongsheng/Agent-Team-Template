@@ -10,6 +10,7 @@ import com.project.backend.room.dto.bed.BedQueryDTO;
 import com.project.backend.room.dto.bed.BedSaveDTO;
 import com.project.backend.room.service.BedService;
 import com.project.backend.room.vo.BedVO;
+import com.project.core.annotation.Log;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -73,6 +74,7 @@ public class BedController extends BaseCrudController<BedVO, BedQueryDTO, BedSav
 
     @PostMapping("/batch-create")
     @Operation(summary = "批量创建床位")
+    @Log(title = "批量创建床位", businessType = 1)
     public R<Integer> batchCreate(@RequestBody @Valid BedBatchCreateDTO dto) {
         return R.ok(bedService.batchCreateBeds(dto));
     }

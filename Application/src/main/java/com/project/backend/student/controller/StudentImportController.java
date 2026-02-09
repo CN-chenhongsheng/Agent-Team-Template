@@ -10,6 +10,7 @@ import com.project.backend.student.dto.imports.ImportTaskVO;
 import com.project.backend.student.dto.imports.TaskIdResponse;
 import com.project.backend.student.service.ImportProgressService;
 import com.project.backend.student.service.StudentImportService;
+import com.project.core.annotation.Log;
 import com.project.core.result.R;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -73,6 +74,7 @@ public class StudentImportController {
      */
     @PostMapping("")
     @Operation(summary = "执行导入", description = "传入分片上传 merge 返回的 fileUrl，同步或异步导入并返回结果或 taskId")
+    @Log(title = "学生批量导入", businessType = 1)
     public R<Object> importFromFile(@RequestBody ImportFileRequest request) {
         log.info("收到导入请求，fileUrl: {}", request != null ? request.getFileUrl() : null);
         if (request == null || request.getFileUrl() == null || request.getFileUrl().isBlank()) {

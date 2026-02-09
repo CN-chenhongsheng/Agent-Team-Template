@@ -20,6 +20,9 @@ public class AllocationTaskSaveDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    @Schema(description = "任务ID（编辑时传入）")
+    private Long id;
+
     @Schema(description = "任务名称", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "任务名称不能为空")
     private String taskName;

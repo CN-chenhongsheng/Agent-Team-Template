@@ -1,5 +1,0 @@
-feat: lint-staged 自动修复格式化与编码问题
-  -修复审批搜索组件中的中文字符编码损坏问题
-  -自动修复 ESLint/Prettier/Stylelint 格式化规范
-
-提交人：陈鸿昇

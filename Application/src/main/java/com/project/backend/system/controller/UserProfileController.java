@@ -1,5 +1,6 @@
 package com.project.backend.system.controller;
 
+import com.project.core.annotation.Log;
 import com.project.core.result.R;
 import com.project.backend.system.dto.ChangePasswordDTO;
 import com.project.backend.system.dto.UserProfileDTO;
@@ -41,6 +42,7 @@ public class UserProfileController {
      * 更新当前用户个人信息
      */
     @Operation(summary = "更新个人信息")
+    @Log(title = "更新个人信息", businessType = 2)
     @PutMapping
     public R<Void> updateProfile(@Valid @RequestBody UserProfileDTO profileDTO) {
         boolean success = userService.updateCurrentUserProfile(profileDTO);
@@ -51,6 +53,7 @@ public class UserProfileController {
      * 修改当前用户密码
      */
     @Operation(summary = "修改密码")
+    @Log(title = "修改密码", businessType = 2)
     @PutMapping("/password")
     public R<Void> changePassword(@Valid @RequestBody ChangePasswordDTO changePasswordDTO) {
         boolean success = userService.changeCurrentUserPassword(changePasswordDTO);

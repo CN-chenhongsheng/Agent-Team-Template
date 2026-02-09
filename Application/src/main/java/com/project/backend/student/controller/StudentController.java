@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 2026-01-06
  */
 @RestController
-@RequestMapping("/v1/student")
+@RequestMapping("/v1/system/student")
 @RequiredArgsConstructor
 @Tag(name = "学生管理", description = "学生信息增删改查")
 public class StudentController extends BaseCrudController<StudentVO, StudentQueryDTO, StudentSaveDTO>
