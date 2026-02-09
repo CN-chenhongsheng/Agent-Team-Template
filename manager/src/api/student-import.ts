@@ -23,7 +23,7 @@ export type DormTreeResponse = Api.StudentImportTree.DormTreeResponse
  */
 export function fetchOrgTree() {
   return request.get<OrgTreeResponse>({
-    url: '/api/v1/student/import/org-tree'
+    url: '/api/v1/system/student/import/org-tree'
   })
 }
 
@@ -34,7 +34,7 @@ export function fetchOrgTree() {
  */
 export function fetchDormTree() {
   return request.get<DormTreeResponse>({
-    url: '/api/v1/student/import/dorm-tree'
+    url: '/api/v1/system/student/import/dorm-tree'
   })
 }
 

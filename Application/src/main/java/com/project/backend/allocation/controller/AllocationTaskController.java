@@ -2,6 +2,7 @@ package com.project.backend.allocation.controller;
 
 import com.project.backend.allocation.dto.task.AllocationTaskQueryDTO;
 import com.project.backend.allocation.dto.task.AllocationTaskSaveDTO;
+import com.project.backend.allocation.service.AllocationProgressService;
 import com.project.backend.allocation.service.AllocationTaskService;
 import com.project.backend.allocation.vo.AllocationPreviewVO;
 import com.project.backend.allocation.vo.AllocationProgressVO;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * 分配任务管理Controller
@@ -40,6 +43,7 @@ public class AllocationTaskController
         extends BaseCrudController<AllocationTaskVO, AllocationTaskQueryDTO, AllocationTaskSaveDTO> {
 
     private final AllocationTaskService taskService;
+    private final AllocationProgressService progressService;
 
     @Override
     public String getEntityName() {
@@ -90,13 +94,43 @@ public class AllocationTaskController
     }
 
     /**
-     * 获取执行进度
+     * 获取执行进度（轮询方式，兼容旧前端）
      */
     @GetMapping("/{id}/progress")
     @Operation(summary = "获取执行进度")
     public R<AllocationProgressVO> getProgress(@PathVariable Long id) {
         AllocationProgressVO progress = taskService.getTaskProgress(id);
         return R.ok(progress);
+    }
+
+    /**
+     * SSE 订阅执行进度（实时推送，替代轮询）
+     *
+     * @param id 任务ID
+     * @return SSE 发射器
+     */
+    @GetMapping(value = "/{id}/progress/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "SSE 订阅执行进度", description = "实时推送分配进度，替代轮询")
+    public SseEmitter subscribeProgress(@PathVariable Long id) {
+        log.info("收到 SSE 订阅请求，taskId: {}", id);
+
+        // 30 分钟超时
+        SseEmitter emitter = new SseEmitter(30 * 60 * 1000L);
+
+        // 注册到推送服务
+        progressService.subscribe(id, emitter);
+
+        // 立即推送当前进度（如果任务已有进度）
+        AllocationProgressVO current = taskService.getTaskProgress(id);
+        if (current != null) {
+            if (Boolean.TRUE.equals(current.getCompleted())) {
+                progressService.pushComplete(id, current);
+            } else {
+                progressService.pushCurrent(id, current);
+            }
+        }
+
+        return emitter;
     }
 
     /**

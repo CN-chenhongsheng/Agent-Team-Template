@@ -18,6 +18,7 @@ import com.project.backend.allocation.entity.AllocationTask;
 import com.project.backend.allocation.mapper.AllocationResultMapper;
 import com.project.backend.allocation.mapper.AllocationTaskMapper;
 import com.project.backend.allocation.service.AllocationConfigService;
+import com.project.backend.allocation.service.AllocationProgressService;
 import com.project.backend.allocation.service.AllocationTaskService;
 import com.project.backend.allocation.vo.AllocationPreviewVO;
 import com.project.backend.allocation.vo.AllocationProgressVO;
@@ -55,6 +56,7 @@ public class AllocationTaskServiceImpl extends ServiceImpl<AllocationTaskMapper,
     private final StudentMapper studentMapper;
     private final BedMapper bedMapper;
     private final AllocationResultMapper resultMapper;
+    private final AllocationProgressService allocationProgressService;
 
     // 任务进度缓存
     private final ConcurrentHashMap<Long, AllocationProgressVO> progressCache = new ConcurrentHashMap<>();
@@ -116,6 +118,25 @@ public class AllocationTaskServiceImpl extends ServiceImpl<AllocationTaskMapper,
             throw new BusinessException("配置不存在");
         }
 
+        // 编辑模式：ID 存在时走更新逻辑
+        if (saveDTO.getId() != null) {
+            AllocationTask existing = getById(saveDTO.getId());
+            if (existing == null) {
+                throw new BusinessException("任务不存在");
+            }
+            if (existing.getStatus() != 0) {
+                throw new BusinessException("只能编辑待执行的任务");
+            }
+            // 只更新允许修改的字段，保留 id、status、创建信息等
+            BeanUtil.copyProperties(saveDTO, existing, "id", "status",
+                    "totalStudents", "totalBeds", "allocatedCount", "failedCount",
+                    "confirmedCount", "avgMatchScore", "minMatchScore", "maxMatchScore",
+                    "lowScoreCount", "startTime", "endTime", "executeDuration",
+                    "createTime", "createBy", "deleted");
+            return updateById(existing);
+        }
+
+        // 新增模式
         AllocationTask task = new AllocationTask();
         BeanUtil.copyProperties(saveDTO, task);
         task.setStatus(0); // 待执行
@@ -270,6 +291,10 @@ public class AllocationTaskServiceImpl extends ServiceImpl<AllocationTaskMapper,
                         progress.setFailedCount(p.getFailedCount());
                         progress.setCurrentStage(p.getCurrentStage());
                         progress.setProgressPercent(p.getProgressPercent());
+                        // SSE 实时推送（有订阅者时才推送）
+                        if (allocationProgressService.hasSubscribers(taskId)) {
+                            allocationProgressService.pushProgress(taskId, progress);
+                        }
                     }
             );
 
@@ -337,6 +362,9 @@ public class AllocationTaskServiceImpl extends ServiceImpl<AllocationTaskMapper,
 
             log.info("任务 {} 执行完成，成功：{}，失败：{}", taskId, successCount, failedCount);
 
+            // SSE 推送完成事件
+            allocationProgressService.pushComplete(taskId, progress);
+
         } catch (Exception e) {
             log.error("任务执行失败", e);
             task.setStatus(5); // 取消
@@ -347,6 +375,9 @@ public class AllocationTaskServiceImpl extends ServiceImpl<AllocationTaskMapper,
             progress.setStatusName("执行失败");
             progress.setErrorMessage(e.getMessage());
             progress.setCompleted(true);
+
+            // SSE 推送错误事件
+            allocationProgressService.pushError(taskId, e.getMessage());
         }
     }
 

@@ -1,14 +1,14 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    title="创建分配任务"
+    :title="isEditMode ? '编辑分配任务' : '创建分配任务'"
     width="80%"
     top="5vh"
     align-center
     :close-on-click-modal="false"
     @close="handleClose"
   >
-    <div class="grid grid-cols-[1fr_400px] gap-5 max-h-[75vh] overflow-y-auto">
+    <div v-loading="formLoading" class="grid grid-cols-[1fr_400px] gap-5 max-h-[75vh] overflow-y-auto">
       <!-- 左侧：任务配置表单 -->
       <div class="flex flex-col gap-5">
         <!-- 基本信息 -->
@@ -281,47 +281,58 @@
       <!-- 右侧：配置详情和预览 -->
       <div class="flex flex-col gap-5 sticky top-0">
         <!-- 配置详情卡片 -->
-        <div v-if="selectedConfig" class="art-card-sm preview-card preview-card--config">
-          <div class="preview-card__header">
-            <div class="flex items-center gap-2">
-              <ArtSvgIcon icon="ri:settings-4-line" class="text-lg" style="color: var(--el-color-primary)" />
-              <span class="preview-card__title">配置详情</span>
-            </div>
+        <div v-if="selectedConfig" class="art-card-sm sidebar-card">
+          <div class="sidebar-card__header">
+            <ArtSvgIcon icon="ri:settings-4-line" class="sidebar-card__header-icon" />
+            <span>配置详情</span>
           </div>
-          <div class="p-5 space-y-4">
-            <div class="flex flex-col gap-2">
-              <span class="preview-card__label">配置名称</span>
-              <span class="preview-card__value">{{ selectedConfig.configName }}</span>
+          <div class="sidebar-card__body">
+            <!-- 配置名称 -->
+            <div class="config-field">
+              <span class="config-field__label">配置名称</span>
+              <span class="config-field__value">{{ selectedConfig.configName }}</span>
             </div>
-            <div class="flex flex-col gap-2">
-              <span class="preview-card__label">算法类型</span>
-              <ElTag size="small" type="primary">{{ selectedConfig.algorithmTypeName || selectedConfig.algorithmType }}</ElTag>
-            </div>
-            <div class="flex flex-col gap-2">
-              <span class="preview-card__label">硬约束</span>
-              <div class="flex flex-wrap gap-1.5">
-                <ElTag v-if="selectedConfig.smokingConstraint" size="small" type="warning">吸烟</ElTag>
-                <ElTag v-if="selectedConfig.genderConstraint" size="small" type="success">性别</ElTag>
-                <ElTag v-if="selectedConfig.sleepHardConstraint" size="small" type="info">作息</ElTag>
-                <span v-if="!selectedConfig.smokingConstraint && !selectedConfig.genderConstraint && !selectedConfig.sleepHardConstraint" class="preview-card__empty">无</span>
+            <!-- 算法类型 -->
+            <div class="config-field">
+              <span class="config-field__label">算法类型</span>
+              <div class="config-algo">
+                <ArtSvgIcon icon="ri:cpu-line" class="config-algo__icon" />
+                <span>{{ selectedConfig.algorithmTypeName || selectedConfig.algorithmType }}</span>
               </div>
             </div>
-            <div class="flex flex-col gap-2">
-              <span class="preview-card__label">最低匹配分</span>
-              <div class="flex items-center gap-2">
-                <span class="text-2xl font-bold" style="color: var(--el-color-primary)">{{ selectedConfig.minMatchScore }}</span>
-                <span class="preview-card__unit">分</span>
+            <!-- 硬约束 -->
+            <div class="config-field">
+              <span class="config-field__label">硬约束</span>
+              <div class="config-constraints">
+                <span v-if="selectedConfig.smokingConstraint" class="constraint-badge constraint-badge--warning">
+                  <ArtSvgIcon icon="ri:fire-line" class="text-xs" /> 吸烟
+                </span>
+                <span v-if="selectedConfig.genderConstraint" class="constraint-badge constraint-badge--success">
+                  <ArtSvgIcon icon="ri:user-line" class="text-xs" /> 性别
+                </span>
+                <span v-if="selectedConfig.sleepHardConstraint" class="constraint-badge constraint-badge--info">
+                  <ArtSvgIcon icon="ri:moon-line" class="text-xs" /> 作息
+                </span>
+                <span v-if="!selectedConfig.smokingConstraint && !selectedConfig.genderConstraint && !selectedConfig.sleepHardConstraint" class="text-xs text-[var(--el-text-color-placeholder)]">无约束</span>
+              </div>
+            </div>
+            <!-- 最低匹配分 -->
+            <div class="config-field config-field--score">
+              <span class="config-field__label">最低匹配分</span>
+              <div class="config-score">
+                <span class="config-score__value">{{ selectedConfig.minMatchScore }}</span>
+                <span class="config-score__unit">分</span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- 预览结果卡片 -->
-        <div class="art-card-sm preview-card preview-card--preview" v-loading="previewLoading">
-          <div class="preview-card__header preview-card__header--with-action">
+        <div class="art-card-sm sidebar-card" v-loading="previewLoading">
+          <div class="sidebar-card__header sidebar-card__header--with-action">
             <div class="flex items-center gap-2">
-              <ArtSvgIcon icon="ri:eye-line" class="text-lg" style="color: var(--el-color-primary)" />
-              <span class="preview-card__title">预览结果</span>
+              <ArtSvgIcon icon="ri:eye-line" class="sidebar-card__header-icon" />
+              <span>预览结果</span>
             </div>
             <ElButton
               link
@@ -336,65 +347,55 @@
           </div>
 
           <template v-if="previewData">
-            <div class="p-5 space-y-3">
-              <!-- 待分配学生 -->
-              <div class="stat-item stat-item--primary">
-                <div class="stat-item__icon stat-item__icon--primary">
-                  <ArtSvgIcon icon="ri:user-line" class="text-2xl" />
+            <div class="sidebar-card__body">
+              <!-- 数据概览：两列网格 -->
+              <div class="preview-grid">
+                <div class="preview-metric">
+                  <div class="preview-metric__icon preview-metric__icon--primary">
+                    <ArtSvgIcon icon="ri:user-line" />
+                  </div>
+                  <div class="preview-metric__value">{{ previewData.toBeAllocatedCount ?? previewData.totalStudents ?? 0 }}</div>
+                  <div class="preview-metric__label">待分配学生</div>
                 </div>
-                <div class="flex flex-col gap-1 flex-1">
-                  <span class="stat-item__label">待分配学生</span>
-                  <span class="stat-item__value stat-item__value--primary">{{ previewData.totalStudents || 0 }}</span>
-                </div>
-              </div>
-
-              <!-- 可用床位 -->
-              <div class="stat-item stat-item--success">
-                <div class="stat-item__icon stat-item__icon--success">
-                  <ArtSvgIcon icon="ri:hotel-bed-line" class="text-2xl" />
-                </div>
-                <div class="flex flex-col gap-1 flex-1">
-                  <span class="stat-item__label">可用床位</span>
-                  <span class="stat-item__value stat-item__value--success">{{ previewData.totalBeds || 0 }}</span>
+                <div class="preview-metric">
+                  <div class="preview-metric__icon preview-metric__icon--success">
+                    <ArtSvgIcon icon="ri:hotel-bed-line" />
+                  </div>
+                  <div class="preview-metric__value">{{ previewData.totalAvailableBeds ?? 0 }}</div>
+                  <div class="preview-metric__label">可用床位</div>
                 </div>
               </div>
 
-              <!-- 床位状态 -->
-              <div class="stat-item" :class="previewData.canAllocate ? 'stat-item--success' : 'stat-item--danger'">
-                <div class="stat-item__icon" :class="previewData.canAllocate ? 'stat-item__icon--success' : 'stat-item__icon--danger'">
-                  <ArtSvgIcon :icon="previewData.canAllocate ? 'ri:checkbox-circle-line' : 'ri:error-warning-line'" class="text-2xl" />
-                </div>
-                <div class="flex flex-col gap-1 flex-1">
-                  <span class="stat-item__label">床位状态</span>
-                  <span class="stat-item__value" :class="previewData.canAllocate ? 'stat-item__value--success' : 'stat-item__value--danger'">
-                    {{ previewData.canAllocate ? '充足' : '不足' }}
-                  </span>
-                </div>
+              <!-- 床位状态横条 -->
+              <div class="preview-status" :class="previewData.canExecute ? 'preview-status--ok' : 'preview-status--warn'">
+                <ArtSvgIcon :icon="previewData.canExecute ? 'ri:checkbox-circle-line' : 'ri:error-warning-line'" class="text-base" />
+                <span>床位{{ previewData.canExecute ? '充足，可以执行分配' : '不足，无法执行分配' }}</span>
               </div>
 
-              <!-- 进度条 -->
-              <div v-if="previewData.totalStudents > 0 && previewData.totalBeds > 0" class="progress-bar">
-                <div class="flex items-center justify-between">
-                  <span class="progress-bar__label">床位使用率</span>
-                  <span class="progress-bar__value">{{ Math.min(Math.round((previewData.totalStudents / previewData.totalBeds) * 100), 100) }}%</span>
+              <!-- 床位使用率 -->
+              <div v-if="(previewData.toBeAllocatedCount ?? previewData.totalStudents ?? 0) > 0 && (previewData.totalAvailableBeds ?? 0) > 0" class="preview-usage">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="preview-usage__label">床位使用率</span>
+                  <span class="preview-usage__value">{{ Math.min(Math.round(((previewData.toBeAllocatedCount ?? previewData.totalStudents ?? 0) / (previewData.totalAvailableBeds ?? 1)) * 100), 100) }}%</span>
                 </div>
                 <ElProgress
-                  :percentage="Math.min(Math.round((previewData.totalStudents / previewData.totalBeds) * 100), 100)"
-                  :color="previewData.canAllocate ? '#67c23a' : '#f56c6c'"
+                  :percentage="Math.min(Math.round(((previewData.toBeAllocatedCount ?? previewData.totalStudents ?? 0) / (previewData.totalAvailableBeds ?? 1)) * 100), 100)"
+                  :color="previewData.canExecute ? '#10b981' : '#ef4444'"
                   :show-text="false"
-                  :stroke-width="8"
+                  :stroke-width="6"
                 />
               </div>
-            </div>
 
-            <div class="px-5 pb-5 space-y-2">
-              <div v-if="previewData.unfilledSurveyCount > 0" class="alert-item alert-item--warning">
-                <ArtSvgIcon icon="ri:error-warning-line" class="text-base" />
-                <span>{{ previewData.unfilledSurveyCount }} 名学生未填写问卷</span>
-              </div>
-              <div v-if="previewData.estimatedTime" class="alert-item alert-item--info">
-                <ArtSvgIcon icon="ri:time-line" class="text-base" />
-                <span>预计执行：{{ previewData.estimatedTime }}</span>
+              <!-- 警告信息 -->
+              <div v-if="(previewData.surveyUnfilledCount ?? 0) > 0 || previewData.cannotExecuteReason" class="preview-alerts">
+                <div v-if="(previewData.surveyUnfilledCount ?? 0) > 0" class="preview-alert">
+                  <ArtSvgIcon icon="ri:error-warning-line" class="text-sm" />
+                  <span>{{ previewData.surveyUnfilledCount }} 名学生未填写问卷</span>
+                </div>
+                <div v-if="previewData.cannotExecuteReason" class="preview-alert preview-alert--error">
+                  <ArtSvgIcon icon="ri:close-circle-line" class="text-sm" />
+                  <span>{{ previewData.cannotExecuteReason }}</span>
+                </div>
               </div>
             </div>
           </template>
@@ -416,7 +417,7 @@
           预览
         </ElButton>
         <ElButton type="primary" :loading="submitLoading" @click="handleSubmit">
-          {{ submitLoading ? '提交中...' : '创建任务' }}
+          {{ submitLoading ? '提交中...' : isEditMode ? '保存修改' : '创建任务' }}
         </ElButton>
       </div>
     </template>
@@ -425,7 +426,12 @@
 
 <script setup lang="ts">
   import type { FormInstance, FormRules } from 'element-plus'
-  import { fetchGetConfigPage, fetchAddTask, fetchPreviewTask } from '@/api/allocation-manage'
+  import {
+    fetchGetConfigPage,
+    fetchAddTask,
+    fetchUpdateTask,
+    fetchPreviewTask
+  } from '@/api/allocation-manage'
   import {
     fetchGetCampusPage,
     fetchGetDepartmentPage,
@@ -435,8 +441,11 @@
   import { fetchGetFloorPage } from '@/api/dormitory-manage'
   import { useDictStore } from '@/store/modules/dict'
 
+  type TaskListItem = Api.Allocation.TaskListItem
+
   interface Props {
     visible: boolean
+    task?: TaskListItem
   }
 
   interface Emits {
@@ -455,9 +464,14 @@
     set: (val) => emit('update:visible', val)
   })
 
+  const isEditMode = computed(() => !!props.task?.id)
+
   const formRef = ref<FormInstance>()
   const submitLoading = ref(false)
   const previewLoading = ref(false)
+  const formLoading = ref(false)
+  // 编辑模式初始化标记，防止级联 watch 清空回显值
+  let isInitializing = false
 
   // 表单数据
   const formData = ref({
@@ -617,6 +631,8 @@
   watch(
     () => formData.value.targetCampusCode,
     (val) => {
+      // 编辑模式初始化时不清空下级值
+      if (isInitializing) return
       // 清空下级选项
       formData.value.targetDeptCode = ''
       formData.value.targetMajorCode = ''
@@ -637,6 +653,8 @@
   watch(
     () => formData.value.targetDeptCode,
     (val) => {
+      // 编辑模式初始化时不清空下级值
+      if (isInitializing) return
       // 清空下级选项
       formData.value.targetMajorCode = ''
       majorOptions.value = []
@@ -664,10 +682,14 @@
     try {
       const data = await fetchPreviewTask({
         configId: formData.value.configId!,
+        taskType: formData.value.taskType,
         targetEnrollmentYear: formData.value.targetEnrollmentYear,
         targetGender: formData.value.targetGender || undefined,
-        targetCampusId: undefined,
-        targetBuildingId: undefined
+        targetCampusCode: formData.value.targetCampusCode || undefined,
+        targetDeptCode: formData.value.targetDeptCode || undefined,
+        targetMajorCode: formData.value.targetMajorCode || undefined,
+        targetFloorIds:
+          formData.value.targetFloorIds.length > 0 ? formData.value.targetFloorIds : undefined
       })
       previewData.value = data
     } catch (e) {
@@ -677,7 +699,7 @@
     }
   }
 
-  // 提交创建
+  // 提交创建/编辑
   const handleSubmit = async () => {
     try {
       await formRef.value?.validate()
@@ -687,14 +709,25 @@
 
     submitLoading.value = true
     try {
-      await fetchAddTask({
+      const saveData: Api.Allocation.TaskSaveParams = {
         taskName: formData.value.taskName,
         taskType: formData.value.taskType,
         configId: formData.value.configId!,
         targetEnrollmentYear: formData.value.targetEnrollmentYear,
         targetGender: formData.value.targetGender || undefined,
+        targetCampusCode: formData.value.targetCampusCode || undefined,
+        targetDeptCode: formData.value.targetDeptCode || undefined,
+        targetMajorCode: formData.value.targetMajorCode || undefined,
+        targetFloorIds:
+          formData.value.targetFloorIds.length > 0 ? formData.value.targetFloorIds : undefined,
         remark: formData.value.remark || undefined
-      })
+      }
+
+      if (isEditMode.value && props.task?.id) {
+        await fetchUpdateTask(props.task.id, saveData)
+      } else {
+        await fetchAddTask(saveData)
+      }
       dialogVisible.value = false
       emit('submit')
     } catch (e) {
@@ -712,34 +745,79 @@
   // 监听visible变化，加载数据
   watch(
     () => props.visible,
-    (val) => {
+    async (val) => {
       if (val) {
-        formData.value = {
-          taskName: '',
-          taskType: 1,
-          configId: undefined,
-          targetEnrollmentYear: undefined,
-          targetGender: '',
-          targetCampusCode: '',
-          targetDeptCode: '',
-          targetMajorCode: '',
-          targetFloorIds: [],
-          remark: ''
-        }
+        formLoading.value = true
         previewData.value = null
-        // 清空下级选项
-        deptOptions.value = []
-        majorOptions.value = []
-        floorOptions.value = []
+
+        // 编辑模式：从 task prop 填充表单，并按级联顺序加载选项
+        if (props.task?.id) {
+          // 标记初始化中，防止 watch 清空回显值
+          isInitializing = true
+
+          formData.value = {
+            taskName: props.task.taskName || '',
+            taskType: props.task.taskType || 1,
+            configId: props.task.configId,
+            targetEnrollmentYear: props.task.targetEnrollmentYear,
+            targetGender: props.task.targetGender || '',
+            targetCampusCode: props.task.targetCampusCode || '',
+            targetDeptCode: props.task.targetDeptCode || '',
+            targetMajorCode: props.task.targetMajorCode || '',
+            targetFloorIds: props.task.targetFloorIds || [],
+            remark: (props.task as any).remark || ''
+          }
+
+          // 并行加载基础数据
+          await Promise.all([
+            loadConfigList(),
+            loadAcademicYearList(),
+            loadDictData(),
+            loadCampusList(),
+            loadFloorList()
+          ])
+
+          // 按级联顺序加载：院系 -> 专业（确保下拉选项可用才能回显）
+          if (formData.value.targetCampusCode) {
+            await loadDeptList()
+          }
+          if (formData.value.targetDeptCode) {
+            await loadMajorList()
+          }
+
+          // 初始化完成，恢复 watch 正常行为
+          isInitializing = false
+        } else {
+          formData.value = {
+            taskName: '',
+            taskType: 1,
+            configId: undefined,
+            targetEnrollmentYear: undefined,
+            targetGender: '',
+            targetCampusCode: '',
+            targetDeptCode: '',
+            targetMajorCode: '',
+            targetFloorIds: [],
+            remark: ''
+          }
+          // 清空下级选项
+          deptOptions.value = []
+          majorOptions.value = []
+          floorOptions.value = []
+          // 并行加载基础数据
+          await Promise.all([
+            loadConfigList(),
+            loadAcademicYearList(),
+            loadDictData(),
+            loadCampusList(),
+            loadFloorList()
+          ])
+        }
+
         nextTick(() => {
           formRef.value?.clearValidate()
         })
-        // 加载配置列表、学年列表、字典数据、校区列表和楼层列表
-        loadConfigList()
-        loadAcademicYearList()
-        loadDictData()
-        loadCampusList()
-        loadFloorList()
+        formLoading.value = false
       }
     }
   )
@@ -834,30 +912,46 @@
   }
 
   // 预览卡片样式（继承系统 art-card-sm 的边框/阴影/圆角）
-  .preview-card {
+  // ========== 右侧侧边卡片 ==========
+  .sidebar-card {
     overflow: hidden;
 
     &__header {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--el-border-color-lighter);
-      background: var(--el-fill-color-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--el-text-color-primary);
+      border-bottom: 1px solid var(--el-border-color-extra-light);
 
       &--with-action {
-        display: flex;
-        align-items: center;
         justify-content: space-between;
       }
     }
 
-    &__title {
+    &__header-icon {
       font-size: 16px;
-      font-weight: 600;
-      color: var(--el-text-color-primary);
+      color: var(--el-color-primary);
     }
+
+    &__body {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 20px;
+    }
+  }
+
+  // ========== 配置详情字段 ==========
+  .config-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 
     &__label {
       font-size: 12px;
-      font-weight: 500;
       color: var(--el-text-color-secondary);
     }
 
@@ -867,136 +961,187 @@
       color: var(--el-text-color-primary);
     }
 
-    &__unit {
-      font-size: 14px;
-      color: var(--el-text-color-secondary);
-    }
-
-    &__empty {
-      font-size: 14px;
-      color: var(--el-text-color-placeholder);
+    &--score {
+      padding-top: 4px;
+      border-top: 1px dashed var(--el-border-color-extra-light);
     }
   }
 
-  // 统计项样式
-  .stat-item {
-    background: var(--el-bg-color);
-    border-radius: 8px;
-    padding: 16px;
-    display: flex;
+  .config-algo {
+    display: inline-flex;
     align-items: center;
-    gap: 16px;
-    border: 2px solid var(--el-border-color-light);
-    transition: all 0.3s;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    gap: 6px;
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--el-color-primary);
+    background-color: rgba(59, 130, 246, 0.06);
+    border-radius: 6px;
+    width: fit-content;
 
-    &:hover {
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      transform: translateY(-2px);
+    &__icon {
+      font-size: 14px;
     }
+  }
 
-    &--primary {
-      border-color: var(--el-color-primary-light-7);
+  .config-constraints {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .constraint-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 9999px;
+
+    &--warning {
+      color: #d97706;
+      background-color: rgba(245, 158, 11, 0.08);
     }
 
     &--success {
-      border-color: var(--el-color-success-light-5);
+      color: #059669;
+      background-color: rgba(16, 185, 129, 0.08);
     }
 
-    &--danger {
-      border-color: var(--el-color-danger-light-5);
+    &--info {
+      color: #6b7280;
+      background-color: rgba(107, 114, 128, 0.08);
     }
+  }
+
+  .config-score {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+
+    &__value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--el-color-primary);
+    }
+
+    &__unit {
+      font-size: 13px;
+      color: var(--el-text-color-secondary);
+    }
+  }
+
+  // ========== 预览数据网格 ==========
+  .preview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .preview-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 12px;
+    border-radius: 10px;
+    background-color: var(--el-fill-color-extra-light);
+    text-align: center;
 
     &__icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s;
+      width: 36px;
+      height: 36px;
+      font-size: 18px;
+      border-radius: 8px;
 
       &--primary {
-        background: var(--el-color-primary-light-9);
-        color: var(--el-color-primary);
+        color: #2563eb;
+        background-color: rgba(59, 130, 246, 0.1);
       }
 
       &--success {
-        background: var(--el-color-success-light-9);
-        color: var(--el-color-success);
+        color: #059669;
+        background-color: rgba(16, 185, 129, 0.1);
       }
-
-      &--danger {
-        background: var(--el-color-danger-light-9);
-        color: var(--el-color-danger);
-      }
-    }
-
-    &__label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--el-text-color-secondary);
     }
 
     &__value {
       font-size: 24px;
       font-weight: 700;
-
-      &--primary {
-        color: var(--el-color-primary);
-      }
-
-      &--success {
-        color: var(--el-color-success);
-      }
-
-      &--danger {
-        color: var(--el-color-danger);
-      }
+      line-height: 1;
+      color: var(--el-text-color-primary);
     }
-  }
-
-  // 进度条样式
-  .progress-bar {
-    background: var(--el-fill-color-light);
-    border-radius: 8px;
-    padding: 16px;
 
     &__label {
       font-size: 12px;
-      color: var(--el-text-color-regular);
+      color: var(--el-text-color-secondary);
+    }
+  }
+
+  // 状态横条
+  .preview-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 8px;
+
+    &--ok {
+      color: #059669;
+      background-color: rgba(16, 185, 129, 0.06);
+    }
+
+    &--warn {
+      color: #dc2626;
+      background-color: rgba(239, 68, 68, 0.06);
+    }
+  }
+
+  // 使用率
+  .preview-usage {
+    &__label {
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
     }
 
     &__value {
       font-size: 12px;
       font-weight: 600;
-      color: var(--el-color-primary);
+      color: var(--el-text-color-primary);
     }
   }
 
-  // 提示项样式
-  .alert-item {
+  // 警告信息
+  .preview-alerts {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .preview-alert {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    border-radius: 8px;
-    font-size: 14px;
+    gap: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #d97706;
+    background-color: rgba(245, 158, 11, 0.06);
+    border-radius: 6px;
 
-    &--warning {
-      background: var(--el-color-warning-light-9);
-      color: var(--el-color-warning);
-      border: 1px solid var(--el-color-warning-light-5);
-    }
-
-    &--info {
-      background: var(--el-color-primary-light-9);
-      color: var(--el-color-primary);
-      border: 1px solid var(--el-color-primary-light-5);
+    &--error {
+      color: #dc2626;
+      background-color: rgba(239, 68, 68, 0.06);
     }
   }
 
-  // 空状态样式
+  // 空状态
   .empty-icon {
     color: var(--el-text-color-placeholder);
   }

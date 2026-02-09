@@ -54,9 +54,12 @@
 <script setup lang="ts">
   import { useTable } from '@/hooks/core/useTable'
   import { fetchGetSurveyPage } from '@/api/allocation-manage'
+  import { ElPopover } from 'element-plus'
   import SurveySearch from './modules/survey-search.vue'
   import SurveyDrawer from './modules/survey-drawer.vue'
   import ArtStatusDot from '@/components/core/tables/art-status-dot/index.vue'
+  import StudentInfoPopover from '@/components/core/cards/art-student-info-popover/index.vue'
+  import { fetchGetStudentDetail } from '@/api/accommodation-manage'
 
   defineOptions({ name: 'AllocationSurvey' })
 
@@ -64,6 +67,33 @@
 
   const showSearchBar = ref(false)
   const drawerVisible = ref(false)
+
+  // 学生详情懒加载缓存（hover 时才请求，避免 N+1）
+  const studentDetailCache = ref<Map<number, Api.AccommodationManage.StudentListItem>>(new Map())
+
+  /**
+   * 懒加载学生详情（仅在 popover 显示时触发）
+   */
+  const lazyLoadStudent = async (studentId: number) => {
+    if (studentDetailCache.value.has(studentId)) return
+    try {
+      const detail = await fetchGetStudentDetail(studentId)
+      if (detail) {
+        studentDetailCache.value.set(studentId, detail)
+      }
+    } catch {
+      // 静默失败，popover 显示已有数据
+    }
+  }
+
+  /**
+   * 获取 popover 展示用的学生数据（合并列表数据 + 缓存详情）
+   */
+  const getPopoverStudent = (row: SurveyListItem) => {
+    const cached = studentDetailCache.value.get(row.studentId)
+    if (cached) return { ...row, ...cached }
+    return row
+  }
   const currentStudentId = ref<number | undefined>(undefined)
   const currentStudentName = ref<string | undefined>(undefined)
 
@@ -126,7 +156,36 @@
       paginationKey: { current: 'pageNum', size: 'pageSize' },
       columnsFactory: () => [
         { prop: 'studentNo', label: '学号', width: 120 },
-        { prop: 'studentName', label: '姓名', width: 100 },
+        {
+          prop: 'studentName',
+          label: '姓名',
+          minWidth: 100,
+          formatter: (row: SurveyListItem) => {
+            if (!row.studentName) return h('span', '--')
+            return h(
+              ElPopover,
+              {
+                placement: 'bottom-start',
+                trigger: 'hover',
+                width: 320,
+                popperClass: 'student-info-popover',
+                onShow: () => lazyLoadStudent(row.studentId)
+              },
+              {
+                default: () => h(StudentInfoPopover, { student: getPopoverStudent(row) }),
+                reference: () =>
+                  h(
+                    'span',
+                    {
+                      class: 'cursor-pointer hover:underline',
+                      style: { color: 'var(--el-color-primary)' }
+                    },
+                    row.studentName
+                  )
+              }
+            )
+          }
+        },
         { prop: 'className', label: '班级', minWidth: 140 },
         {
           prop: 'enrollmentYear',

@@ -24,6 +24,9 @@ import com.project.backend.room.service.StatisticsService;
 import com.project.backend.room.vo.BedVO;
 import com.project.backend.room.vo.RoomVO;
 import com.project.backend.room.vo.RoomVisualVO;
+import com.project.backend.student.entity.Student;
+import com.project.backend.student.mapper.StudentMapper;
+import com.project.backend.common.service.StudentInfoEnricher;
 import com.project.backend.util.DictUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -55,6 +58,8 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
     private final CampusMapper campusMapper;
     private final StatisticsService statisticsService;
     private final BedService bedService;
+    private final StudentMapper studentMapper;
+    private final StudentInfoEnricher studentInfoEnricher;
 
     @Override
     @Transactional(readOnly = true)
@@ -504,13 +509,87 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
         allBedsWrapper.in(Bed::getRoomId, roomIds).orderByAsc(Bed::getSort).orderByAsc(Bed::getId);
         List<Bed> allBeds = bedMapper.selectList(allBedsWrapper);
 
-        // 将床位按房间ID分组，转换为 BedVO
+        // 批量加载床位关联的房间信息（用于补全 roomNumber、floorId、floorCode）
+        Map<Long, Room> bedRoomMap = new HashMap<>();
+        for (Room r : rooms) {
+            bedRoomMap.put(r.getId(), r);
+        }
+
+        // 批量加载床位关联的楼层信息
+        Set<Long> bedFloorIds = allBeds.stream()
+                .map(Bed::getFloorId).filter(id -> id != null).collect(Collectors.toSet());
+        // 也收集来自房间的 floorId（兜底）
+        rooms.stream().map(Room::getFloorId).filter(id -> id != null).forEach(bedFloorIds::add);
+        Map<Long, Floor> bedFloorMap = bedFloorIds.isEmpty() ? Map.of()
+                : floorMapper.selectBatchIds(bedFloorIds).stream()
+                        .collect(Collectors.toMap(Floor::getId, f -> f, (a, b) -> a));
+
+        // 批量加载床位关联的校区信息
+        Set<String> bedCampusCodes = allBeds.stream()
+                .map(Bed::getCampusCode).filter(code -> StrUtil.isNotBlank(code)).collect(Collectors.toSet());
+        Map<String, Campus> bedCampusMap = bedCampusCodes.isEmpty() ? Map.of()
+                : bedCampusCodes.stream()
+                        .map(campusMapper::selectByCampusCode)
+                        .filter(campus -> campus != null)
+                        .collect(Collectors.toMap(Campus::getCampusCode, c -> c, (a, b) -> a));
+
+        // 批量加载床位关联的学生信息
+        Set<Long> bedStudentIds = allBeds.stream()
+                .map(Bed::getStudentId).filter(id -> id != null).collect(Collectors.toSet());
+        Map<Long, Student> bedStudentMap = bedStudentIds.isEmpty() ? Map.of()
+                : studentMapper.selectBatchIds(bedStudentIds).stream()
+                        .collect(Collectors.toMap(Student::getId, s -> s, (a, b) -> a));
+
+        // 将床位按房间ID分组，完整转换为 BedVO（含学生信息、楼层、校区等）
         Map<Long, List<BedVO>> bedsByRoomId = new HashMap<>();
         for (Bed bed : allBeds) {
             BedVO bedVO = new BedVO();
             BeanUtil.copyProperties(bed, bedVO);
             bedVO.setStatusText(DictUtils.getLabel("sys_common_status", bed.getStatus(), "未知"));
+            bedVO.setBedPositionText(DictUtils.getLabel("dormitory_bed_position", bed.getBedPosition(), "未知"));
             bedVO.setBedStatusText(DictUtils.getLabel("dormitory_bed_status", bed.getBedStatus(), "未知"));
+
+            // 补全房间信息
+            Room bedRoom = bedRoomMap.get(bed.getRoomId());
+            if (bedRoom != null) {
+                bedVO.setRoomNumber(bedRoom.getRoomNumber());
+                if (bed.getFloorId() == null && bedRoom.getFloorId() != null) {
+                    bedVO.setFloorId(bedRoom.getFloorId());
+                }
+                if (StrUtil.isBlank(bed.getFloorCode()) && StrUtil.isNotBlank(bedRoom.getFloorCode())) {
+                    bedVO.setFloorCode(bedRoom.getFloorCode());
+                }
+            }
+
+            // 补全楼层信息
+            Long floorIdForBed = bedVO.getFloorId() != null ? bedVO.getFloorId()
+                    : (bedRoom != null ? bedRoom.getFloorId() : null);
+            if (floorIdForBed != null) {
+                Floor bedFloor = bedFloorMap.get(floorIdForBed);
+                if (bedFloor != null) {
+                    bedVO.setFloorName(bedFloor.getFloorName());
+                    if (StrUtil.isBlank(bedVO.getFloorCode())) {
+                        bedVO.setFloorCode(bedFloor.getFloorCode());
+                    }
+                }
+            }
+
+            // 补全校区信息
+            if (StrUtil.isNotBlank(bed.getCampusCode())) {
+                Campus bedCampus = bedCampusMap.get(bed.getCampusCode());
+                if (bedCampus != null) {
+                    bedVO.setCampusName(bedCampus.getCampusName());
+                }
+            }
+
+            // 填充学生详细信息（关键：含 studentInfo 中的姓名、学号等，供可视化视图展示入住人）
+            if (bed.getStudentId() != null) {
+                Student student = bedStudentMap.get(bed.getStudentId());
+                if (student != null) {
+                    studentInfoEnricher.enrichStudentInfo(student, bedVO);
+                }
+            }
+
             bedsByRoomId.computeIfAbsent(bed.getRoomId(), k -> new ArrayList<>()).add(bedVO);
         }
 

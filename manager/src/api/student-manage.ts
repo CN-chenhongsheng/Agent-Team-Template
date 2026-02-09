@@ -15,7 +15,7 @@ import { useUserStore } from '@/store/modules/user'
  */
 export function fetchGetStudentPage(params: Api.StudentManage.StudentSearchParams) {
   return request.get<Api.StudentManage.StudentPageResponse>({
-    url: '/api/v1/student/page',
+    url: '/api/v1/system/student/page',
     params
   })
 }
@@ -26,7 +26,7 @@ export function fetchGetStudentPage(params: Api.StudentManage.StudentSearchParam
  */
 export function fetchGetStudentDetail(id: number) {
   return request.get<Api.StudentManage.StudentListItem>({
-    url: `/api/v1/student/${id}`
+    url: `/api/v1/system/student/${id}`
   })
 }
 
@@ -36,7 +36,7 @@ export function fetchGetStudentDetail(id: number) {
  */
 export function fetchAddStudent(data: Api.StudentManage.StudentSaveParams) {
   return request.post({
-    url: '/api/v1/student',
+    url: '/api/v1/system/student',
     data,
     showSuccessMessage: true
   })
@@ -48,7 +48,7 @@ export function fetchAddStudent(data: Api.StudentManage.StudentSaveParams) {
  */
 export function fetchUpdateStudent(data: Api.StudentManage.StudentSaveParams) {
   return request.put({
-    url: '/api/v1/student',
+    url: '/api/v1/system/student',
     data,
     showSuccessMessage: true
   })
@@ -60,7 +60,7 @@ export function fetchUpdateStudent(data: Api.StudentManage.StudentSaveParams) {
  */
 export function fetchDeleteStudent(id: number) {
   return request.del({
-    url: `/api/v1/student/${id}`,
+    url: `/api/v1/system/student/${id}`,
     showSuccessMessage: true
   })
 }
@@ -71,7 +71,7 @@ export function fetchDeleteStudent(id: number) {
  */
 export function fetchBatchDeleteStudent(ids: number[]) {
   return request.del({
-    url: '/api/v1/student/batch',
+    url: '/api/v1/system/student/batch',
     data: ids,
     showSuccessMessage: true
   })
@@ -84,7 +84,7 @@ export function fetchBatchDeleteStudent(ids: number[]) {
  */
 export function fetchUpdateStudentStatus(id: number, status: number) {
   return request.put({
-    url: `/api/v1/student/${id}/status/${status}`,
+    url: `/api/v1/system/student/${id}/status/${status}`,
     showSuccessMessage: true
   })
 }
@@ -104,7 +104,7 @@ export function fetchImportStudents(
   }
 
   return request.post<Api.StudentImport.ImportResponse>({
-    url: '/api/v1/student/import',
+    url: '/api/v1/system/student/import',
     data,
     showErrorMessage: true
   })
@@ -115,7 +115,7 @@ export function fetchImportStudents(
  */
 export function fetchImportTaskResult(taskId: string) {
   return request.get<Api.StudentImport.ImportTaskVO>({
-    url: `/api/v1/student/import/task/${taskId}`,
+    url: `/api/v1/system/student/import/task/${taskId}`,
     showErrorMessage: true
   })
 }
@@ -167,7 +167,7 @@ export function subscribeImportProgress(taskId: string, callbacks: SSEImportCall
   const token = userStore.accessToken
 
   // 构建带 token 的 SSE URL
-  const sseUrl = `${baseUrl}/v1/student/import/progress/${taskId}?token=${encodeURIComponent(token)}`
+  const sseUrl = `${baseUrl}/v1/system/student/import/progress/${taskId}?token=${encodeURIComponent(token)}`
 
   console.log('[SSE] 创建连接:', sseUrl.replace(token, '***'))
 

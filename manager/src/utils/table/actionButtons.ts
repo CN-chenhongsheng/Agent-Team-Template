@@ -29,7 +29,15 @@ const BUTTON_LABELS: Record<string, string> = {
   reset: '重置',
   share: '分配',
   link: '绑定',
-  notify: '提醒'
+  notify: '提醒',
+  copy: '复制',
+  play: '执行',
+  pause: '暂停',
+  cancel: '取消',
+  refresh: '刷新',
+  export: '导出',
+  import: '导入',
+  print: '打印'
 }
 
 /**
@@ -47,7 +55,15 @@ export const BUTTON_ICONS: Record<string, string> = {
   reset: 'ri:refresh-line',
   share: 'ri:share-line',
   link: 'ri:link',
-  notify: 'ri:notification-line'
+  notify: 'ri:notification-line',
+  copy: 'ri:file-copy-2-line',
+  play: 'ri:play-circle-line',
+  pause: 'ri:pause-circle-line',
+  cancel: 'ri:close-circle-line',
+  refresh: 'ri:refresh-line',
+  export: 'ri:download-2-line',
+  import: 'ri:upload-2-line',
+  print: 'ri:printer-line'
 }
 
 /**

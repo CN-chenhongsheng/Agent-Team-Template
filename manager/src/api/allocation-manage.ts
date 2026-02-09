@@ -8,6 +8,7 @@
  */
 
 import request from '@/utils/http'
+import { useUserStore } from '@/store/modules/user'
 
 /** ==================== 配置管理 ==================== */
 
@@ -147,6 +148,18 @@ export function fetchAddTask(data: Api.Allocation.TaskSaveParams) {
 }
 
 /**
+ * 更新任务
+ * @param data 任务数据（含 id）
+ */
+export function fetchUpdateTask(id: number, data: Api.Allocation.TaskSaveParams) {
+  return request.put({
+    url: `/api/v1/system/allocation/task/${id}`,
+    data,
+    showSuccessMessage: true
+  })
+}
+
+/**
  * 预览分配
  * @param data 预览参数
  */
@@ -169,13 +182,98 @@ export function fetchExecuteTask(id: number) {
 }
 
 /**
- * 获取任务进度
+ * 获取任务进度（轮询方式，兼容/降级用）
  * @param id 任务ID
  */
 export function fetchGetTaskProgress(id: number) {
   return request.get<Api.Allocation.TaskProgress>({
     url: `/api/v1/system/allocation/task/${id}/progress`
   })
+}
+
+/** SSE 进度事件回调 */
+interface SSEAllocationCallbacks {
+  onProgress: (data: Api.Allocation.TaskProgress) => void
+  onComplete: (data: Api.Allocation.TaskProgress) => void
+  onError: (error: string) => void
+}
+
+/**
+ * SSE 订阅分配任务进度（实时推送，替代轮询）
+ * @param taskId 任务ID
+ * @param callbacks 事件回调
+ * @returns 取消订阅函数
+ */
+export function subscribeTaskProgress(taskId: number, callbacks: SSEAllocationCallbacks): () => void {
+  const baseUrl = import.meta.env.VITE_API_PROXY_URL || ''
+  const userStore = useUserStore()
+  const token = userStore.accessToken
+
+  const sseUrl = `${baseUrl}/v1/system/allocation/task/${taskId}/progress/sse?token=${encodeURIComponent(token)}`
+  console.log('[AllocationSSE] 创建连接:', sseUrl.replace(token, '***'))
+
+  const eventSource = new EventSource(sseUrl)
+
+  // 进度更新
+  eventSource.addEventListener('progress', (event: MessageEvent) => {
+    try {
+      const data: Api.Allocation.TaskProgress = JSON.parse(event.data)
+      callbacks.onProgress(data)
+    } catch (e) {
+      console.error('[AllocationSSE] 解析 progress 事件失败:', e)
+    }
+  })
+
+  // 当前状态（刚连接时推送）
+  eventSource.addEventListener('current', (event: MessageEvent) => {
+    try {
+      const data: Api.Allocation.TaskProgress = JSON.parse(event.data)
+      callbacks.onProgress(data)
+    } catch (e) {
+      console.error('[AllocationSSE] 解析 current 事件失败:', e)
+    }
+  })
+
+  // 完成
+  eventSource.addEventListener('complete', (event: MessageEvent) => {
+    try {
+      const data: Api.Allocation.TaskProgress = JSON.parse(event.data)
+      console.log('[AllocationSSE] 任务完成:', data)
+      callbacks.onComplete(data)
+      eventSource.close()
+    } catch (e) {
+      console.error('[AllocationSSE] 解析 complete 事件失败:', e)
+    }
+  })
+
+  // 错误
+  eventSource.addEventListener('error', (event: MessageEvent) => {
+    try {
+      const data = JSON.parse(event.data)
+      console.error('[AllocationSSE] 任务错误:', data)
+      callbacks.onError(data.errorMessage || '执行失败')
+      eventSource.close()
+    } catch {
+      // SSE 连接错误（非服务端推送）
+    }
+  })
+
+  // SSE 连接级错误
+  eventSource.onerror = () => {
+    if (eventSource.readyState === EventSource.CLOSED) {
+      console.log('[AllocationSSE] 连接已关闭')
+    } else if (eventSource.readyState === EventSource.CONNECTING) {
+      console.log('[AllocationSSE] 正在重连...')
+    } else {
+      callbacks.onError('SSE 连接失败')
+      eventSource.close()
+    }
+  }
+
+  return () => {
+    console.log('[AllocationSSE] 手动关闭连接')
+    eventSource.close()
+  }
 }
 
 /**

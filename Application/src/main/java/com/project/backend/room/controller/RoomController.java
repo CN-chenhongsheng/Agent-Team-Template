@@ -13,6 +13,7 @@ import com.project.backend.room.vo.RoomVO;
 import com.project.backend.room.vo.RoomVisualVO;
 
 import java.util.List;
+import com.project.core.annotation.Log;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -80,6 +81,7 @@ public class RoomController extends BaseCrudController<RoomVO, RoomQueryDTO, Roo
 
     @PostMapping("/batch-create")
     @Operation(summary = "批量创建房间")
+    @Log(title = "批量创建房间", businessType = 1)
     public R<Integer> batchCreate(@RequestBody @Valid RoomBatchCreateDTO dto) {
         return R.ok(roomService.batchCreateRooms(dto));
     }

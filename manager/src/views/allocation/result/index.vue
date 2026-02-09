@@ -7,17 +7,37 @@
 
     <template v-else>
       <!-- 任务摘要 -->
-      <ElCard shadow="never" class="mb-3" v-if="taskInfo.id">
-        <div class="flex justify-between items-center">
-          <div>
-            <span class="text-lg font-bold">{{ taskInfo.taskName }}</span>
-            <ElTag class="ml-2">{{ taskInfo.statusName }}</ElTag>
+      <ElCard shadow="never" class="task-summary" v-if="taskInfo.id">
+        <div class="task-summary__content">
+          <!-- 左侧：任务名称 + 状态 -->
+          <div class="task-summary__info">
+            <h3 class="task-summary__title">{{ taskInfo.taskName }}</h3>
+            <ArtStatusDot
+              :text="taskInfo.statusName || '未知'"
+              :type="taskInfo.status === 2 ? 'success' : taskInfo.status === 5 ? 'danger' : taskInfo.status === 1 ? 'warning' : 'info'"
+            />
           </div>
-          <div class="text-gray-500 text-sm">
-            <span>总学生: {{ taskInfo.totalStudents }}</span>
-            <span class="ml-4">已分配: {{ taskInfo.allocatedCount }}</span>
-            <span class="ml-4">已确认: {{ taskInfo.confirmedCount }}</span>
-            <span class="ml-4">平均分: {{ taskInfo.avgMatchScore }}</span>
+          <!-- 右侧：统计指标 -->
+          <div class="task-summary__metrics">
+            <div class="summary-metric">
+              <span class="summary-metric__value summary-metric__value--primary">{{ taskInfo.totalStudents ?? 0 }}</span>
+              <span class="summary-metric__label">总学生</span>
+            </div>
+            <div class="summary-metric__divider" />
+            <div class="summary-metric">
+              <span class="summary-metric__value summary-metric__value--blue">{{ taskInfo.allocatedCount ?? 0 }}</span>
+              <span class="summary-metric__label">已分配</span>
+            </div>
+            <div class="summary-metric__divider" />
+            <div class="summary-metric">
+              <span class="summary-metric__value summary-metric__value--green">{{ taskInfo.confirmedCount ?? 0 }}</span>
+              <span class="summary-metric__label">已确认</span>
+            </div>
+            <div class="summary-metric__divider" />
+            <div class="summary-metric">
+              <span class="summary-metric__value summary-metric__value--amber">{{ taskInfo.avgMatchScore ?? '--' }}</span>
+              <span class="summary-metric__label">平均分</span>
+            </div>
           </div>
         </div>
       </ElCard>
@@ -91,6 +111,7 @@
   import ResultSearch from './modules/result-search.vue'
   import ResultDrawer from './modules/result-drawer.vue'
   import { ElEmpty } from 'element-plus'
+  import ArtStatusDot from '@/components/core/tables/art-status-dot/index.vue'
   import type { ActionButtonConfig } from '@/types/component'
 
   defineOptions({ name: 'AllocationResult' })
@@ -398,3 +419,76 @@
     }
   })
 </script>
+
+<style scoped lang="scss">
+  .task-summary {
+    margin-bottom: 12px;
+
+    &__content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    &__info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    &__title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--el-text-color-primary);
+    }
+
+    &__metrics {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+  }
+
+  .summary-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+
+    &__value {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.2;
+
+      &--primary {
+        color: var(--el-text-color-primary);
+      }
+
+      &--blue {
+        color: #3b82f6;
+      }
+
+      &--green {
+        color: #10b981;
+      }
+
+      &--amber {
+        color: #f59e0b;
+      }
+    }
+
+    &__label {
+      font-size: 11px;
+      color: var(--el-text-color-secondary);
+    }
+
+    &__divider {
+      width: 1px;
+      height: 28px;
+      background-color: var(--el-border-color-extra-light);
+    }
+  }
+</style>

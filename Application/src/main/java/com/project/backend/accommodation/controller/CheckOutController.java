@@ -8,6 +8,7 @@ import com.project.core.result.PageResult;
 import com.project.core.result.R;
 import com.project.backend.controller.base.BaseCrudController;
 import com.project.backend.controller.base.BatchDeleteController;
+import com.project.core.annotation.Log;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -66,6 +67,7 @@ public class CheckOutController extends BaseCrudController<CheckOutVO, CheckOutQ
      * 撤回退宿申请
      */
     @Operation(summary = "撤回退宿申请")
+    @Log(title = "撤回退宿申请", businessType = 2)
     @PutMapping("/{id}/cancel")
     public R<Void> cancel(@PathVariable Long id) {
         boolean success = checkOutService.cancelCheckOut(id);

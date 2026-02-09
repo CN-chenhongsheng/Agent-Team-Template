@@ -1,5 +1,6 @@
 package com.project.backend.system.controller;
 
+import com.project.core.annotation.Log;
 import com.project.core.result.PageResult;
 import com.project.core.result.R;
 import com.project.backend.controller.base.BatchDeleteController;
@@ -55,6 +56,7 @@ public class OperLogController implements BatchDeleteController {
 
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除操作日志")
+    @Log(title = "批量删除操作日志", businessType = 3)
     public R<Void> batchDelete(@RequestBody Long[] ids) {
         log.info("批量删除操作日志，ID：{}", (Object) ids);
         boolean success = operLogService.batchDelete(ids);
@@ -67,6 +69,7 @@ public class OperLogController implements BatchDeleteController {
 
     @DeleteMapping("/clean")
     @Operation(summary = "清空操作日志")
+    @Log(title = "清空操作日志", businessType = 3)
     public R<Void> clean() {
         log.info("清空操作日志");
         boolean success = operLogService.clean();
