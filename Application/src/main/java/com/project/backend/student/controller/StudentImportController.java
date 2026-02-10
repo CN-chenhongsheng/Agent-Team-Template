@@ -34,7 +34,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  */
 @Slf4j
 @RestController
-@RequestMapping("/v1/student/import")
+@RequestMapping("/v1/system/student/import")
 @RequiredArgsConstructor
 @Tag(name = "学生导入", description = "学生批量导入相关接口")
 public class StudentImportController {
