@@ -11,26 +11,26 @@
     :close-on-click-modal="false"
     class="student-select-dialog"
     @close="handleClose"
+    align-center
+    top="5vh"
   >
-    <!-- 目标床位信息卡片 -->
-    <div class="target-card">
-      <div class="target-card__icon">
-        <ArtSvgIcon icon="ri:hotel-bed-line" class="text-2xl" />
-      </div>
-      <div class="target-card__info">
-        <div class="target-card__title">
-          <span class="target-card__room">{{ roomInfo?.roomNumber }}</span>
-          <span class="target-card__bed">{{ bedInfo?.bedNumber }}号床</span>
+    <!-- 目标床位 Banner -->
+    <div class="target-banner">
+      <ArtSvgIcon icon="ri:hotel-bed-line" class="target-banner__bg-icon" />
+      <div class="target-banner__content">
+        <div class="target-banner__main">
+          <span class="target-banner__room">{{ roomInfo?.roomNumber }}</span>
+          <span class="target-banner__bed">{{ bedInfo?.bedNumber }}号床</span>
         </div>
-        <div class="target-card__meta">
-          <span v-if="roomInfo?.floorName" class="target-card__location">
-            <ArtSvgIcon icon="ri:building-line" class="mr-1 text-xs" />
+        <div class="target-banner__tags">
+          <span v-if="roomInfo?.floorName" class="target-banner__tag">
+            <ArtSvgIcon icon="ri:building-line" class="mr-0.5 text-xs" />
             {{ roomInfo?.floorName }}
           </span>
-          <span v-if="dormitoryGenderText" class="target-card__gender">
+          <span v-if="dormitoryGenderText" class="target-banner__tag target-banner__tag--accent">
             <ArtSvgIcon
               :icon="genderFilter === 1 ? 'ri:men-line' : 'ri:women-line'"
-              class="mr-1 text-xs"
+              class="mr-0.5 text-xs"
             />
             {{ dormitoryGenderText }}
           </span>
@@ -136,7 +136,7 @@
             <ArtSvgIcon icon="ri:search-line" class="mr-1" />
             搜索
           </ElButton>
-          <ElButton @click="handleReset">
+          <ElButton v-ripple @click="handleReset">
             <ArtSvgIcon icon="ri:refresh-line" class="mr-1" />
             重置
           </ElButton>
@@ -150,7 +150,7 @@
         v-loading="loading"
         :data="studentList"
         :row-class-name="getRowClassName"
-        :max-height="300"
+        :max-height="400"
         @row-click="handleRowClick"
         class="student-table"
       >
@@ -619,42 +619,38 @@
     }
   }
 
-  // 目标床位卡片
-  .target-card {
-    display: flex;
-    gap: 16px;
-    align-items: center;
+  // 目标床位 Banner
+  .target-banner {
+    position: relative;
     padding: 16px 20px;
-    margin-bottom: 20px;
-    background: linear-gradient(
-      135deg,
-      color-mix(in srgb, var(--theme-color) 8%, transparent) 0%,
-      color-mix(in srgb, var(--theme-color) 4%, transparent) 100%
-    );
-    border: 1px solid color-mix(in srgb, var(--theme-color) 20%, transparent);
-    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    background: var(--art-gray-50);
+    border: 1px solid var(--art-gray-200);
+    border-radius: 10px;
 
-    &__icon {
-      display: flex;
-      flex-shrink: 0;
-      align-items: center;
-      justify-content: center;
-      width: 48px;
-      height: 48px;
-      color: white;
-      background: var(--theme-color);
-      border-radius: 10px;
+    // 右侧装饰大图标
+    &__bg-icon {
+      position: absolute;
+      top: 50%;
+      right: 20px;
+      font-size: 72px;
+      color: var(--theme-color);
+      pointer-events: none;
+      opacity: 0.1;
+      transform: translateY(-50%);
     }
 
-    &__info {
-      flex: 1;
+    &__content {
+      position: relative;
+      z-index: 1;
     }
 
-    &__title {
+    &__main {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       align-items: baseline;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     &__room {
@@ -664,28 +660,29 @@
     }
 
     &__bed {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--theme-color);
-    }
-
-    &__meta {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-    }
-
-    &__location,
-    &__gender {
-      display: flex;
-      align-items: center;
-      font-size: 13px;
-      color: var(--art-gray-600);
-    }
-
-    &__gender {
+      font-size: 14px;
       font-weight: 500;
       color: var(--theme-color);
+    }
+
+    &__tags {
+      display: flex;
+      gap: 8px;
+    }
+
+    &__tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 8px;
+      font-size: 12px;
+      color: var(--art-gray-500);
+      background: var(--art-gray-100);
+      border-radius: 4px;
+
+      &--accent {
+        color: var(--theme-color);
+        background: color-mix(in srgb, var(--theme-color) 10%, transparent);
+      }
     }
   }
 
@@ -754,6 +751,11 @@
     :deep(.el-table__row) {
       cursor: pointer;
       transition: all 0.15s ease;
+
+      td {
+        padding: 6px 0;
+        font-size: 13px;
+      }
     }
 
     :deep(.row-disabled) {
@@ -804,7 +806,7 @@
     display: flex;
     gap: 12px;
     align-items: center;
-    padding: 10px 16px;
+    padding: 8px 16px;
     background: linear-gradient(
       135deg,
       color-mix(in srgb, var(--el-color-success) 12%, transparent) 0%,
@@ -869,16 +871,16 @@
       }
     }
 
-    .target-card {
-      background: linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--theme-color) 15%, transparent) 0%,
-        color-mix(in srgb, var(--theme-color) 8%, transparent) 100%
-      );
-      border-color: color-mix(in srgb, var(--theme-color) 30%, transparent);
+    .target-banner {
+      background: var(--art-gray-200);
+      border-color: var(--art-gray-300);
 
       &__room {
         color: var(--art-gray-100);
+      }
+
+      &__tag {
+        background: var(--art-gray-300);
       }
     }
 
