@@ -43,7 +43,7 @@
     </ElCard>
 
     <!-- 流程绑定弹窗 -->
-    <FlowBindingDialog v-model="bindingDialogVisible" @success="refreshData" />
+    <FlowBindingDialog v-model="bindingDialogVisible" :flow="bindingFlow" @success="refreshData" />
   </div>
 </template>
 
@@ -86,6 +86,7 @@
 
   const showSearchBar = ref(false)
   const bindingDialogVisible = ref(false)
+  const bindingFlow = ref<FlowListItem | null>(null)
 
   // 跨标签页通信和数据缓存
   const { saveCache } = useFlowData()
@@ -203,6 +204,7 @@
               {
                 type: 'link',
                 onClick: () => {
+                  bindingFlow.value = row
                   bindingDialogVisible.value = true
                 },
                 label: '绑定'

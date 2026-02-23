@@ -355,6 +355,11 @@ html.dark .el-card {
   margin: -3px 0 0 2px;
 }
 
+// 无数据时隐藏表格滚动条
+.el-table:has(.el-table__empty-block) .el-scrollbar__bar {
+  display: none !important;
+}
+
 // 去除 el-dropdown 鼠标放上去出现的边框
 .el-tooltip__trigger:focus-visible {
   outline: unset;

@@ -172,7 +172,7 @@
         <!-- 空状态 -->
         <div
           v-else
-          class="flex flex-col items-center justify-center py-15 text-[var(--el-text-color-placeholder)] text-center"
+          class="flex flex-col items-center justify-center h-full text-[var(--el-text-color-placeholder)] text-center"
         >
           <i class="ri-user-add-line text-5xl text-[var(--el-border-color)] mb-3"></i>
           <p class="m-0 text-sm">请从左侧选择角色，系统将自动加载该角色下的用户</p>

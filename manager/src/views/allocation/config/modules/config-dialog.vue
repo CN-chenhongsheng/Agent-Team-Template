@@ -16,9 +16,13 @@
           <div class="config-card__header">
             <div class="flex items-center gap-2">
               <div class="w-1 h-5 bg-primary rounded-full"></div>
-              <span class="text-base font-semibold text-gray-800 dark:text-gray-100">硬约束设置</span>
+              <span class="text-base font-semibold text-gray-800 dark:text-gray-100"
+                >硬约束设置</span
+              >
             </div>
-            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block ml-3">设置匹配时的必要条件</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block ml-3"
+              >设置匹配时的必要条件</span
+            >
           </div>
           <div class="flex flex-col gap-3">
             <div class="constraint-item">
@@ -26,8 +30,12 @@
                 <div class="flex items-center gap-3">
                   <ArtSvgIcon icon="ri:fire-line" class="text-xl text-primary" />
                   <div class="flex flex-col gap-1">
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-200">吸烟约束</span>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">吸烟者不能与不接受吸烟者同住</span>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-200"
+                      >吸烟约束</span
+                    >
+                    <span class="text-xs text-gray-500 dark:text-gray-400"
+                      >吸烟者不能与不接受吸烟者同住</span
+                    >
                   </div>
                 </div>
                 <ArtSwitch
@@ -43,7 +51,9 @@
                 <div class="flex items-center gap-3">
                   <ArtSvgIcon icon="ri:group-line" class="text-xl text-primary" />
                   <div class="flex flex-col gap-1">
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-200">性别约束</span>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-200"
+                      >性别约束</span
+                    >
                     <span class="text-xs text-gray-500 dark:text-gray-400">不同性别不能同住</span>
                   </div>
                 </div>
@@ -60,8 +70,12 @@
                 <div class="flex items-center gap-3">
                   <ArtSvgIcon icon="ri:moon-line" class="text-xl text-primary" />
                   <div class="flex flex-col gap-1">
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-200">作息约束</span>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">作息差异≥3档不能同住</span>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-200"
+                      >作息约束</span
+                    >
+                    <span class="text-xs text-gray-500 dark:text-gray-400"
+                      >作息差异≥3档不能同住</span
+                    >
                   </div>
                 </div>
                 <ArtSwitch
@@ -130,7 +144,9 @@
                   <ArtSvgIcon icon="ri:fire-line" class="text-base text-primary" />
                   <span class="text-sm font-medium text-gray-700 dark:text-gray-200">吸烟维度</span>
                 </div>
-                <span class="text-sm font-semibold text-primary">{{ formData.smokingWeight }}%</span>
+                <span class="text-sm font-semibold text-primary"
+                  >{{ formData.smokingWeight }}%</span
+                >
               </div>
               <ElSlider v-model="formData.smokingWeight" :max="100" />
             </div>
@@ -191,9 +207,17 @@
               <div class="w-1 h-5 bg-primary rounded-full"></div>
               <span class="text-base font-semibold text-gray-800 dark:text-gray-100">基础信息</span>
             </div>
-            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block ml-3">配置的基本信息</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block ml-3"
+              >配置的基本信息</span
+            >
           </div>
-          <ElForm ref="formRef" :model="formData" :rules="formRules" label-width="110px" label-position="left">
+          <ElForm
+            ref="formRef"
+            :model="formData"
+            :rules="formRules"
+            label-width="110px"
+            label-position="left"
+          >
             <ElFormItem prop="configName">
               <template #label>
                 <div class="flex items-center gap-1.5">
@@ -215,11 +239,21 @@
           <div class="config-card__header">
             <div class="flex items-center gap-2">
               <div class="w-1 h-5 bg-primary rounded-full"></div>
-              <span class="text-base font-semibold text-gray-800 dark:text-gray-100">算法与阈值</span>
+              <span class="text-base font-semibold text-gray-800 dark:text-gray-100"
+                >算法与阈值</span
+              >
             </div>
-            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block ml-3">选择匹配算法并设置分数阈值</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block ml-3"
+              >选择匹配算法并设置分数阈值</span
+            >
           </div>
-          <ElForm ref="formRef" :model="formData" :rules="formRules" label-width="110px" label-position="left">
+          <ElForm
+            ref="formRef"
+            :model="formData"
+            :rules="formRules"
+            label-width="110px"
+            label-position="left"
+          >
             <ElFormItem prop="algorithmType">
               <template #label>
                 <div class="flex items-center gap-1.5">
@@ -249,7 +283,9 @@
                 </div>
               </template>
               <ElInputNumber v-model="formData.minMatchScore" :min="0" :max="100" />
-              <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">低于此分数需人工审核</span>
+              <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1"
+                >低于此分数需人工审核</span
+              >
             </ElFormItem>
           </ElForm>
         </div>
@@ -261,7 +297,9 @@
               <div class="w-1 h-5 bg-primary rounded-full"></div>
               <span class="text-base font-semibold text-gray-800 dark:text-gray-100">加分项</span>
             </div>
-            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block ml-3">同一组织的学生可获得额外加分</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block ml-3"
+              >同一组织的学生可获得额外加分</span
+            >
           </div>
           <ElForm ref="formRef" :model="formData" label-width="110px" label-position="left">
             <ElFormItem>
@@ -301,7 +339,9 @@
               <div class="w-1 h-5 bg-primary rounded-full"></div>
               <span class="text-base font-semibold text-gray-800 dark:text-gray-100">备注</span>
             </div>
-            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block ml-3">配置的补充说明</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400 mt-1 block ml-3"
+              >配置的补充说明</span
+            >
           </div>
           <ElForm ref="formRef" :model="formData" label-width="0">
             <ElFormItem label="">
@@ -463,38 +503,25 @@
     padding: 20px;
 
     &__header {
-      margin-bottom: 16px;
       padding-bottom: 12px;
+      margin-bottom: 16px;
       border-bottom: 1px solid var(--el-border-color-lighter);
     }
   }
 
   // 约束项样式
   .constraint-item {
-    background: var(--el-bg-color);
-    border-radius: 8px;
     padding: 16px;
+    background: var(--el-bg-color);
     border: 1px solid transparent;
-    transition: all 0.3s;
-
-    &:hover {
-      transform: translateY(-2px);
-      border-color: var(--el-color-primary-light-7);
-      box-shadow: 0 4px 12px color-mix(in srgb, var(--el-color-primary) 15%, transparent);
-    }
+    border-radius: 8px;
   }
 
   // 权重项样式
   .weight-item {
+    padding: 16px;
     background: var(--el-bg-color);
     border-radius: 8px;
-    padding: 16px;
-    transition: all 0.3s;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px color-mix(in srgb, var(--el-color-primary) 15%, transparent);
-    }
   }
 
   // 自定义动画：抖动提示
@@ -503,9 +530,11 @@
     100% {
       transform: translateX(0);
     }
+
     25% {
       transform: translateX(-2px);
     }
+
     75% {
       transform: translateX(2px);
     }
