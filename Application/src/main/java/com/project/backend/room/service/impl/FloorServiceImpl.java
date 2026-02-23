@@ -26,6 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -57,9 +59,7 @@ public class FloorServiceImpl extends ServiceImpl<FloorMapper, Floor> implements
         Page<Floor> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         page(page, wrapper);
 
-        List<FloorVO> voList = page.getRecords().stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
+        List<FloorVO> voList = convertToVOList(page.getRecords());
 
         return PageResult.build(voList, page.getTotal(), page.getCurrent(), page.getSize());
     }
@@ -216,6 +216,39 @@ public class FloorServiceImpl extends ServiceImpl<FloorMapper, Floor> implements
         }
 
         return result;
+    }
+
+    /**
+     * 批量转换实体到VO（避免N+1查询）
+     */
+    private List<FloorVO> convertToVOList(List<Floor> floors) {
+        if (floors == null || floors.isEmpty()) {
+            return List.of();
+        }
+
+        // 批量加载所有关联的校区
+        Set<String> campusCodes = floors.stream()
+                .map(Floor::getCampusCode)
+                .filter(code -> StrUtil.isNotBlank(code))
+                .collect(Collectors.toSet());
+        Map<String, Campus> campusMap = campusCodes.isEmpty() ? Map.of() :
+                campusMapper.selectList(
+                        new LambdaQueryWrapper<Campus>().in(Campus::getCampusCode, campusCodes)
+                ).stream().collect(Collectors.toMap(Campus::getCampusCode, c -> c));
+
+        return floors.stream().map(floor -> {
+            FloorVO vo = new FloorVO();
+            BeanUtil.copyProperties(floor, vo);
+            vo.setStatusText(DictUtils.getLabel("sys_common_status", floor.getStatus(), "未知"));
+            vo.setGenderTypeText(DictUtils.getLabel("dormitory_gender_type", floor.getGenderType(), "未知"));
+            if (StrUtil.isNotBlank(floor.getCampusCode())) {
+                Campus campus = campusMap.get(floor.getCampusCode());
+                if (campus != null) {
+                    vo.setCampusName(campus.getCampusName());
+                }
+            }
+            return vo;
+        }).collect(Collectors.toList());
     }
 
     /**

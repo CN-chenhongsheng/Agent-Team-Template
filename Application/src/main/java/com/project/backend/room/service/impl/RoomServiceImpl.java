@@ -273,10 +273,9 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
                 .filter(code -> StrUtil.isNotBlank(code))
                 .collect(Collectors.toSet());
         Map<String, Campus> campusMap = campusCodes.isEmpty() ? Map.of() :
-                campusCodes.stream()
-                        .map(campusMapper::selectByCampusCode)
-                        .filter(campus -> campus != null)
-                        .collect(Collectors.toMap(Campus::getCampusCode, c -> c));
+                campusMapper.selectList(
+                        new LambdaQueryWrapper<Campus>().in(Campus::getCampusCode, campusCodes)
+                ).stream().collect(Collectors.toMap(Campus::getCampusCode, c -> c));
 
         // 批量统计每个房间的床位数
         Set<Long> roomIds = rooms.stream()
@@ -285,14 +284,12 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
                 .collect(Collectors.toSet());
         Map<Long, Long> bedCountMap = new HashMap<>();
         if (!roomIds.isEmpty()) {
-            // 查询所有相关床位
-            LambdaQueryWrapper<Bed> bedWrapper = new LambdaQueryWrapper<>();
-            bedWrapper.in(Bed::getRoomId, roomIds);
-            List<Bed> beds = bedMapper.selectList(bedWrapper);
-
-            // 按房间ID分组统计
-            bedCountMap = beds.stream()
-                    .collect(Collectors.groupingBy(Bed::getRoomId, Collectors.counting()));
+            // SQL 分组计数，避免加载全部 Bed 实体到内存
+            for (Map<String, Object> row : bedMapper.countGroupByRoomIds(roomIds)) {
+                Long roomId = ((Number) row.get("room_id")).longValue();
+                Long cnt = ((Number) row.get("cnt")).longValue();
+                bedCountMap.put(roomId, cnt);
+            }
         }
 
         // 转换为VO列表
@@ -528,10 +525,9 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
         Set<String> bedCampusCodes = allBeds.stream()
                 .map(Bed::getCampusCode).filter(code -> StrUtil.isNotBlank(code)).collect(Collectors.toSet());
         Map<String, Campus> bedCampusMap = bedCampusCodes.isEmpty() ? Map.of()
-                : bedCampusCodes.stream()
-                        .map(campusMapper::selectByCampusCode)
-                        .filter(campus -> campus != null)
-                        .collect(Collectors.toMap(Campus::getCampusCode, c -> c, (a, b) -> a));
+                : campusMapper.selectList(
+                        new LambdaQueryWrapper<Campus>().in(Campus::getCampusCode, bedCampusCodes)
+                ).stream().collect(Collectors.toMap(Campus::getCampusCode, c -> c, (a, b) -> a));
 
         // 批量加载床位关联的学生信息
         Set<Long> bedStudentIds = allBeds.stream()
@@ -608,10 +604,9 @@ public class RoomServiceImpl extends ServiceImpl<RoomMapper, Room> implements Ro
                 .filter(code -> StrUtil.isNotBlank(code))
                 .collect(Collectors.toSet());
         Map<String, Campus> campusMap = campusCodes.isEmpty() ? Map.of() :
-                campusCodes.stream()
-                        .map(campusMapper::selectByCampusCode)
-                        .filter(campus -> campus != null)
-                        .collect(Collectors.toMap(Campus::getCampusCode, c -> c));
+                campusMapper.selectList(
+                        new LambdaQueryWrapper<Campus>().in(Campus::getCampusCode, campusCodes)
+                ).stream().collect(Collectors.toMap(Campus::getCampusCode, c -> c));
 
         // 转换为 RoomVisualVO
         return rooms.stream()
