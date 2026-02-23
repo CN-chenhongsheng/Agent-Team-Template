@@ -27,3 +27,5 @@ demo
 文档
 AGENTS.md
 scripts/
+*.xlsx
+*.xls
