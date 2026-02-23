@@ -1,7 +1,7 @@
 <template>
   <div class="setting-drawer">
     <ElDrawer
-      size="307px"
+      size="308px"
       v-model="visible"
       :lock-scroll="true"
       :with-header="false"

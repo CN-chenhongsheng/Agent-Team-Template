@@ -757,8 +757,8 @@
     display: flex;
     height: calc(100vh - 200px);
     min-height: 400px;
-    margin: -20px;
     margin-top: 0;
+    margin-left: -20px;
 
     &__content {
       display: flex;

@@ -213,17 +213,12 @@
       &:hover {
         border-color: var(--art-gray-300);
         box-shadow:
-          0 4px 6px -1px rgb(0 0 0 / 8%),
-          0 10px 15px -3px rgb(0 0 0 / 6%),
-          0 0 0 1px rgb(0 0 0 / 2%);
-        transform: translateY(-3px);
+          0 2px 4px -1px rgb(0 0 0 / 4%),
+          0 4px 8px -2px rgb(0 0 0 / 3%);
       }
 
       &:active {
-        box-shadow:
-          0 2px 4px -1px rgb(0 0 0 / 6%),
-          0 4px 6px -1px rgb(0 0 0 / 4%);
-        transform: translateY(-1px);
+        box-shadow: 0 1px 3px -1px rgb(0 0 0 / 4%);
       }
     }
   }

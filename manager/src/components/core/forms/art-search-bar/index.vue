@@ -388,11 +388,11 @@
         margin-left: 10px;
         line-height: 32px;
         color: var(--theme-color);
-        cursor: pointer;
+        cursor: var(--cursor-pointer);
         transition: color 0.2s ease;
 
         &:hover {
-          color: var(--ElColor-primary);
+          opacity: 0.8;
         }
 
         span {
