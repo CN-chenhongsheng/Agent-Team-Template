@@ -9,8 +9,10 @@
         <el-tag v-if="flowName" type="primary">{{ flowName }}</el-tag>
       </div>
       <div class="flex items-center gap-3">
-        <el-button @click="handleCancel">取消</el-button>
-        <el-button :loading="isSaving" @click="handleSave"> 保存 </el-button>
+        <el-button v-ripple @click="handleCancel">取消</el-button>
+        <el-button v-ripple type="primary" :loading="isSaving" @click="handleSave">
+          保存
+        </el-button>
       </div>
     </div>
 

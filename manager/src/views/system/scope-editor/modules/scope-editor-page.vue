@@ -13,8 +13,10 @@
           <span class="text-[var(--el-text-color-secondary)]">({{ username }})</span>
         </div>
         <div class="flex items-center gap-3">
-          <el-button @click="handleCancel">取消</el-button>
-          <el-button type="primary" :loading="isSaving" @click="handleSave">保存</el-button>
+          <el-button v-ripple @click="handleCancel">取消</el-button>
+          <el-button v-ripple type="primary" :loading="isSaving" @click="handleSave"
+            >保存</el-button
+          >
         </div>
       </div>
 

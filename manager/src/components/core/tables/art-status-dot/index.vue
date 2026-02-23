@@ -58,10 +58,8 @@
     display: inline-flex;
     gap: 6px;
     align-items: center;
-    padding: 2px 10px 2px 8px;
     font-weight: 500;
     border-radius: 9999px;
-    transition: all 0.2s ease;
 
     &__indicator {
       position: relative;
@@ -78,7 +76,6 @@
         content: '';
         border-radius: 50%;
         opacity: 0.4;
-        animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
       }
     }
 
@@ -91,15 +88,9 @@
     // ========== 配色方案 ==========
 
     &--success {
-      background-color: rgb(16 185 129 / 8%);
-
       .art-status-dot__indicator {
         background-color: #10b981;
         box-shadow: 0 0 0 2px rgb(16 185 129 / 20%);
-
-        &::after {
-          background-color: #10b981;
-        }
       }
 
       .art-status-dot__text {
@@ -108,15 +99,9 @@
     }
 
     &--danger {
-      background-color: rgb(239 68 68 / 8%);
-
       .art-status-dot__indicator {
         background-color: #ef4444;
         box-shadow: 0 0 0 2px rgb(239 68 68 / 20%);
-
-        &::after {
-          background-color: #ef4444;
-        }
       }
 
       .art-status-dot__text {
@@ -125,15 +110,9 @@
     }
 
     &--warning {
-      background-color: rgb(245 158 11 / 8%);
-
       .art-status-dot__indicator {
         background-color: #f59e0b;
         box-shadow: 0 0 0 2px rgb(245 158 11 / 20%);
-
-        &::after {
-          background-color: #f59e0b;
-        }
       }
 
       .art-status-dot__text {
@@ -142,15 +121,9 @@
     }
 
     &--info {
-      background-color: rgb(107 114 128 / 8%);
-
       .art-status-dot__indicator {
         background-color: #9ca3af;
         box-shadow: 0 0 0 2px rgb(156 163 175 / 20%);
-        // info 状态不需要呼吸动画
-        &::after {
-          display: none;
-        }
       }
 
       .art-status-dot__text {
@@ -159,33 +132,14 @@
     }
 
     &--primary {
-      background-color: rgb(59 130 246 / 8%);
-
       .art-status-dot__indicator {
         background-color: #3b82f6;
         box-shadow: 0 0 0 2px rgb(59 130 246 / 20%);
-
-        &::after {
-          background-color: #3b82f6;
-        }
       }
 
       .art-status-dot__text {
         color: #2563eb;
       }
-    }
-  }
-
-  // 向外扩散动画（不回缩）
-  @keyframes pulse-ring {
-    0% {
-      opacity: 0.25;
-      transform: scale(1);
-    }
-
-    100% {
-      opacity: 0;
-      transform: scale(2);
     }
   }
 
