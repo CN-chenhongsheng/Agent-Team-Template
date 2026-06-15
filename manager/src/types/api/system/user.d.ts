@@ -13,7 +13,6 @@ declare namespace Api {
       username?: string
       nickname?: string
       phone?: string
-      manageScope?: string
       status?: number
       pageNum?: number
       pageSize?: number
@@ -29,7 +28,6 @@ declare namespace Api {
       email?: string
       phone?: string
       gender?: number
-      manageScope?: string
       status?: number
       roleIds?: number[]
     }
@@ -60,7 +58,6 @@ declare namespace Api {
       phone?: string
       gender?: number
       genderText?: string
-      manageScope?: string
       status: number
       statusText?: string
       gender?: number
@@ -98,5 +95,21 @@ declare namespace Api {
 
     /** 角色用户信息（Map格式，key为角色代码，value为用户列表） */
     type RoleUserMap = Record<string, UserSimpleItem[]>
+
+    /** 导入错误信息 */
+    interface ImportError {
+      row: number
+      field: string
+      message: string
+      value?: string
+    }
+
+    /** 用户导入结果 */
+    interface UserImportResult {
+      totalRows: number
+      successCount: number
+      failCount: number
+      errors: ImportError[]
+    }
   }
 }

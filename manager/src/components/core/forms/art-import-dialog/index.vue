@@ -180,7 +180,9 @@
                       ? 'cursor-not-allowed opacity-40'
                       : 'cursor-pointer text-[var(--el-text-color-secondary)] hover:text-[var(--el-color-danger)]'
                   "
-                  @click.stop="uploadDisabled || scanState === 'scanning' ? undefined : handleFileRemove()"
+                  @click.stop="
+                    uploadDisabled || scanState === 'scanning' ? undefined : handleFileRemove()
+                  "
                 >
                   <Close />
                 </ElIcon>
@@ -305,10 +307,7 @@
       </div>
 
       <!-- 导入须知 -->
-      <div
-        v-if="tips && tips.length > 0"
-        class="import-card import-warning-card p-4"
-      >
+      <div v-if="tips && tips.length > 0" class="import-card import-warning-card p-4">
         <div class="mb-2 flex items-center gap-2">
           <div class="import-warning-card-icon flex items-center justify-center">
             <ElIcon class="text-base"><InfoFilled /></ElIcon>
@@ -338,7 +337,9 @@
         <ElButton
           type="primary"
           class="w-full"
-          :disabled="uploadDisabled || !selectedFile || (scanState !== 'success' && scanState !== 'skipped')"
+          :disabled="
+            uploadDisabled || !selectedFile || (scanState !== 'success' && scanState !== 'skipped')
+          "
           :loading="submitLoading"
           @click="handleSubmit"
         >
@@ -363,7 +364,14 @@
     type UploadFile,
     type UploadRawFile
   } from 'element-plus'
-  import { Download, Upload, Document, UploadFilled, InfoFilled, Close } from '@element-plus/icons-vue'
+  import {
+    Download,
+    Upload,
+    Document,
+    UploadFilled,
+    InfoFilled,
+    Close
+  } from '@element-plus/icons-vue'
   import { ChunkUploader, type UploadProgress, type UploadResult } from '@/utils/upload'
   import type { ImportValidationErrorMeta } from '@/utils/excel/importValidation/errors'
   import ScanResultDialog from './ScanResultDialog.vue'
@@ -922,18 +930,18 @@
       overflow: hidden;
 
       &.is-scanning::before {
-        content: '';
         position: absolute;
         inset: 0;
+        pointer-events: none;
+        content: '';
         background: linear-gradient(
           110deg,
           transparent 0%,
-          rgba(255, 255, 255, 0.35) 45%,
+          rgb(255 255 255 / 35%) 45%,
           transparent 70%
         );
         transform: translateX(-100%);
         animation: importScanShimmer 1.2s ease-in-out infinite;
-        pointer-events: none;
       }
     }
 
@@ -941,6 +949,7 @@
       0% {
         transform: translateX(-100%);
       }
+
       100% {
         transform: translateX(100%);
       }
@@ -954,22 +963,22 @@
     .import-header-icon {
       width: 28px;
       height: 28px;
-      border-radius: 8px;
-      background-color: var(--el-color-primary-light-9);
       color: var(--el-color-primary);
+      background-color: var(--el-color-primary-light-9);
+      border-radius: 8px;
     }
 
     .import-warning-card {
-      border: 1px solid var(--el-color-warning-light-5);
       background-color: var(--el-color-warning-light-9);
+      border: 1px solid var(--el-color-warning-light-5);
     }
 
     .import-warning-card-icon {
       width: 28px;
       height: 28px;
-      border-radius: 8px;
-      background-color: var(--el-color-warning-light-7);
       color: var(--el-color-warning);
+      background-color: var(--el-color-warning-light-7);
+      border-radius: 8px;
     }
 
     .import-warning-card-title {
@@ -983,18 +992,18 @@
     .el-upload-dragger {
       width: 100%;
       padding: 0;
-      border-radius: var(--el-border-radius-base);
       border-color: var(--el-border-color-light);
+      border-radius: var(--el-border-radius-base);
       transition: all 0.3s;
 
       &:hover:not(.is-disabled) {
-        border-color: var(--el-color-primary);
         background-color: var(--el-color-primary-light-9);
+        border-color: var(--el-color-primary);
       }
 
       &.is-dragover {
-        border-color: var(--el-color-primary);
         background-color: var(--el-color-primary-light-9);
+        border-color: var(--el-color-primary);
       }
 
       &.is-disabled {

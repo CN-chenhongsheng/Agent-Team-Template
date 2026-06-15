@@ -204,7 +204,6 @@
   import { fetchGetUserProfile, fetchUpdateUserProfile, fetchChangePassword } from '@/api/auth'
   import { useDictStore } from '@/store/modules/dict'
   import defaultAvatarImg from '@/assets/images/user/avatar.webp'
-  import { formatManageScopeSync } from '@/utils/school/scopeFormatter'
 
   defineOptions({ name: 'UserCenter' })
 
@@ -227,9 +226,9 @@
   // 管理范围标签列表
   const manageScopeTags = computed(() => {
     if (!userProfile.value?.manageScope) return []
-    const formatted = formatManageScopeSync(userProfile.value.manageScope)
-    if (!formatted || formatted === '未设置' || formatted === '格式错误') return []
-    return formatted.split('、').filter((part) => part.trim())
+    const scope = userProfile.value.manageScope
+    if (!scope || scope === '未设置') return []
+    return [scope]
   })
 
   // 表单引用
@@ -364,7 +363,6 @@
         introduction: form.introduction || undefined
       })
 
-      ElMessage.success('个人信息更新成功')
       isEdit.value = false
 
       // 重新加载用户信息
@@ -406,7 +404,6 @@
         confirmPassword: pwdForm.confirmPassword
       })
 
-      ElMessage.success('密码修改成功')
       isEditPwd.value = false
 
       // 清空密码表单

@@ -27,7 +27,11 @@
           />
           <span
             class="pointer-events-none absolute right-1 top-1 h-1.5 w-1.5 rounded-full"
-            :class="autoRefreshEnabled ? 'bg-primary shadow-[0_0_0_2px_rgba(59,130,246,0.35)]' : 'bg-g-400 opacity-60'"
+            :class="
+              autoRefreshEnabled
+                ? 'bg-primary shadow-[0_0_0_2px_rgba(59,130,246,0.35)]'
+                : 'bg-g-400 opacity-60'
+            "
           />
         </div>
       </ElTooltip>

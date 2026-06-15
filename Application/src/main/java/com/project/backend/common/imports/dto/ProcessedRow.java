@@ -1,6 +1,5 @@
 package com.project.backend.common.imports.dto;
 
-import com.project.backend.student.dto.imports.ImportError;
 import lombok.Data;
 
 import java.util.List;

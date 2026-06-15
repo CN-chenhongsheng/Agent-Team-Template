@@ -20,16 +20,7 @@ import org.springframework.context.annotation.FilterType;
                 pattern = "com\\.project\\.core\\.upload\\..*"))
 @MapperScan({
         "com.project.backend.mapper",
-        "com.project.backend.accommodation.mapper",
-        "com.project.backend.allocation.mapper",
-        "com.project.backend.approval.mapper",
-        "com.project.backend.room.mapper",
-        "com.project.backend.organization.mapper",
-        "com.project.backend.school.mapper",
-        "com.project.backend.student.mapper",
-        "com.project.backend.system.mapper",
-        "com.project.backend.notice.mapper",
-        "com.project.backend.repair.mapper"
+        "com.project.backend.system.mapper"
 })
 public class Application {
 

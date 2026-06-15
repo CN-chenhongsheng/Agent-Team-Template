@@ -40,13 +40,13 @@ export interface TemplateColumn {
    * 级联列由 cascadeGenerator 单独处理，不走普通下拉逻辑
    */
   cascadeType?:
-    | 'campus'     // 校区（第一级）
+    | 'campus' // 校区（第一级）
     | 'department' // 院系（第二级，依赖校区）
-    | 'major'      // 专业（第三级，依赖院系）
-    | 'class'      // 班级（第四级，依赖专业）
-    | 'floor'      // 楼层（第二级，依赖校区）
-    | 'room'       // 房间（第三级，依赖楼层）
-    | 'bed'        // 床位（第四级，依赖房间）
+    | 'major' // 专业（第三级，依赖院系）
+    | 'class' // 班级（第四级，依赖专业）
+    | 'floor' // 楼层（第二级，依赖校区）
+    | 'room' // 房间（第三级，依赖楼层）
+    | 'bed' // 床位（第四级，依赖房间）
 }
 
 /**
@@ -55,9 +55,9 @@ export interface TemplateColumn {
  */
 export interface CascadeData {
   /** 组织架构树数据 */
-  orgTree?: import('@/api/student-import').OrgTreeResponse
+  orgTree?: any
   /** 住宿结构树数据 */
-  dormTree?: import('@/api/student-import').DormTreeResponse
+  dormTree?: any
 }
 
 /**
@@ -83,9 +83,7 @@ export interface TemplateConfig {
  * @param dictCodes 字典编码数组
  * @returns 字典数据 Map
  */
-async function loadDictData(
-  dictCodes: string[]
-): Promise<Record<string, string[]>> {
+async function loadDictData(dictCodes: string[]): Promise<Record<string, string[]>> {
   if (dictCodes.length === 0) {
     return {}
   }
@@ -165,10 +163,7 @@ const THEME_COLORS = {
  * @param options 下拉选项
  * @returns 批注文本
  */
-function generateSmartNote(
-  column: TemplateColumn,
-  options: string[] | null
-): string {
+function generateSmartNote(column: TemplateColumn, options: string[] | null): string {
   const notes: string[] = []
 
   // 必填提示

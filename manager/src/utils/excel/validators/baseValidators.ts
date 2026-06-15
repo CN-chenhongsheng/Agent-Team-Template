@@ -155,11 +155,7 @@ export const validateDate = (value: string): string | null => {
   }
 
   // 验证解析后的日期是否与输入一致（避免 2月30日 被自动修正为 3月2日）
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() + 1 !== month ||
-    date.getDate() !== day
-  ) {
+  if (date.getFullYear() !== year || date.getMonth() + 1 !== month || date.getDate() !== day) {
     return '日期无效'
   }
 

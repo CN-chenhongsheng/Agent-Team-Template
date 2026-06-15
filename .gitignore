@@ -3,12 +3,6 @@ node_modules/
 .env
 .mcp.json
 
-# Claude/Cursor
-.claude
-.cursor
-.shared
-.skills
-
 # Compressed files
 .zip
 .rar
@@ -25,7 +19,6 @@ node_modules/
 docs
 demo
 文档
-AGENTS.md
 scripts/
 *.xlsx
 *.xls

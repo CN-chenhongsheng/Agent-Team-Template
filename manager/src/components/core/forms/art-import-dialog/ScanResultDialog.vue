@@ -79,10 +79,7 @@
 
         <!-- 右侧：按行聚合的错误列表 -->
         <div class="flex w-80 flex-col gap-3">
-          <ElCard
-            shadow="never"
-            class="shrink-0 !rounded-[calc(var(--el-border-radius-base))]"
-          >
+          <ElCard shadow="never" class="shrink-0 !rounded-[calc(var(--el-border-radius-base))]">
             <div class="mb-2 text-sm font-medium text-[var(--el-text-color-primary)]">
               按行查看错误
             </div>
@@ -241,8 +238,8 @@
 <style scoped lang="scss">
   .scan-result-dialog {
     :deep(.el-dialog__body) {
-      padding: 16px 20px;
       height: 75vh;
+      padding: 16px 20px;
       overflow: hidden;
     }
   }
@@ -274,12 +271,12 @@
   }
 
   .scan-result-table {
-    border-radius: calc(var(--el-border-radius-base));
     overflow: hidden;
+    border-radius: calc(var(--el-border-radius-base));
 
     :deep(.el-table__header-wrapper th) {
-      background-color: var(--el-fill-color-light);
       font-weight: 600;
+      background-color: var(--el-fill-color-light);
     }
 
     :deep(.el-table__body-wrapper) {
@@ -326,15 +323,15 @@
 
   .download-icon-btn {
     &:hover:not(.is-disabled) {
-      border-color: var(--el-color-primary);
-      background-color: var(--el-color-primary-light-9);
       color: var(--el-color-primary);
+      background-color: var(--el-color-primary-light-9);
+      border-color: var(--el-color-primary);
       transform: translateY(-1px);
     }
 
     &.is-disabled {
-      box-shadow: none;
       color: var(--el-text-color-placeholder);
+      box-shadow: none;
     }
   }
 </style>

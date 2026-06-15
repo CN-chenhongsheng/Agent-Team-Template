@@ -100,7 +100,10 @@ public class OperLogServiceImpl extends ServiceImpl<OperLogMapper, OperLog> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean clean() {
-        return remove(new LambdaQueryWrapper<>());
+        // 使用 isNotNull 条件避免触发全表删除保护
+        LambdaQueryWrapper<OperLog> wrapper = new LambdaQueryWrapper<>();
+        wrapper.isNotNull(OperLog::getId);
+        return remove(wrapper);
     }
 
     /**

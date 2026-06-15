@@ -28,7 +28,7 @@
           <div class="search-bar">
             <div class="search-inputs">
               <ElInput
-                v-model="typeSearchForm.dictName"
+                v-model="typeFormFilters.dictName"
                 placeholder="搜索字典名称"
                 clearable
                 @clear="handleTypeSearch"
@@ -39,7 +39,7 @@
                 </template>
               </ElInput>
               <ElInput
-                v-model="typeSearchForm.dictCode"
+                v-model="typeFormFilters.dictCode"
                 placeholder="搜索字典编码"
                 clearable
                 @clear="handleTypeSearch"
@@ -100,7 +100,7 @@
             <!-- 数据搜索 -->
             <div class="search-bar">
               <ElInput
-                v-model="dataSearchForm.label"
+                v-model="dataFormFilters.label"
                 placeholder="搜索字典标签"
                 clearable
                 @clear="handleDataSearch"
@@ -175,7 +175,7 @@
   // 字典类型相关
   const selectedTypeId = ref<number | null>(null)
   const selectedDictCode = ref<string>('')
-  const typeSearchForm = ref<Api.SystemManage.DictTypeSearchParams>({
+  const typeFormFilters = ref<Api.SystemManage.DictTypeSearchParams>({
     pageNum: 1,
     dictName: undefined,
     dictCode: undefined,
@@ -188,6 +188,7 @@
     loading: typeLoading,
     pagination: typePagination,
     getData: getTypeData,
+    refreshRemove: refreshTypeRemove,
     handleSizeChange: handleTypeSizeChange,
     handleCurrentChange: handleTypeCurrentChange,
     contextMenuItems: typeContextMenuItems,
@@ -198,10 +199,7 @@
     core: {
       apiFn: fetchGetDictTypePage,
       apiParams: computed(() => ({
-        pageNum: typeSearchForm.value.pageNum,
-        dictName: typeSearchForm.value.dictName,
-        dictCode: typeSearchForm.value.dictCode,
-        status: typeSearchForm.value.status
+        ...typeFormFilters.value
       })),
       paginationKey: {
         current: 'pageNum',
@@ -277,7 +275,7 @@
   })
 
   // 字典数据相关
-  const dataSearchForm = ref({
+  const dataFormFilters = ref({
     dictCode: '',
     label: undefined as string | undefined
   })
@@ -288,6 +286,7 @@
     loading: dataLoading,
     pagination: dataPagination,
     getData: getDataData,
+    refreshRemove: refreshDataRemove,
     handleSizeChange: handleDataSizeChange,
     handleCurrentChange: handleDataCurrentChange,
     fetchData: fetchDataData,
@@ -299,8 +298,7 @@
     core: {
       apiFn: fetchGetDictDataPage,
       apiParams: computed(() => ({
-        dictCode: dataSearchForm.value.dictCode,
-        label: dataSearchForm.value.label
+        ...dataFormFilters.value
       })),
       immediate: false, // 不自动加载，需要先选择字典类型
       paginationKey: {
@@ -406,15 +404,15 @@
 
   // 类型相关方法
   const handleTypeSearch = () => {
-    typeSearchForm.value.pageNum = 1
+    typeFormFilters.value.pageNum = 1
     getTypeData()
   }
 
   const handleTypeRowClick = (row: DictTypeListItem) => {
     selectedTypeId.value = row.id
     selectedDictCode.value = row.dictCode
-    dataSearchForm.value.dictCode = row.dictCode
-    dataSearchForm.value.label = undefined
+    dataFormFilters.value.dictCode = row.dictCode
+    dataFormFilters.value.label = undefined
     // 使用 nextTick 确保 useTable 的内部 watch 已完成参数同步
     nextTick(() => {
       getDataData()
@@ -440,12 +438,12 @@
       )
 
       await fetchDeleteDictType(row.id)
-      handleTypeRefresh()
+      await refreshTypeRemove()
       // 如果删除的是当前选中的类型，清空右侧数据
       if (selectedTypeId.value === row.id) {
         selectedTypeId.value = null
         selectedDictCode.value = ''
-        dataSearchForm.value.dictCode = ''
+        dataFormFilters.value.dictCode = ''
         dataData.value = []
       }
     } catch (error) {
@@ -489,7 +487,7 @@
 
   // 数据相关方法
   const handleDataSearch = () => {
-    if (!dataSearchForm.value.dictCode) return
+    if (!dataFormFilters.value.dictCode) return
     getDataData()
   }
 
@@ -508,7 +506,7 @@
       })
 
       await fetchDeleteDictData(row.id)
-      handleDataRefresh()
+      await refreshDataRemove()
     } catch (error) {
       if (error !== 'cancel') {
         console.error('删除字典数据失败:', error)
@@ -517,7 +515,7 @@
   }
 
   const handleDataRefresh = () => {
-    if (!dataSearchForm.value.dictCode) return
+    if (!dataFormFilters.value.dictCode) return
     fetchDataData()
   }
 

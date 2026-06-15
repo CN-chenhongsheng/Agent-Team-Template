@@ -65,12 +65,8 @@
   import MenuDialog from './modules/menu-dialog.vue'
   import MenuSearch from './modules/menu-search.vue'
   import { fetchGetMenuList, fetchDeleteMenu, fetchUpdateMenuStatus } from '@/api/system-manage'
-  import { useReferenceStore } from '@/store/modules/reference'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
   import { h, nextTick } from 'vue'
-
-  // 使用参考数据 store（用于缓存失效）
-  const referenceStore = useReferenceStore()
 
   defineOptions({ name: 'Menus' })
 
@@ -144,9 +140,8 @@
       apiFn: fetchGetMenuList,
       apiParams: computed(() => {
         return {
-          menuName: formFilters.value.menuName || undefined,
-          status: formFilters.value.status
-        } as Partial<Api.SystemManage.MenuSearchParams>
+          ...formFilters.value
+        } as Api.SystemManage.MenuSearchParams
       }),
       columnsFactory: () => [
         {
@@ -338,8 +333,6 @@
    */
   const handleSubmit = async (): Promise<void> => {
     dialogVisible.value = false
-    // 刷新菜单树缓存
-    await referenceStore.refreshMenuTreeSelect()
     // 根据 dialogType 判断是新增还是编辑
     if (dialogType.value === 'add') {
       await refreshCreate()
@@ -386,8 +379,6 @@
       })
 
       await fetchDeleteMenu(row.id)
-      // 刷新菜单树缓存
-      await referenceStore.refreshMenuTreeSelect()
       await refreshRemove()
     } catch (error) {
       if (error !== 'cancel') {

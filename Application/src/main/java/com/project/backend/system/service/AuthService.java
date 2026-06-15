@@ -1,7 +1,6 @@
 package com.project.backend.system.service;
 
 import com.project.backend.system.dto.LoginDTO;
-import com.project.backend.system.dto.StudentLoginDTO;
 import com.project.backend.system.dto.WxLoginDTO;
 import com.project.backend.system.vo.LoginVO;
 import com.project.backend.system.vo.UserInfoVO;
@@ -25,16 +24,6 @@ public interface AuthService {
      * @return 登录结果
      */
     LoginVO login(LoginDTO loginDTO, HttpServletRequest request, HttpServletResponse response);
-
-    /**
-     * 学生登录
-     *
-     * @param studentLoginDTO 学生登录参数
-     * @param request HTTP请求
-     * @param response HTTP响应
-     * @return 登录结果
-     */
-    LoginVO studentLogin(StudentLoginDTO studentLoginDTO, HttpServletRequest request, HttpServletResponse response);
 
     /**
      * 微信小程序登录

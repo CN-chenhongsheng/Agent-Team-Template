@@ -20,6 +20,8 @@ import com.project.backend.util.DictUtils;
 import com.project.backend.system.vo.MenuVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,6 +89,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "userMenuTree", allEntries = true)
     public boolean saveMenu(MenuSaveDTO saveDTO) {
         Menu menu = new Menu();
         BeanUtil.copyProperties(saveDTO, menu);
@@ -123,6 +126,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "userMenuTree", allEntries = true)
     public boolean deleteMenu(Long id) {
         if (id == null) {
             throw new BusinessException("菜单ID不能为空");
@@ -242,6 +246,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
      * 获取当前登录用户的菜单树
      */
     @Override
+    @Cacheable(value = "userMenuTree", key = "T(com.project.core.context.UserContext).getUserId()", unless = "#result == null")
     public List<MenuVO> getUserMenuTree() {
         // 从UserContext 获取当前登录用户ID
         Long userId = UserContext.getUserId();
@@ -299,6 +304,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "userMenuTree", allEntries = true)
     public boolean updateStatus(Long id, Integer status) {
         Menu menu = getById(id);
         if (menu == null) {

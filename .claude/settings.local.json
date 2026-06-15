@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git config:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nchore: resolve .gitignore merge conflict\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(cmd /c \"npx -y @f4ww4z/mcp-mysql-server\")",
+      "mcp__mysql-database__connect_db",
+      "mcp__mysql-database__query",
+      "mcp__mysql-database__execute",
+      "mcp__mysql-database__list_tables",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 完善操作日志记录与分配算法优化\n\n- 后端为住宿管理各Controller（入住/退宿/留宿/调宿）的撤回和管理员操作添加@Log注解\n- 优化分配算法实现，引入ForkJoinPool提升并发性能，新增AlgorithmHelper工具类\n- 新增AllocationProgressService用于任务进度追踪\n- 优化前端管理后台分配任务、调查问卷、结果展示等视图的交互体验\n- 优化小程序多个页面组件的样式与布局\n- 清理临时文件COMMIT_MSG.txt\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit --no-verify -m \"$\\(cat <<''EOF''\nfeat: 完善操作日志记录与分配算法优化\n\n- 后端为住宿管理各Controller（入住/退宿/留宿/调宿）的撤回和管理员操作添加@Log注解\n- 优化分配算法实现，引入ForkJoinPool提升并发性能，新增AlgorithmHelper工具类\n- 新增AllocationProgressService用于任务进度追踪\n- 新增数据库床位生成脚本（generate-beds.sql）\n- 优化前端管理后台分配任务、调查问卷、结果展示等视图的交互体验\n- 优化小程序多个页面组件的样式与布局\n- 清理临时文件COMMIT_MSG.txt\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(xargs:*)",
+      "mcp__mysql-database__describe_table"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "mysql-database"
+  ]
+}

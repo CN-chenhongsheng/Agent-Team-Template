@@ -22,8 +22,8 @@ import {
   SPEED_SAMPLE_TIME
 } from './constants'
 import { uploadStorage } from './storage'
+import { UploadState } from './types'
 import type {
-  UploadState,
   UploadProgress,
   UploadResult,
   UploaderOptions,
@@ -34,7 +34,6 @@ import type {
 import {
   fetchUploadPrecheck,
   fetchUploadChunk,
-  fetchVerifyChunks,
   fetchMergeChunks,
   fetchAbortUpload
 } from '@/api/chunk-upload'
@@ -58,7 +57,7 @@ export class ChunkUploader {
   private onHashProgress?: (percent: number) => void
 
   // 状态
-  private state: UploadState = 'idle'
+  private state: UploadState = UploadState.IDLE
   private isPaused = false
   private isAborted = false
 
@@ -102,7 +101,7 @@ export class ChunkUploader {
 
     try {
       // 1. 计算文件哈希
-      this.setState('hashing')
+      this.setState(UploadState.HASHING)
       this.currentHash = await this.calculateHash(file)
 
       // 2. 切分文件
@@ -110,7 +109,7 @@ export class ChunkUploader {
       const totalChunks = this.chunks.length
 
       // 3. 预检
-      this.setState('prechecking')
+      this.setState(UploadState.PRECHECKING)
       const precheckResult = await fetchUploadPrecheck({
         fileHash: this.currentHash,
         fileName: file.name,
@@ -120,7 +119,7 @@ export class ChunkUploader {
 
       // 秒传
       if (precheckResult.canSkip && precheckResult.fileUrl) {
-        this.setState('completed')
+        this.setState(UploadState.COMPLETED)
         await uploadStorage.deleteRecord(this.currentHash)
         return {
           url: precheckResult.fileUrl,
@@ -163,7 +162,7 @@ export class ChunkUploader {
       this.buildPendingTasks(totalChunks)
 
       // 6. 开始上传
-      this.setState('uploading')
+      this.setState(UploadState.UPLOADING)
       this.uploadStartTime = Date.now()
       await this.uploadChunks()
 
@@ -173,7 +172,7 @@ export class ChunkUploader {
       }
 
       // 7. 合并
-      this.setState('merging')
+      this.setState(UploadState.MERGING)
       const mergeResult = await fetchMergeChunks({
         fileHash: this.currentHash,
         fileName: file.name,
@@ -183,7 +182,7 @@ export class ChunkUploader {
       // 8. 清理本地记录
       await uploadStorage.deleteRecord(this.currentHash)
 
-      this.setState('completed')
+      this.setState(UploadState.COMPLETED)
       return {
         url: mergeResult.url,
         name: mergeResult.name,
@@ -192,7 +191,7 @@ export class ChunkUploader {
       }
     } catch (error) {
       if (!this.isAborted) {
-        this.setState('failed')
+        this.setState(UploadState.FAILED)
       }
       throw error
     } finally {
@@ -204,9 +203,9 @@ export class ChunkUploader {
    * 暂停上传
    */
   pause(): void {
-    if (this.state === 'uploading') {
+    if (this.state === UploadState.UPLOADING) {
       this.isPaused = true
-      this.setState('paused')
+      this.setState(UploadState.PAUSED)
     }
   }
 
@@ -214,9 +213,9 @@ export class ChunkUploader {
    * 恢复上传
    */
   async resume(): Promise<void> {
-    if (this.state === 'paused' && this.currentFile) {
+    if (this.state === UploadState.PAUSED && this.currentFile) {
       this.isPaused = false
-      this.setState('uploading')
+      this.setState(UploadState.UPLOADING)
       await this.uploadChunks()
     }
   }
@@ -227,7 +226,7 @@ export class ChunkUploader {
   async abort(): Promise<void> {
     this.isAborted = true
     this.isPaused = true
-    this.setState('aborted')
+    this.setState(UploadState.ABORTED)
 
     // 清理服务端临时文件
     if (this.currentHash) {
@@ -257,7 +256,7 @@ export class ChunkUploader {
    * 重置状态
    */
   private reset(): void {
-    this.state = 'idle'
+    this.state = UploadState.IDLE
     this.isPaused = false
     this.isAborted = false
     this.currentFile = null

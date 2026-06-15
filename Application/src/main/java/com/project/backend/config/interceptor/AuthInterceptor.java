@@ -3,8 +3,6 @@ package com.project.backend.config.interceptor;
 import cn.dev33.satoken.stp.StpUtil;
 import com.project.core.constant.CacheConstant;
 import com.project.core.context.UserContext;
-import com.project.backend.student.entity.Student;
-import com.project.backend.student.mapper.StudentMapper;
 import com.project.backend.system.entity.User;
 import com.project.backend.system.mapper.UserMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,9 +18,8 @@ import java.time.Duration;
 /**
  * 认证拦截器
  * 验证 Token 并将用户信息存入 ThreadLocal
- * 支持管理员（sys_user）和学生（sys_student）两种类型的认证
  * 使用 Redis 缓存用户信息，避免每次请求查库
- * 
+ *
  * @author 陈鸿昇
  * @since 2025-12-31
  */
@@ -32,7 +29,6 @@ import java.time.Duration;
 public class AuthInterceptor implements HandlerInterceptor {
 
     private final UserMapper userMapper;
-    private final StudentMapper studentMapper;
     private final StringRedisTemplate stringRedisTemplate;
 
     /**
@@ -172,7 +168,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     private boolean loadUserFromDbAndCache(Long userId, String cacheKey, HttpServletResponse response) {
         UserContext.LoginUser loginUser = new UserContext.LoginUser();
 
-        // 先查询管理员/宿管员
+        // 查询管理员/宿管员
         User user = userMapper.selectById(userId);
         if (user != null) {
             if (user.getStatus() == 0) {
@@ -200,37 +196,10 @@ public class AuthInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        // 查询学生
-        Student student = studentMapper.selectById(userId);
-        if (student == null) {
-            log.warn("用户不存在，用户ID：{}（既不是管理员也不是学生）", userId);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return false;
-        }
-
-        if (student.getStatus() == 0) {
-            log.warn("学生已被停用，学生ID：{}", userId);
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            return false;
-        }
-
-        loginUser.setUserId(student.getId());
-        loginUser.setUsername(student.getStudentNo());
-        loginUser.setNickname(student.getStudentName());
-        loginUser.setAvatar(null);
-        UserContext.setUser(loginUser);
-
-        // 写入缓存
-        String cacheValue = String.join(CACHE_SEPARATOR,
-                "student",
-                nullSafe(student.getStudentNo()),
-                nullSafe(student.getStudentName()),
-                "",
-                String.valueOf(student.getStatus()));
-        stringRedisTemplate.opsForValue().set(cacheKey, cacheValue, CACHE_TTL);
-
-        log.debug("学生信息已存入 ThreadLocal 和缓存，学生ID：{}", userId);
-        return true;
+        // 用户不存在
+        log.warn("用户不存在，用户ID：{}", userId);
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        return false;
     }
 
     private String nullSafe(String value) {

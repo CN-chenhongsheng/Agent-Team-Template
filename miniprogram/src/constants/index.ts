@@ -28,27 +28,9 @@ export const USER_CONSTANTS = {
 };
 
 /**
- * 申请相关常量
- */
-export const APPLY_CONSTANTS = {
-  // 申请编号前缀
-  APPLY_NO_PREFIX: 'NO.',
-  // 默认申请编号
-  DEFAULT_APPLY_NO: '20231024001',
-  // 默认申请类型
-  DEFAULT_APPLY_TYPE: '申请',
-  // 默认状态文本
-  DEFAULT_STATUS_TEXT: '未知',
-  // 默认状态颜色
-  DEFAULT_STATUS_COLOR: '#999',
-};
-
-/**
  * 时间相关常量
  */
 export const TIME_CONSTANTS = {
-  // 预计审核时间 (小时)
-  ESTIMATED_REVIEW_HOURS: 24,
   // 时间格式
   DATE_FORMAT: 'YYYY-MM-DD',
   DATE_TIME_FORMAT: 'YYYY-MM-DD HH:mm',
@@ -60,28 +42,14 @@ export const TIME_CONSTANTS = {
 export const ROUTE_CONSTANTS = {
   // 首页
   HOME: '/pages/tab/home/index',
-  // 申请列表页
-  APPLY_LIST: '/pages/tab/apply/index',
   // 个人中心页
   PROFILE: '/pages/tab/profile/index',
   // 消息页
   MESSAGE: '/pages/service/message/index',
-  // 学生申请详情页
-  STUDENT_APPLY_DETAIL: '/pages/apply/detail/index',
-  // 申请表单页
-  APPLY_FORM: '/pages/apply/form/index',
   // 登录页
   LOGIN: '/pages/common/login/index',
   // 通知详情页
   NOTICE_DETAIL: '/pages/service/notice-detail/index',
-  // 学生生活习惯页
-  STUDENT_HABITS: '/pages/profile/student-habits/index',
-  // 智能分配 - 生活习惯问卷
-  ALLOCATION_SURVEY: '/pages/allocation/survey/index',
-  // 智能分配 - 分配结果
-  ALLOCATION_RESULT: '/pages/allocation/result/index',
-  // 智能分配 - 床位推荐
-  ALLOCATION_RECOMMEND: '/pages/allocation/recommend/index',
 };
 
 /**
@@ -154,8 +122,6 @@ export const STORAGE_CONSTANTS = {
   TOKEN_KEY: 'access_token',
   // 刷新 Token 存储键
   REFRESH_TOKEN_KEY: 'refresh_token',
-  // 申请草稿存储键
-  APPLY_DRAFT_KEY: 'apply_draft',
   // 用户偏好设置存储键
   USER_PREFERENCES_KEY: 'user_preferences',
 };

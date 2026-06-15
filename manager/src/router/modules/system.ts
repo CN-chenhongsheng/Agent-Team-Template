@@ -65,16 +65,6 @@ export const systemRoutes: AppRouteRecord = {
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
-    },
-    {
-      path: 'notice',
-      name: 'Notice',
-      component: '/system/notice',
-      meta: {
-        title: 'menus.system.notice',
-        keepAlive: true,
-        roles: ['R_SUPER', 'R_ADMIN']
-      }
     }
   ]
 }

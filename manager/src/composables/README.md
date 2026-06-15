@@ -26,7 +26,7 @@ export const yourImportConfig: GenericImportConfig = {
   // 模板配置
   templateColumns: [
     { key: 'name', title: '姓名', required: true, width: 15 },
-    { key: 'phone', title: '手机号', width: 12 },
+    { key: 'phone', title: '手机号', width: 12 }
     // ... 更多字段
   ],
   templateFilename: '数据导入模板',
@@ -54,37 +54,36 @@ export const yourImportConfig: GenericImportConfig = {
 
 ```vue
 <script setup lang="ts">
-import { useGenericImport } from '@/composables/useGenericImport'
-import { yourImportConfig } from './config/your-import-config'
-import ArtImportDialog from '@/components/core/forms/art-import-dialog/index.vue'
+  import { useGenericImport } from '@/composables/useGenericImport'
+  import { yourImportConfig } from './config/your-import-config'
+  import ArtImportDialog from '@/components/core/forms/art-import-dialog/index.vue'
 
-const {
-  dialogVisible,
-  handleDownloadTemplate,
-  handleScanFile,
-  handleUploadSuccess
-} = useGenericImport({
-  ...yourImportConfig,
-  onImportComplete: (result, status) => {
-    // 导入完成后刷新列表
-    refreshData()
-  },
-  onViewDetail: (result) => {
-    // 显示导入结果详情
-    showResultDialog(result)
-  }
-})
+  const { dialogVisible, handleDownloadTemplate, handleScanFile, handleUploadSuccess } =
+    useGenericImport({
+      ...yourImportConfig,
+      onImportComplete: (result, status) => {
+        // 导入完成后刷新列表
+        refreshData()
+      },
+      onViewDetail: (result) => {
+        // 显示导入结果详情
+        showResultDialog(result)
+      }
+    })
 
-const importTips = [
-  '请先下载模板，按模板格式填写数据',
-  '必填字段不能为空',
-  '请选择 XLSX 文件'
-]
+  const importTips = ['请先下载模板，按模板格式填写数据', '必填字段不能为空', '请选择 XLSX 文件']
 </script>
 
 <template>
   <!-- 导入按钮 -->
-  <ElButton @click="() => { dialogVisible = true }">导入数据</ElButton>
+  <ElButton
+    @click="
+      () => {
+        dialogVisible = true
+      }
+    "
+    >导入数据</ElButton
+  >
 
   <!-- 导入对话框 -->
   <ArtImportDialog
@@ -104,7 +103,7 @@ const importTips = [
 ### GenericImportConfig
 
 | 选项 | 类型 | 必填 | 说明 |
-|------|------|------|------|
+| --- | --- | --- | --- |
 | `templateColumns` | `TemplateColumn[]` | 是 | 模板列配置 |
 | `templateFilename` | `string` | 是 | 模板文件名 |
 | `templateSheetName` | `string` | 否 | 工作表名称（默认：'导入数据'） |
@@ -205,7 +204,7 @@ A: 可以提供自己的 `scanFn` 或 `scanWithProgressFn`：
 
 ```typescript
 const { handleScanFile } = useGenericImport({
-  ...config,
+  ...config
   // 使用自定义扫描函数
 })
 

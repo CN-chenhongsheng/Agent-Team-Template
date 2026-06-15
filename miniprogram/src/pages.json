@@ -18,13 +18,6 @@
       }
     },
     {
-      "path": "pages/tab/apply/index",
-      "style": {
-        "navigationBarTitleText": "申请中心",
-        "navigationStyle": "custom"
-      }
-    },
-    {
       "path": "pages/tab/profile/index",
       "style": {
         "navigationStyle": "custom"
@@ -46,12 +39,6 @@
           "style": {
             "navigationBarTitleText": "网页"
           }
-        },
-        {
-          "path": "dorm-info/index",
-          "style": {
-            "navigationBarTitleText": "宿舍信息"
-          }
         }
       ]
     },
@@ -67,86 +54,6 @@
         {
           "path": "change-password/index",
           "style": {
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "student-habits/index",
-          "style": {
-            "navigationStyle": "custom"
-          }
-        }
-      ]
-    },
-    {
-      "root": "pages/apply",
-      "pages": [
-        {
-          "path": "detail/index",
-          "style": {
-            "navigationBarTitleText": "申请详情",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "form/index",
-          "style": {
-            "navigationStyle": "custom"
-          }
-        }
-      ]
-    },
-    {
-      "root": "pages/service",
-      "pages": [
-        {
-          "path": "repair-list/index",
-          "style": {
-            "navigationBarTitleText": "报修记录"
-          }
-        },
-        {
-          "path": "repair-detail/index",
-          "style": {
-            "navigationBarTitleText": "报修详情"
-          }
-        },
-        {
-          "path": "notice-detail/index",
-          "style": {
-            "navigationBarTitleText": "公告详情"
-          }
-        },
-        {
-          "path": "message/index",
-          "style": {
-            "navigationBarTitleText": "消息中心",
-            "navigationStyle": "custom"
-          }
-        }
-      ]
-    },
-    {
-      "root": "pages/allocation",
-      "pages": [
-        {
-          "path": "survey/index",
-          "style": {
-            "navigationBarTitleText": "生活习惯问卷",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "result/index",
-          "style": {
-            "navigationBarTitleText": "分配结果",
-            "navigationStyle": "custom"
-          }
-        },
-        {
-          "path": "recommend/index",
-          "style": {
-            "navigationBarTitleText": "床位推荐",
             "navigationStyle": "custom"
           }
         }
@@ -173,11 +80,6 @@
       "text": "首页",
       "iconPath": "static/images/tabbar/home.png",
       "selectedIconPath": "static/images/tabbar/home-active.png"
-    }, {
-      "pagePath": "pages/tab/apply/index",
-      "text": "申请",
-      "iconPath": "static/images/tabbar/apply.png",
-      "selectedIconPath": "static/images/tabbar/apply-active.png"
     }, {
       "pagePath": "pages/tab/profile/index",
       "text": "我的",

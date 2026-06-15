@@ -22,16 +22,6 @@ export function loginAPI(data: ILoginParams) {
 }
 
 /**
- * 学生登录（学号+密码）
- */
-export function studentLoginAPI(data: { studentNo: string; password: string }) {
-  return post<IBackendLoginResponse>({
-    url: '/api/v1/auth/student/login',
-    data,
-  });
-}
-
-/**
  * 用户登出
  */
 export function logoutAPI() {

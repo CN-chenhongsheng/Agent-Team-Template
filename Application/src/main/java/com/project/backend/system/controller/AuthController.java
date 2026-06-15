@@ -3,7 +3,6 @@ package com.project.backend.system.controller;
 import com.project.core.annotation.RateLimit;
 import com.project.core.result.R;
 import com.project.backend.system.dto.LoginDTO;
-import com.project.backend.system.dto.StudentLoginDTO;
 import com.project.backend.system.dto.WxLoginDTO;
 import com.project.backend.system.service.AuthService;
 import com.project.backend.system.vo.LoginVO;
@@ -19,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 认证控制器
- * 
+ *
  * @author 陈鸿昇
  * @since 2026-01-01
  */
@@ -43,20 +42,6 @@ public class AuthController {
                             HttpServletResponse response) {
         log.info("用户登录请求: {}", loginDTO.getUsername());
         LoginVO loginVO = authService.login(loginDTO, request, response);
-        return R.ok(loginVO);
-    }
-
-    /**
-     * 学生登录
-     */
-    @Operation(summary = "学生登录")
-    @PostMapping("/student/login")
-    @RateLimit(key = "student-login", time = 60, count = 5, message = "登录请求过于频繁，请稍后再试")
-    public R<LoginVO> studentLogin(@Valid @RequestBody StudentLoginDTO studentLoginDTO,
-                                   HttpServletRequest request,
-                                   HttpServletResponse response) {
-        log.info("学生登录请求: {}", studentLoginDTO.getStudentNo());
-        LoginVO loginVO = authService.studentLogin(studentLoginDTO, request, response);
         return R.ok(loginVO);
     }
 

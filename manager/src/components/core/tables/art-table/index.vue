@@ -6,7 +6,8 @@
   <div class="art-table" :class="{ 'is-empty': isEmpty }" :style="containerHeight">
     <ElTable
       ref="elTableRef"
-      v-loading="!!loading"
+      v-loading="!!loading || initializing"
+      :element-loading-text="initializing ? '系统初始化中...' : undefined"
       v-bind="{ ...$attrs, ...props, height, stripe, border, size, headerCellStyle }"
       @row-contextmenu="handleRowContextmenu"
     >
@@ -105,6 +106,7 @@
   import { storeToRefs } from 'pinia'
   import { ColumnOption } from '@/types'
   import { useTableStore } from '@/store/modules/table'
+  import { useAppStore } from '@/store/modules/app'
   import { useCommon } from '@/hooks/core/useCommon'
   import { useTableHeight } from '@/hooks/core/useTableHeight'
   import { useResizeObserver, useWindowSize } from '@vueuse/core'
@@ -119,6 +121,8 @@
   const contextMenuRef = ref<InstanceType<typeof ArtMenuRight>>()
   const tableStore = useTableStore()
   const { isBorder, isZebra, tableSize, isFullScreen, isHeaderBackground } = storeToRefs(tableStore)
+  const appStore = useAppStore()
+  const { initializing } = storeToRefs(appStore)
 
   /** 分页配置接口 */
   interface PaginationConfig {

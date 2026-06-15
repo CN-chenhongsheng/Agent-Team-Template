@@ -26,6 +26,9 @@
             <ElButton @click="showDialog('add')" v-ripple v-permission="'system:user:add'">
               新增用户
             </ElButton>
+            <ElButton @click="showImportDialog" v-ripple v-permission="'system:user:import'">
+              导入用户
+            </ElButton>
             <ElButton
               :disabled="selectedCount === 0"
               @click="handleBatchDelete"
@@ -68,6 +71,19 @@
         :user-data="currentPermissionUser"
         @success="handlePermissionSuccess"
       />
+
+      <!-- 用户查看抽屉 -->
+      <UserDrawer v-model:visible="drawerVisible" :user-id="currentUserId" />
+
+      <!-- 用户导入弹窗 -->
+      <ArtImportDialog
+        v-model="importDialogVisible"
+        title="导入用户"
+        :template-download-fn="handleDownloadTemplate"
+        :scan-with-progress-fn="handleScanFile"
+        @upload-success="handleUploadSuccess"
+        @upload="handleImportSuccess"
+      />
     </ElCard>
   </div>
 </template>
@@ -85,15 +101,16 @@
   import UserSearch from './modules/user-search.vue'
   import UserDialog from './modules/user-dialog.vue'
   import UserPermissionDialog from './modules/user-permission-dialog.vue'
-  import { useScopeCache } from '@/views/system/scope-editor/composables/useScopeCache'
-  import { useScopeCommunication } from '@/views/system/scope-editor/composables/useScopeCommunication'
+  import UserDrawer from './modules/user-drawer.vue'
+  import ArtImportDialog from '@/components/core/forms/art-import-dialog/index.vue'
+  import { useGenericImport } from '@/composables/useGenericImport'
+  import { userImportConfig } from './config/user-import-config'
   import { ElImage, ElTooltip } from 'element-plus'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
   import { DialogType } from '@/types'
   import type { ActionButtonConfig } from '@/types/component'
   import { useUserOnlineStatus } from '@/hooks/core/useUserOnlineStatus'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
-  import { formatManageScopeSync } from '@/utils/school/scopeFormatter'
 
   defineOptions({ name: 'User' })
 
@@ -101,19 +118,19 @@
 
   const { onlineStatusMap } = useUserOnlineStatus()
 
-  // 预加载节点名称缓存（在后台异步加载）
-  import('@/utils/school/scopeFormatter').then((module) => {
-    module.formatManageScope('').catch(() => {
-      // 静默失败，不影响页面显示
-    })
-  })
-
   const showSearchBar = ref(false)
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
   const editData = ref<Partial<UserListItem>>({})
   const permissionDialogVisible = ref(false)
   const currentPermissionUser = ref<UserListItem | undefined>(undefined)
+  const drawerVisible = ref(false)
+  const currentUserId = ref<number>()
+
+  // 导入功能
+  const importDialogVisible = ref(false)
+  const { handleDownloadTemplate, handleScanFile, handleUploadSuccess } =
+    useGenericImport(userImportConfig)
 
   // 选中行
   const selectedRows = ref<UserListItem[]>([])
@@ -125,7 +142,6 @@
     username: undefined,
     nickname: undefined,
     phone: undefined,
-    manageScope: undefined,
     status: undefined
   })
 
@@ -133,13 +149,19 @@
   let showDialog: (type: DialogType, row?: UserListItem) => void
   let deleteUser: (row: UserListItem) => Promise<void>
   let handleResetPassword: (row: UserListItem) => Promise<void>
-  let openScopeEditor: (row: UserListItem) => void
   let showPermissionDialog: (row: UserListItem) => void
+  let showDrawer: (row: UserListItem) => void
 
   /**
    * 获取用户操作配置（复用于操作列和右键菜单）
    */
   const getUserActions = (row: UserListItem): ActionButtonConfig[] => [
+    {
+      type: 'view',
+      label: '查看',
+      onClick: () => showDrawer(row),
+      auth: 'system:user:view'
+    },
     {
       type: 'edit',
       label: '编辑',
@@ -151,12 +173,6 @@
       label: '重置密码',
       onClick: () => handleResetPassword(row),
       auth: 'system:user:reset-pwd'
-    },
-    {
-      type: 'share',
-      label: '分配范围',
-      onClick: () => openScopeEditor(row),
-      auth: 'system:user:assign-scope'
     },
     {
       type: 'share',
@@ -197,13 +213,8 @@
       apiFn: fetchGetUserPage,
       apiParams: computed(() => {
         return {
-          pageNum: formFilters.value.pageNum,
-          username: formFilters.value.username || undefined,
-          nickname: formFilters.value.nickname || undefined,
-          phone: formFilters.value.phone || undefined,
-          manageScope: formFilters.value.manageScope || undefined,
-          status: formFilters.value.status
-        } as Partial<Api.SystemManage.UserSearchParams>
+          ...formFilters.value
+        } as Api.SystemManage.UserSearchParams
       }),
       // 自定义分页字段映射
       paginationKey: {
@@ -253,44 +264,6 @@
           prop: 'phone',
           label: '手机号',
           width: 125
-        },
-        {
-          prop: 'manageScope',
-          label: '管理范围',
-          minWidth: 150,
-          formatter: (row) => {
-            const formatted = formatManageScopeSync(row.manageScope)
-            // 将字符串按"、"拆分，每个部分作为一个 tag
-            const parts = formatted.split('、').filter((part) => part.trim())
-
-            if (parts.length === 0 || formatted === '未设置' || formatted === '格式错误') {
-              return h(ElTag, { type: 'info', size: 'small' }, () => formatted || '未设置')
-            }
-
-            // 如果只有一个标签，直接显示
-            if (parts.length === 1) {
-              return h(ElTag, { size: 'small', type: 'primary' }, () => parts[0])
-            }
-
-            // 多个标签：显示第一个 + [+N]，hover 显示全部
-            const tooltipContent = parts.join('、')
-            const displayTags = [
-              h(ElTag, { size: 'small', type: 'primary' }, () => parts[0]),
-              h(ElTag, { size: 'small', type: 'primary' }, () => `+${parts.length - 1}`)
-            ]
-
-            return h(
-              ElTooltip,
-              {
-                content: tooltipContent,
-                placement: 'top',
-                effect: 'dark'
-              },
-              {
-                default: () => h('div', { class: 'flex gap-1' }, displayTags)
-              }
-            )
-          }
         },
         {
           prop: 'roleNames',
@@ -424,7 +397,6 @@
       username: undefined,
       nickname: undefined,
       phone: undefined,
-      manageScope: undefined,
       status: undefined
     }
     await resetSearchParams()
@@ -558,41 +530,6 @@
     }
   }
 
-  // ========== 管理范围编辑器（多标签页模式） ==========
-  const { saveCache: saveScopeCache } = useScopeCache()
-  const { onMessage: onScopeMessage } = useScopeCommunication()
-
-  /**
-   * 打开管理范围编辑器（新标签页）
-   */
-  openScopeEditor = (row: UserListItem): void => {
-    // 缓存用户数据到 sessionStorage
-    saveScopeCache({
-      userId: row.id,
-      username: row.username || '',
-      nickname: row.nickname || '',
-      manageScope: row.manageScope || '',
-      userData: { ...row }
-    })
-
-    // 构建 URL（hash 模式路由）
-    const baseUrl = window.location.origin
-    const editorUrl = `${baseUrl}/#/system/scope-editor/${row.id}`
-
-    const newWindow = window.open(editorUrl, '_blank')
-    if (!newWindow) {
-      ElMessage.warning('请允许浏览器弹出窗口')
-    }
-  }
-
-  // 监听编辑器跨标签页消息
-  onScopeMessage((message) => {
-    if (message.type === 'scope-saved') {
-      ElMessage.success(`用户"${message.nickname}"的管理范围已更新`)
-      refreshData()
-    }
-  })
-
   /**
    * 显示权限分配弹窗
    */
@@ -601,6 +538,26 @@
     nextTick(() => {
       permissionDialogVisible.value = true
     })
+  }
+
+  /**
+   * 显示用户查看抽屉
+   */
+  showDrawer = (row: UserListItem): void => {
+    currentUserId.value = row.id
+    drawerVisible.value = true
+  }
+
+  /**
+   * 下载用户导入模板
+   */
+  const showImportDialog = (): void => {
+    importDialogVisible.value = true
+  }
+
+  const handleImportSuccess = (): void => {
+    importDialogVisible.value = false
+    refreshData()
   }
 
   /**

@@ -51,5 +51,39 @@ declare namespace Api {
       pageNum: number
       pageSize: number
     }
+
+    /** ==================== 登入日志管理 ==================== */
+    /** 登入日志查询参数 */
+    interface LoginLogSearchParams {
+      pageNum: number
+      pageSize?: number
+      username?: string
+      loginType?: string
+      loginStatus?: number
+      startTime?: string
+      endTime?: string
+    }
+
+    /** 登入日志列表项 */
+    interface LoginLogListItem {
+      id: number
+      username: string
+      loginType: string
+      loginTypeText: string
+      loginStatus: number
+      loginStatusText: string
+      ipAddress: string
+      loginLocation: string
+      browser: string
+      os: string
+      message: string
+      loginTime: string
+    }
+
+    /** 登入日志分页响应 */
+    interface LoginLogPageResponse {
+      list: LoginLogListItem[]
+      total: number
+    }
   }
 }

@@ -10,7 +10,6 @@ import {
   loginAPI,
   logoutAPI,
   refreshTokenAPI,
-  studentLoginAPI,
   updateUserProfileAPI,
   wxLoginAPI,
 } from '@/api';
@@ -21,7 +20,7 @@ import { UserRole as UserRoleEnum } from '@/types';
 
 export interface LoginResult {
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string;
   userInfo: IUser;
 }
 
@@ -34,14 +33,13 @@ function transformLoginResponse(res: IBackendLoginResponse): LoginResult {
   }
   return {
     accessToken: res.token,
-    refreshToken: '',
+    refreshToken: undefined,
     userInfo: {
       id: res.userId,
       username: res.username,
       nickname: res.nickname,
       avatar: res.avatar,
       role: res.role as UserRole,
-      studentInfo: res.studentInfo,
     },
   };
 }
@@ -55,17 +53,6 @@ export class AuthService {
       return mockResponse(mockLoginResponse);
     }
     const res = await loginAPI(data);
-    return transformLoginResponse(res);
-  }
-
-  /**
-   * 学生登录（学号+密码）
-   */
-  static async studentLogin(data: { studentNo: string; password: string }): Promise<LoginResult> {
-    if (USE_MOCK) {
-      return mockResponse(mockLoginResponse);
-    }
-    const res = await studentLoginAPI(data);
     return transformLoginResponse(res);
   }
 
@@ -102,8 +89,8 @@ export class AuthService {
   /**
    * 刷新 Token
    */
-  static refreshToken(refreshToken: string) {
-    return refreshTokenAPI(refreshToken);
+  static refreshToken() {
+    return refreshTokenAPI();
   }
 
   /**

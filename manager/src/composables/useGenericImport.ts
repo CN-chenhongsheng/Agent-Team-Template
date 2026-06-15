@@ -278,8 +278,6 @@ export function useGenericImport<TResult extends ImportResult = ImportResult, TC
         sheetName: templateSheetName,
         cascadeData
       })
-
-      ElMessage.success('模板下载成功')
     } catch (error) {
       console.error('下载模板失败:', error)
       ElMessage.error('模板下载失败，请稍后重试')

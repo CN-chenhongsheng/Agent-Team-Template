@@ -38,9 +38,6 @@ public class UserVO implements Serializable {
     @Schema(description = "手机号")
     private String phone;
 
-    @Schema(description = "管理范围")
-    private String manageScope;
-
     @Schema(description = "状态：1正常 0停用")
     private Integer status;
 

@@ -37,6 +37,7 @@ import com.project.backend.system.vo.UserVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,7 +87,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         wrapper.like(StrUtil.isNotBlank(queryDTO.getUsername()), User::getUsername, queryDTO.getUsername())
                .like(StrUtil.isNotBlank(queryDTO.getNickname()), User::getNickname, queryDTO.getNickname())
                .like(StrUtil.isNotBlank(queryDTO.getPhone()), User::getPhone, queryDTO.getPhone())
-               .eq(StrUtil.isNotBlank(queryDTO.getManageScope()), User::getManageScope, queryDTO.getManageScope())
                .eq(queryDTO.getStatus() != null, User::getStatus, queryDTO.getStatus())
                .orderByDesc(User::getCreateTime);
 
@@ -472,6 +472,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "userInfo", key = "T(com.project.core.context.UserContext).getUserId()")
     public boolean updateCurrentUserProfile(UserProfileDTO profileDTO) {
         Long userId = UserContext.getUserId();
         if (userId == null) {

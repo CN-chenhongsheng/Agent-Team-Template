@@ -12,27 +12,5 @@ export * from './auth';
 // 用户相关
 export * from './user';
 
-// 申请相关
-export * from './check-in';
-export * from './transfer';
-export * from './check-out';
-export * from './stay';
-
-// 审批相关
-export * from './approval';
-
-// 宿舍信息相关
-export * from './dormitory';
-
-// 服务相关
-export * from './repair';
+// 通知相关
 export * from './notice';
-
-// 统计相关
-export * from './statistics';
-
-// 学生习惯相关
-export * from './student-habits';
-
-// 智能分配相关
-export * from './allocation';

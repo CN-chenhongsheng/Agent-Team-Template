@@ -158,20 +158,10 @@ export interface ReferenceCache<T> {
 
 // 参考数据Store状态
 export interface ReferenceState {
-  /** 校区树缓存 */
-  campusTreeCache: ReferenceCache<Api.SystemManage.CampusTreeList>
-  /** 楼层列表缓存（按校区代码） */
-  floorListCache: Map<string, ReferenceCache<Api.SystemManage.FloorListItem[]>>
-  /** 房间列表缓存（按楼层ID） */
-  roomListCache: Map<number, ReferenceCache<Api.SystemManage.RoomListItem[]>>
   /** 角色列表缓存 */
   allRolesCache: ReferenceCache<Api.SystemManage.RoleListItem[]>
   /** 用户列表缓存（按角色代码） */
   usersByRoleCodesCache: Map<string, ReferenceCache<Api.SystemManage.UserSimpleItem[]>>
-  /** 专业列表缓存 */
-  majorListCache: ReferenceCache<Api.SystemManage.MajorListItem[]>
-  /** 院系树缓存 */
-  departmentTreeCache: ReferenceCache<Api.SystemManage.DepartmentTreeList>
   /** 菜单树缓存 */
   menuTreeSelectCache: ReferenceCache<Api.SystemManage.MenuTreeList>
 }

@@ -4,4 +4,3 @@
  */
 
 export * from './notice';
-export * from './repair';

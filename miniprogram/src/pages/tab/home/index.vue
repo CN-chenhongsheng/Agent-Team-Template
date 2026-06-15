@@ -38,13 +38,6 @@
             <view class="user-name">
               {{ userInfo?.nickname || '未登录' }}
             </view>
-            <view class="student-no">
-              学号: {{ userInfo?.studentInfo?.studentNo || '-' }}
-            </view>
-            <view v-if="dormInfo !== '未分配'" class="dorm-tag">
-              <u-icon name="home" size="14" color="#009688" />
-              <text>{{ dormInfo }}</text>
-            </view>
           </view>
         </view>
       </view>
@@ -201,46 +194,6 @@
           </view>
         </view>
       </view>
-
-      <!-- 我的申请进度（仅登录后显示） -->
-      <view v-if="isLoggedIn" class="section">
-        <view class="section-header">
-          <view class="section-title">
-            我的申请进度
-          </view>
-          <view class="filter-btn" @click="handleGoApplyList">
-            <u-icon name="list" size="20" color="#94a3b8" />
-          </view>
-        </view>
-        <view v-if="applyList.length === 0" class="empty-apply">
-          <u-empty mode="list" text="暂无申请记录" icon-size="120" />
-        </view>
-        <view v-else class="apply-list">
-          <view
-            v-for="item in applyList.slice(0, 4)"
-            :key="item.id"
-            class="glass-card apply-item"
-            @click="handleViewApply(item)"
-          >
-            <view class="apply-icon" :style="{ background: item.bgColor }">
-              <u-icon :name="item.icon" size="18" :color="item.iconColor" />
-            </view>
-            <view class="apply-info">
-              <view class="apply-header">
-                <view class="apply-title">
-                  {{ item.typeName }}
-                </view>
-                <view class="apply-status" :class="item.statusClass">
-                  {{ item.statusText }}
-                </view>
-              </view>
-              <view class="apply-date">
-                {{ item.applyDate }}
-              </view>
-            </view>
-          </view>
-        </view>
-      </view>
     </view>
 
     <!-- 底部安全区域 -->
@@ -248,7 +201,7 @@
 
     <!-- 隐私协议组件 -->
     <!-- #ifdef MP-WEIXIN -->
-    <agree-privacy v-model="showAgreePrivacy" :disable-check-privacy="false" @agree="handleAgree" />
+    <agree-privacy v-model="showAgreePrivacy" :disable-check-privacy="false" />
     <!-- #endif -->
   </view>
 </template>
@@ -256,34 +209,20 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import type { IApplyDisplay, INoticeDisplay, IQuickService } from '@/types';
+import type { INoticeDisplay, IQuickService } from '@/types';
 import useUserStore from '@/store/modules/user';
 import { ROUTE_CONSTANTS } from '@/constants';
 import { USE_MOCK } from '@/mock';
-import { getMyAppliesAPI } from '@/api';
-import {
-  transformMyApplyToDisplay
-} from '@/utils/apply-transform';
-import { useNotice } from '@/composables/useNotice';
 
 const userStore = useUserStore();
 const { userInfo, isLoggedIn } = storeToRefs(userStore);
-const { unreadCount: unreadNoticeCount, loadUnreadCount } = useNotice();
+const unreadNoticeCount = ref(0);
 
 const defaultAvatar = 'https://via.placeholder.com/150';
 const showAgreePrivacy = ref(false);
 
 // 是否是学生
 const isStudent = computed(() => userInfo.value?.role === 'student');
-
-// 宿舍信息
-const dormInfo = computed(() => {
-  const student = userInfo.value?.studentInfo;
-  if (!student || !student.floorCode || !student.roomCode) {
-    return '未分配';
-  }
-  return `${student.floorCode} ${student.roomCode}室`;
-});
 
 // 当前日期
 const currentDate = computed(() => {
@@ -332,7 +271,7 @@ const quickServices = ref<IQuickService[]>([
 const noticeList = ref<INoticeDisplay[]>([]);
 
 // 申请列表
-const applyList = ref<IApplyDisplay[]>([]);
+const applyList = ref<any[]>([]);
 
 // 水电统计数据
 const electricityData = ref({
@@ -538,20 +477,6 @@ function handleViewNotice(notice: INoticeDisplay): void {
   uni.navigateTo({ url: `${ROUTE_CONSTANTS.NOTICE_DETAIL}?id=${notice.id}` });
 }
 
-// 跳转申请列表
-function handleGoApplyList(): void {
-  uni.switchTab({ url: '/pages/tab/apply/index' });
-}
-
-// 查看申请详情
-function handleViewApply(item: IApplyDisplay): void {
-  uni.navigateTo({ url: `${ROUTE_CONSTANTS.STUDENT_APPLY_DETAIL}?id=${item.id}&type=${item.type}` });
-}
-
-// 同意隐私协议
-function handleAgree(): void {
-}
-
 function handleGoLogin(): void {
   uni.navigateTo({ url: ROUTE_CONSTANTS.LOGIN });
 }
@@ -683,31 +608,9 @@ async function loadData(): Promise<void> {
         },
       ];
     }
-    else {
-      // 调用真实API加载申请列表（使用统一的我的申请接口）
-      await loadApplyListFromAPI();
-    }
   }
   catch (error) {
     console.error('加载首页数据失败:', error);
-  }
-}
-
-// 从API加载申请列表
-async function loadApplyListFromAPI(): Promise<void> {
-  try {
-    // 使用统一的我的申请API，限制返回最近4条
-    const result = await getMyAppliesAPI({ limit: 4 });
-
-    // 转换为展示格式
-    applyList.value = result.list.map(transformMyApplyToDisplay);
-
-    console.log('首页申请列表加载成功:', applyList.value);
-  }
-  catch (error) {
-    console.error('从API加载申请列表失败:', error);
-    // 降级方案：使用空数组
-    applyList.value = [];
   }
 }
 
@@ -716,10 +619,6 @@ onMounted(async () => {
   await userStore.checkLoginStatus();
   // 加载页面数据
   loadData();
-  // 加载未读通知数量
-  if (isLoggedIn.value) {
-    loadUnreadCount();
-  }
 });
 </script>
 
@@ -1178,26 +1077,26 @@ onMounted(async () => {
 
   // 用电卡片顶部渐变线条
   &--electric::before {
-    content: '';
     position: absolute;
     top: 0;
-    left: 0;
     right: 0;
+    left: 0;
     height: 6rpx;
     background: linear-gradient(90deg, #0adbc3 0%, #14b8a6 40%, transparent 100%);
     border-radius: 3rpx 3rpx 0 0;
+    content: '';
   }
 
   // 用水卡片顶部渐变线条
   &--water::before {
-    content: '';
     position: absolute;
     top: 0;
-    left: 0;
     right: 0;
+    left: 0;
     height: 6rpx;
     background: linear-gradient(90deg, #60a5fa 0%, #3b82f6 40%, transparent 100%);
     border-radius: 3rpx 3rpx 0 0;
+    content: '';
   }
 }
 
@@ -1209,9 +1108,9 @@ onMounted(async () => {
   width: 280rpx;
   height: 280rpx;
   border-radius: 50%;
+  opacity: 0.8;
   filter: blur(56rpx);
   pointer-events: none;
-  opacity: 0.8;
 
   &.utility-bg-electric {
     background: rgb(10 219 195 / 12%);
@@ -1293,11 +1192,11 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   padding: 8rpx 16rpx;
+  margin-top: 8rpx;
   font-size: 22rpx;
   border-radius: 20rpx;
   gap: 4rpx;
   font-weight: $font-semibold;
-  margin-top: 8rpx;
 
   &.trend-down {
     color: #16a34a;

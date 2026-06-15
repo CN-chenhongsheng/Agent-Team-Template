@@ -316,6 +316,51 @@ export function fetchCleanOperLog() {
   })
 }
 
+/** ==================== 登入日志管理 ==================== */
+
+/**
+ * 获取登入日志分页列表
+ * @param params 查询参数
+ */
+export function fetchGetLoginLogList(params: Api.SystemManage.LoginLogSearchParams) {
+  return request.get<Api.SystemManage.LoginLogPageResponse>({
+    url: '/api/v1/system/login-log/page',
+    params
+  })
+}
+
+/**
+ * 获取登入日志详情
+ * @param id 日志ID
+ */
+export function fetchGetLoginLogDetail(id: number) {
+  return request.get<Api.SystemManage.LoginLogListItem>({
+    url: `/api/v1/system/login-log/${id}`
+  })
+}
+
+/**
+ * 批量删除登入日志
+ * @param ids 日志ID列表
+ */
+export function fetchBatchDeleteLoginLog(ids: number[]) {
+  return request.del({
+    url: '/api/v1/system/login-log/batch',
+    data: ids,
+    showSuccessMessage: true
+  })
+}
+
+/**
+ * 清空登入日志
+ */
+export function fetchCleanLoginLog() {
+  return request.del({
+    url: '/api/v1/system/login-log/clean',
+    showSuccessMessage: true
+  })
+}
+
 /** ==================== 菜单管理 ==================== */
 
 /**
@@ -549,73 +594,25 @@ export function fetchDeleteDictData(id: number) {
   })
 }
 
-/** ==================== 通知管理 ==================== */
-
 /**
- * 获取通知分页列表
- * @param params 查询参数
+ * 下载用户导入模板
  */
-export function fetchGetNoticePage(params: Api.SystemManage.NoticeSearchParams) {
-  return request.get<Api.SystemManage.NoticePageResponse>({
-    url: '/api/v1/system/notice/page',
-    params
+export function fetchDownloadUserTemplate() {
+  return request.get({
+    url: '/api/v1/system/user/import/template',
+    responseType: 'blob'
   })
 }
 
 /**
- * 获取通知详情
- * @param id 通知ID
+ * 导入用户数据
+ * @param fileUrl 文件URL
+ * @param totalRows 总行数
  */
-export function fetchGetNoticeDetail(id: number) {
-  return request.get<Api.SystemManage.NoticeListItem>({
-    url: `/api/v1/system/notice/${id}`
-  })
-}
-
-/**
- * 新增通知
- * @param data 通知数据
- */
-export function fetchAddNotice(data: Api.SystemManage.NoticeSaveParams) {
-  return request.post({
-    url: '/api/v1/system/notice',
-    data,
-    showSuccessMessage: true
-  })
-}
-
-/**
- * 编辑通知
- * @param id 通知ID
- * @param data 通知数据
- */
-export function fetchUpdateNotice(id: number, data: Api.SystemManage.NoticeSaveParams) {
-  return request.put({
-    url: `/api/v1/system/notice/${id}`,
-    data,
-    showSuccessMessage: true
-  })
-}
-
-/**
- * 删除通知
- * @param id 通知ID
- */
-export function fetchDeleteNotice(id: number) {
-  return request.del({
-    url: `/api/v1/system/notice/${id}`,
-    showSuccessMessage: true
-  })
-}
-
-/**
- * 批量删除通知
- * @param ids 通知ID列表
- */
-export function fetchBatchDeleteNotice(ids: number[]) {
-  return request.del({
-    url: '/api/v1/system/notice/batch',
-    data: ids,
+export function fetchImportUsers(fileUrl: string, totalRows?: number) {
+  return request.post<Api.SystemManage.UserImportResult>({
+    url: '/api/v1/system/user/import',
+    data: { fileUrl, totalRows },
     showSuccessMessage: true
   })
 }

@@ -258,10 +258,7 @@
       if (props.dialogType === 'add') {
         await fetchAddDictData(form)
       } else {
-        if (!form.id) {
-          ElMessage.error('字典数据ID不能为空')
-          return
-        }
+        if (!form.id) return
         await fetchUpdateDictData(form.id, form)
       }
 

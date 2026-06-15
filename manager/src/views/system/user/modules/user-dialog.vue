@@ -30,8 +30,7 @@
 </template>
 
 <script setup lang="ts">
-  import { fetchAddUser, fetchUpdateUser } from '@/api/system-manage'
-  import { useReferenceStore } from '@/store/modules/reference'
+  import { fetchAddUser, fetchUpdateUser, fetchGetRoleList } from '@/api/system-manage'
   import type { FormRules } from 'element-plus'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
   import type { FormItem } from '@/components/core/forms/art-form/index.vue'
@@ -53,9 +52,6 @@
   // 角色列表数据
   const roleList = ref<Api.SystemManage.RoleListItem[]>([])
   const submitLoading = ref(false)
-
-  // 使用参考数据 store
-  const referenceStore = useReferenceStore()
 
   // 对话框显示控制
   const dialogVisible = computed({
@@ -160,11 +156,12 @@
   }
 
   /**
-   * 加载角色列表（使用 store 缓存）
+   * 加载角色列表
    */
   const loadRoles = async () => {
     try {
-      roleList.value = await referenceStore.loadAllRoles()
+      const res = await fetchGetRoleList({ pageNum: 1, pageSize: 1000, status: 1 })
+      roleList.value = res.list || []
     } catch (error) {
       console.error('加载角色列表失败:', error)
     }

@@ -45,10 +45,6 @@ public class User extends BaseEntity {
     @TableField("phone")
     private String phone;
 
-    @Schema(description = "管理范围")
-    @TableField("manage_scope")
-    private String manageScope;
-
     @Schema(description = "状态：1正常 0停用")
     @TableField("status")
     private Integer status;

@@ -20,30 +20,6 @@ export const mockStudentUser: IUser = {
   role: UserRole.STUDENT,
   roleName: '学生',
   status: 1,
-  studentInfo: {
-    id: 1,
-    studentNo: '2021001',
-    studentName: '张三',
-    gender: 1,
-    phone: '13800138000',
-    email: 'zhangsan@example.com',
-    enrollmentYear: 2021,
-    schoolingLength: 4,
-    currentGrade: '大三',
-    academicStatus: 1,
-    campusCode: 'CAMPUS001',
-    deptCode: 'DEPT001',
-    majorCode: 'MAJOR001',
-    classId: 1,
-    classCode: 'CLASS001',
-    floorId: 1,
-    floorCode: 'FLOOR001',
-    roomId: 101,
-    roomCode: '101',
-    bedId: 1,
-    bedCode: '1',
-    status: 1,
-  },
 };
 
 /**
@@ -51,16 +27,15 @@ export const mockStudentUser: IUser = {
  */
 export const mockDormManagerUser: IUser = {
   id: 2,
-  username: 'dormmanager01',
-  nickname: '李宿管',
+  username: 'manager01',
+  nickname: '李管理',
   avatar: 'https://via.placeholder.com/150',
   phone: '13800138001',
-  email: 'lidorm@example.com',
+  email: 'limanager@example.com',
   gender: 2,
   role: UserRole.DORM_MANAGER,
-  roleName: '宿管员',
+  roleName: '管理员',
   status: 1,
-  managedFloors: ['FLOOR001', 'FLOOR002'],
 };
 
 /**

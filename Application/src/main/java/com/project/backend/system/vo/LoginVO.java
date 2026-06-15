@@ -1,6 +1,5 @@
 package com.project.backend.system.vo;
 
-import com.project.backend.student.vo.StudentVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,9 +34,6 @@ public class LoginVO {
     @Schema(description = "头像")
     private String avatar;
 
-    @Schema(description = "用户角色：student-学生, dorm_manager-宿管 admin-管理员")
+    @Schema(description = "用户角色：admin-管理员")
     private String role;
-
-    @Schema(description = "学生信息（学生角色时返回）")
-    private StudentVO studentInfo;
 }

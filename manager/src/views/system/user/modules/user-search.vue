@@ -70,12 +70,6 @@
       props: { clearable: true, placeholder: '请输入手机号', maxlength: 11 }
     },
     {
-      label: '管理范围',
-      key: 'manageScope',
-      type: 'input',
-      props: { clearable: true, placeholder: '请输入管理范围' }
-    },
-    {
       label: '状态',
       key: 'status',
       type: 'select',

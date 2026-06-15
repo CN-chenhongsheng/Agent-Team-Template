@@ -78,14 +78,10 @@
     fetchBatchDeleteRole,
     fetchUpdateRoleStatus
   } from '@/api/system-manage'
-  import { useReferenceStore } from '@/store/modules/reference'
   import RoleSearch from './modules/role-search.vue'
   import RoleEditDialog from './modules/role-edit-dialog.vue'
   import RolePermissionDialog from './modules/role-permission-dialog.vue'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
-
-  // 使用参考数据 store（用于缓存失效）
-  const referenceStore = useReferenceStore()
 
   defineOptions({ name: 'Role' })
 
@@ -130,11 +126,8 @@
       apiFn: fetchGetRoleList,
       apiParams: computed(() => {
         return {
-          pageNum: formFilters.value.pageNum,
-          roleName: formFilters.value.roleName || undefined,
-          roleCode: formFilters.value.roleCode || undefined,
-          status: formFilters.value.status
-        } as Partial<Api.SystemManage.RoleSearchParams>
+          ...formFilters.value
+        } as Api.SystemManage.RoleSearchParams
       }),
       // 自定义分页字段映射
       paginationKey: {
@@ -157,6 +150,7 @@
           prop: 'roleCode',
           label: '角色编码',
           minWidth: 150,
+          showOverflowTooltip: true,
           formatter: (row: RoleListItem) => {
             return row.roleCode
           }
@@ -280,8 +274,6 @@
    * 处理编辑弹窗成功事件
    */
   const handleEditDialogSuccess = async () => {
-    // 刷新角色列表缓存
-    await referenceStore.refreshAllRoles()
     // 根据 dialogType 判断是新增还是编辑
     if (dialogType.value === 'add') {
       await refreshCreate()
@@ -313,8 +305,6 @@
       )
 
       await fetchDeleteRole(row.id)
-      // 刷新角色列表缓存
-      await referenceStore.refreshAllRoles()
       await refreshRemove()
     } catch (error) {
       if (error !== 'cancel') {
@@ -354,8 +344,6 @@
       const ids = selectedRows.value.map((role) => role.id)
       await fetchBatchDeleteRole(ids)
 
-      // 刷新角色列表缓存
-      await referenceStore.refreshAllRoles()
       selectedRows.value = []
       await refreshRemove()
     } catch (error) {

@@ -7,13 +7,7 @@
  * @author 陈鸿昇
  */
 
-import {
-  DB_NAME,
-  DB_VERSION,
-  STORE_NAME,
-  BACKUP_KEY_PREFIX,
-  EXPIRED_DAYS
-} from './constants'
+import { DB_NAME, DB_VERSION, STORE_NAME, BACKUP_KEY_PREFIX, EXPIRED_DAYS } from './constants'
 import type { UploadRecord } from './types'
 
 /**

@@ -73,22 +73,6 @@ const useUserStore = defineStore('user', {
     },
 
     /**
-     * 学生登录（学号+密码）
-     */
-    async studentLogin(studentNo: string, password: string) {
-      try {
-        const result = await AuthService.studentLogin({ studentNo, password });
-        this.setToken(result.accessToken, result.refreshToken);
-        this.setUserInfo(result.userInfo);
-        return result;
-      }
-      catch (error) {
-        console.error('[Store] 学生登录失败:', error);
-        throw error;
-      }
-    },
-
-    /**
      * 微信小程序授权登录
      */
     async wxLogin(provider: providerType = 'weixin') {

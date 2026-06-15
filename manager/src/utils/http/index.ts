@@ -84,7 +84,12 @@ axiosInstance.interceptors.request.use(
     const { accessToken, isLogin } = userStore
 
     // 如果用户已登录但 accessToken 为空（页面刷新导致），且不是刷新/登录接口，主动刷新 token
-    if (isLogin && !accessToken && !request.url?.includes('/auth/refresh') && !request.url?.includes('/auth/login')) {
+    if (
+      isLogin &&
+      !accessToken &&
+      !request.url?.includes('/auth/refresh') &&
+      !request.url?.includes('/auth/login')
+    ) {
       // 如果刷新已经失败过，不再尝试刷新，直接让请求失败
       if (refreshFailed) {
         throw createHttpError('会话已过期，请重新登录', ApiStatus.unauthorized)
@@ -94,16 +99,18 @@ axiosInstance.interceptors.request.use(
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
-        }).then(() => {
-          // 刷新完成后，添加新的 token 到请求头
-          if (userStore.accessToken) {
-            request.headers.set('Authorization', `Bearer ${userStore.accessToken}`)
-          }
-          return request
-        }).catch((error) => {
-          // 刷新失败，抛出错误
-          throw error
         })
+          .then(() => {
+            // 刷新完成后，添加新的 token 到请求头
+            if (userStore.accessToken) {
+              request.headers.set('Authorization', `Bearer ${userStore.accessToken}`)
+            }
+            return request
+          })
+          .catch((error) => {
+            // 刷新失败，抛出错误
+            throw error
+          })
       } else {
         // 开始刷新 token
         isRefreshing = true

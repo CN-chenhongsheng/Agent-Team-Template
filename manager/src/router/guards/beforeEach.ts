@@ -41,6 +41,7 @@ import NProgress from 'nprogress'
 import { useSettingStore } from '@/store/modules/setting'
 import { useUserStore } from '@/store/modules/user'
 import { useMenuStore } from '@/store/modules/menu'
+import { useAppStore } from '@/store/modules/app'
 import { setWorktab } from '@/utils/navigation'
 import { setPageTitle } from '@/utils/router'
 import { RoutesAlias } from '../routesAlias'
@@ -355,9 +356,9 @@ async function handleDynamicRoutes(
     }
   }
 
-  // 没有缓存或缓存无效，显示 loading 并调用 API
-  pendingLoading = true
-  loadingService.showLoading()
+  // 没有缓存或缓存无效，设置初始化状态并调用 API
+  const appStore = useAppStore()
+  appStore.setInitializing(true)
 
   try {
     // 1. 并行获取用户信息和菜单数据（两者互不依赖，并行可将等待时间减半）
@@ -403,11 +404,9 @@ async function handleDynamicRoutes(
       homePath.value || '/'
     )
 
-    // 初始化成功，重置进行中标记
+    // 初始化成功，重置进行中标记和初始化状态
     routeInitInProgress = false
-
-    // 关闭 loading
-    closeLoading()
+    appStore.setInitializing(false)
 
     // 9. 重新导航到目标路由
     if (!hasPermission) {
@@ -431,8 +430,8 @@ async function handleDynamicRoutes(
   } catch (error) {
     console.error('[RouteGuard] 动态路由注册失败:', error)
 
-    // 关闭 loading
-    closeLoading()
+    // 重置初始化状态
+    appStore.setInitializing(false)
 
     // 401 错误：axios 拦截器已处理退出登录，取消当前导航
     if (isUnauthorizedError(error)) {

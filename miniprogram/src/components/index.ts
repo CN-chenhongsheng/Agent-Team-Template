@@ -16,7 +16,6 @@ export { default as EmptyState } from './base/empty-state/index.vue';
 
 // 业务组件
 export { default as UserCard } from './business/user-card/index.vue';
-export { default as ApplyCard } from './business/apply-card/index.vue';
 export { default as NoticeCard } from './business/notice-card/index.vue';
 
 // 其他组件

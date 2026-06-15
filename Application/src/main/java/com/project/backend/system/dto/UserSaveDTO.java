@@ -43,9 +43,6 @@ public class UserSaveDTO {
     @Pattern(regexp = RegexConstants.MOBILE, message = "手机号格式不正确")
     private String phone;
 
-    @Schema(description = "管理范围")
-    private String manageScope;
-
     @Schema(description = "状态：1正常 0停用")
     private Integer status;
 
