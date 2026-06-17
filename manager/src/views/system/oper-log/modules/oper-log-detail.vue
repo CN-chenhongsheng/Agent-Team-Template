@@ -1,10 +1,5 @@
 <template>
-  <ElDialog
-    v-model="dialogVisible"
-    title="操作日志详情"
-    width="800px"
-    :close-on-click-modal="false"
-  >
+  <ElDialog v-model="dialogVisible" title="操作日志详情" width="800px">
     <div class="oper-log-detail">
       <ElDescriptions :column="2" border>
         <ElDescriptionsItem label="操作模块" :span="2">

@@ -8,6 +8,7 @@ import '@styles/index.scss'                         // 样式
 import '@utils/sys/console.ts'                      // 控制台输出内容
 import { setupGlobDirectives } from './directives'
 import { setupErrorHandle } from './utils/sys/error-handle'
+import { setupDialogOrigin } from './utils/sys/dialog-origin'
 
 document.addEventListener(
   'touchstart',
@@ -20,6 +21,7 @@ initStore(app)
 initRouter(app)
 setupGlobDirectives(app)
 setupErrorHandle(app)
+setupDialogOrigin()
 
 app.use(language)
 app.mount('#app')

@@ -93,6 +93,12 @@ textarea,
   cursor: var(--cursor-pointer) !important;
 }
 
+.el-switch:not(.is-disabled) .el-switch__core,
+.el-switch:not(.is-disabled) .el-switch__inner,
+.el-switch:not(.is-disabled) .el-switch__action {
+  cursor: var(--cursor-pointer) !important;
+}
+
 .el-input__inner,
 .el-textarea__inner {
   cursor: var(--cursor-text) !important;
@@ -102,7 +108,11 @@ textarea,
 [disabled],
 .is-disabled,
 .el-button.is-disabled,
-.el-input.is-disabled .el-input__inner {
+.el-input.is-disabled .el-input__inner,
+.el-switch.is-disabled,
+.el-switch.is-disabled .el-switch__core,
+.el-switch.is-disabled .el-switch__inner,
+.el-switch.is-disabled .el-switch__action {
   cursor: var(--cursor-not-allowed) !important;
 }
 

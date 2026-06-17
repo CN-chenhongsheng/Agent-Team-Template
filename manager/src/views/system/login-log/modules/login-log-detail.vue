@@ -1,10 +1,5 @@
 <template>
-  <ElDialog
-    v-model="dialogVisible"
-    title="登入日志详情"
-    width="800px"
-    :close-on-click-modal="false"
-  >
+  <ElDialog v-model="dialogVisible" title="登入日志详情" width="800px">
     <div class="login-log-detail">
       <ElDescriptions :column="2" border>
         <ElDescriptionsItem label="用户账号">
@@ -16,7 +11,7 @@
           </ElTag>
         </ElDescriptionsItem>
         <ElDescriptionsItem label="登录状态">
-          <ElTag :type="logData?.loginStatus === 0 ? 'success' : 'danger'">
+          <ElTag :type="loginStatusTagType">
             {{ logData?.loginStatusText || '-' }}
           </ElTag>
         </ElDescriptionsItem>
@@ -68,5 +63,15 @@
   const dialogVisible = computed({
     get: () => props.visible,
     set: (val) => emit('update:visible', val)
+  })
+
+  // 登录状态标签颜色（与表格保持一致：0-失败 danger / 1-成功 success / 2-登出 info）
+  const loginStatusTagType = computed(() => {
+    const typeMap: Record<number, 'danger' | 'success' | 'info'> = {
+      0: 'danger',
+      1: 'success',
+      2: 'info'
+    }
+    return typeMap[props.logData?.loginStatus as 0 | 1 | 2] || 'info'
   })
 </script>

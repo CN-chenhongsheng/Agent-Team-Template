@@ -7,6 +7,9 @@
 // Element Plus 样式优化
 @use './core/el-ui.scss';
 
+// 全局弹窗放大居中动画
+@use './core/el-dialog-origin.scss';
+
 // Element Plus 暗黑主题
 @use './core/el-dark.scss';
 

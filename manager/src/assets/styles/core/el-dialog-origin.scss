@@ -1,0 +1,54 @@
+// 全局弹窗"从按钮位置放大居中、关闭缩回按钮"动画
+// 起点偏移由 utils/sys/dialog-origin.ts 写入 --art-dx / --art-dy（根元素）
+// 作用于所有使用 dialog-fade 过渡的 el-dialog（不影响 messagebox / drawer）
+
+.el-overlay .el-dialog {
+  transform-origin: center center;
+}
+
+// 动画期间提升为独立合成层，避免每帧重绘阴影/内容导致卡顿
+.el-overlay.dialog-fade-enter-active .el-dialog,
+.el-overlay.dialog-fade-leave-active .el-dialog {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.el-overlay.dialog-fade-enter-active .el-dialog {
+  animation: artOriginIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.el-overlay.dialog-fade-leave-active .el-dialog {
+  animation: artOriginOut 0.3s cubic-bezier(0.55, 0, 0.45, 1) both;
+}
+
+@keyframes artOriginIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(var(--art-dx, 0), var(--art-dy, 0), 0) scale(0.2);
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes artOriginOut {
+  0% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--art-dx, 0), var(--art-dy, 0), 0) scale(0.2);
+  }
+}
