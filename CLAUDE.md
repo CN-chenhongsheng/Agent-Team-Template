@@ -4,13 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-宿舍管理系统（Dormitory Management System），采用前后端分离的多模块 monorepo 架构，包含三个独立子项目：
+宿舍管理系统（Dormitory Management System），采用前后端分离的多模块 monorepo 架构，包含两个独立子项目：
 
 | 模块 | 路径 | 技术栈 | 用途 |
 |------|------|--------|------|
 | **Application** | `Application/` | Java 21 + Spring Boot 3.2 + MyBatis-Plus + MySQL + Redis | 后端 API 服务 |
 | **manager** | `manager/` | Vue 3 + TypeScript + Element Plus + Tailwind CSS 4 + Vite | 管理后台 Web 端 |
-| **miniprogram** | `miniprogram/` | UniApp + Vue 3 + TypeScript + UView Plus + UnoCSS | 微信小程序端 |
 
 ## 常用命令
 
@@ -49,43 +48,16 @@ cd manager && pnpm fix         # ESLint 自动修复
 cd manager && pnpm lint:prettier   # Prettier 格式化
 ```
 
-### 小程序 (miniprogram/)
-
-```bash
-# 安装依赖（需要 Node >=18, pnpm >=7.30）
-cd miniprogram && pnpm install
-
-# 开发 - H5
-cd miniprogram && pnpm dev:h5
-
-# 开发 - 微信小程序
-cd miniprogram && pnpm dev:mp-weixin
-
-# 构建 - 微信小程序
-cd miniprogram && pnpm build:mp-weixin
-
-# 类型检查
-cd miniprogram && pnpm type-check
-
-# Lint
-cd miniprogram && pnpm eslint
-cd miniprogram && pnpm stylelint
-
-# 测试
-cd miniprogram && pnpm test:run
-```
-
 ## 后端架构 (Application)
 
-### 三层包结构
+### 两层包结构
 
 ```
 com.project.core/     — 基础设施层：配置、异常处理、工具类、通用实体、常量、枚举
 com.project.backend/  — 管理后台 API 层：面向 manager 前端的接口
-com.project.app/      — 小程序 API 层：面向微信小程序的接口
 ```
 
-**依赖方向**（只能向下依赖）：`app → core`，`backend → core`，`app` 和 `backend` 之间不能互相依赖。
+**依赖方向**（只能向下依赖）：`backend → core`。
 
 ### 业务模块组织
 
@@ -129,29 +101,6 @@ com.project.app/      — 小程序 API 层：面向微信小程序的接口
 
 详细前端规范见 `manager/CLAUDE.md`。
 
-## 小程序架构 (miniprogram)
-
-### 核心约定
-
-- **UI 设计**：玻璃态（glass-morphism）设计系统，暖色调背景（粉/桃/珊瑚渐变）
-- **角色系统**：三种角色 — student（学生）、dorm_manager（宿管）、admin（管理员）
-- **文件组织**：folder + index 模式（如 `src/api/<module>/index.ts`）
-- **Barrel 导出**：`src/api/index.ts`、`src/utils/index.ts`、`src/services/index.ts`、`src/composables/index.ts`、`src/components/index.ts` 必须保持完整导出
-- **类型定义**：API 类型必须定义在 `src/types/api/` 下，禁止在 API 模块中内联定义接口
-- **表单入口**：所有申请表单统一走 `pages/apply/form/index.vue`，通过 `type` 参数区分
-- **Mock 开发**：通过 `USE_MOCK` 标志切换 mock/真实 API
-- **状态管理**：Pinia + 持久化
-- **组件库**：UView Plus (`u-button`, `u-card`, `u-form` 等)
-- **页面限制**：SFC 不超过 500 行，超出需拆分到 `pages/**/components/` 和 composables
-
-### 命名规范
-
-- 文件/文件夹：kebab-case
-- 组件：PascalCase
-- Composables：`useXxx`
-- API 函数：`verbNounAPI`（如 `getDormInfoAPI`）
-- 常量：UPPER_SNAKE_CASE
-
 ## Git 提交规范
 
 使用中文提交信息，格式：
@@ -165,7 +114,6 @@ feat: 简短中文描述
 ```
 
 manager 项目使用 Husky + lint-staged + commitlint (Conventional Commits)。
-miniprogram 项目使用 simple-git-hooks + lint-staged。
 
 ## Claude Code 团队协作
 
@@ -173,9 +121,8 @@ miniprogram 项目使用 simple-git-hooks + lint-staged。
 
 - **backend-java-expert**：后端 Java 专家（senior-backend-engineer agent）
 - **manager-frontend-expert**：管理后台前端专家（frontend-admin-dev agent）
-- **miniprogram-expert**：小程序前端专家（miniprogram-frontend-dev agent）
 
-团队名称：`sushe-fullstack-team`。使用 `/team-cleanup` 清理团队资源。
+团队名称：`Project-fullstack-team`。使用 `/team-cleanup` 清理团队资源。
 
 ## 可用 Skills
 
@@ -183,7 +130,6 @@ miniprogram 项目使用 simple-git-hooks + lint-staged。
 |-------|------|
 | `backend-java` | Java 后端编码规范 |
 | `manager-frontend` | 管理后台 Vue 3 前端规范 |
-| `miniprogram-standards` | 小程序架构与模块约定 |
 | `git-commit-zh` | 中文 Git 提交信息格式 |
 | `team-start` / `team-cleanup` | 启动/清理开发团队 |
 | `ui-ux-pro-max` | UI/UX 设计辅助 |

@@ -70,16 +70,14 @@ You are a Senior Backend Engineer with 10+ years of experience building scalable
 
 ## Project-Specific Context
 
-You are working on a dual-project monorepo for a dormitory management system:
+You are working on a monorepo for a dormitory management system:
 - **Manager**: Backend APIs for admin dashboard
-- **Miniprogram**: Backend APIs for WeChat mini-program
 
 **Key Technical Stack:**
-- TypeScript for type safety
+This is a Java backend project using Spring Boot 3.2 + MyBatis-Plus + Sa-Token + MySQL + Redis.
+- TypeScript for type safety (manager frontend)
 - Axios with interceptors for HTTP (manager project)
-- Custom request wrapper with error handling (miniprogram project)
 - Pinia stores for state management (client-side)
-- Mock data system for development
 - MySQL database accessible via MCP server (configured in `.claude/.mcp.json`)
 
 **Database Configuration:**
@@ -100,8 +98,8 @@ You are working on a dual-project monorepo for a dormitory management system:
 **Code Structure & Consistency:**
 - **When creating new modules or features**, you MUST first review the overall codebase structure to ensure consistency
 - **Reference the backend Java skill** (`.cursor/skills/backend-java/SKILL.md`) for:
-  - Package structure (core/backend/app three-layer architecture)
-  - Dependency direction rules (downward only: backend→core, app→core, app→backend)
+  - Package structure (core/backend two-layer architecture)
+  - Dependency direction rules (downward only: backend→core)
   - Controller/Service/DTO/VO/Entity standards and naming conventions
   - RESTful API design patterns and URL conventions
   - Exception handling and transaction management patterns
@@ -111,7 +109,7 @@ You are working on a dual-project monorepo for a dormitory management system:
   - Ensure consistent naming, structure, and organization
   - Follow the same architectural decisions and design patterns
   - Maintain code uniformity across the entire project
-- **Always check** existing implementations in `Application/src/main/java/com/sushe/backend/` and `Application/src/main/java/com/sushe/app/` for reference patterns
+- **Always check** existing implementations in `Application/src/main/java/com/project/backend/` for reference patterns
 
 ## Decision-Making Framework
 

@@ -143,7 +143,6 @@ public class LoginLogServiceImpl extends ServiceImpl<LoginLogMapper, LoginLog> i
         if (loginType == null) return "-";
         return switch (loginType) {
             case "password" -> "密码登录";
-            case "wechat" -> "微信登录";
             default -> loginType;
         };
     }

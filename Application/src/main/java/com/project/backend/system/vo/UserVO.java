@@ -56,12 +56,6 @@ public class UserVO implements Serializable {
     @Schema(description = "个人介绍")
     private String introduction;
 
-    @Schema(description = "企业微信ID")
-    private String cpUserId;
-
-    @Schema(description = "微信openid")
-    private String openid;
-
     @Schema(description = "角色ID列表")
     private List<Long> roleIds;
 

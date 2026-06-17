@@ -45,7 +45,7 @@ public class OperLog implements Serializable {
     @TableField("request_method")
     private String requestMethod;
 
-    @Schema(description = "操作类别：其它 1后台用户 2手机端用户）")
+    @Schema(description = "操作类别：后台用户）")
     @TableField("operator_type")
     private Integer operatorType;
 

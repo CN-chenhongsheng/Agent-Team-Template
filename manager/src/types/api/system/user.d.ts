@@ -64,8 +64,6 @@ declare namespace Api {
       genderText?: string
       address?: string
       introduction?: string
-      cpUserId?: string
-      openid?: string
       roleIds?: number[]
       roleNames?: string[]
       createTime?: string

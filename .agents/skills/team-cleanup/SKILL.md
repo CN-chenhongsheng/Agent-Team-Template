@@ -1,13 +1,13 @@
 ---
 name: team-cleanup
-description: Gracefully shutdown all teammates and cleanup the sushe-fullstack-team resources. Use when the user wants to end the team session.
+description: Gracefully shutdown all teammates and cleanup the Project-fullstack-team resources. Use when the user wants to end the team session.
 ---
 
 # Cleanup Full-Stack Development Team
 
 ## What This Does
 
-Gracefully shuts down all three teammates and cleans up the `sushe-fullstack-team` resources:
+Gracefully shuts down all teammates and cleans up the `Project-fullstack-team` resources:
 1. Sends shutdown requests to all teammates
 2. Waits for confirmation from each teammate
 3. Deletes team configuration and task list
@@ -26,7 +26,6 @@ When this skill is invoked:
 1. Send shutdown requests to all teammates using `SendMessage` tool:
    - Send to `backend-java-expert`
    - Send to `manager-frontend-expert`
-   - Send to `miniprogram-expert`
 
    Message type: `shutdown_request`
    Content: "团队任务完成，准备关闭会话"
@@ -34,8 +33,8 @@ When this skill is invoked:
 2. Wait for shutdown confirmations from all teammates
 
 3. After all teammates have shut down, use `TeamDelete` tool to cleanup:
-   - Removes `~/.Codex/teams/sushe-fullstack-team/`
-   - Removes `~/.Codex/tasks/sushe-fullstack-team/`
+   - Removes `~/.Codex/teams/Project-fullstack-team/`
+   - Removes `~/.Codex/tasks/Project-fullstack-team/`
 
 ## Important Notes
 
@@ -52,7 +51,6 @@ After cleanup is complete, display:
 已关闭的队友：
 - backend-java-expert
 - manager-frontend-expert
-- miniprogram-expert
 
 团队资源已删除。
 ```

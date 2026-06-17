@@ -61,14 +61,6 @@ public class User extends BaseEntity {
     @TableField("introduction")
     private String introduction;
 
-    @Schema(description = "企业微信ID")
-    @TableField("cp_user_id")
-    private String cpUserId;
-
-    @Schema(description = "微信openid")
-    @TableField("openid")
-    private String openid;
-
     @Schema(description = "最后登录时间")
     @TableField("last_login_time")
     private LocalDateTime lastLoginTime;

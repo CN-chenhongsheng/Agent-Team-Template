@@ -1,16 +1,16 @@
 ---
 name: backend-java
-description: Enforces Java backend coding standards for the Application module. Use when working with Java files in Application/, creating controllers, services, entities, DTOs, VOs, mappers, or any backend code. Covers package structure (core/backend/app), dependency rules, Controller/Service patterns, exception handling, naming conventions, and JavaDoc requirements.
+description: Enforces Java backend coding standards for the Application module. Use when working with Java files in Application/, creating controllers, services, entities, DTOs, VOs, mappers, or any backend code. Covers package structure (core/backend), dependency rules, Controller/Service patterns, exception handling, naming conventions, and JavaDoc requirements.
 ---
 
 # Backend Java Coding Standards
 
 ## Package Structure
 
-**Three-layer architecture: core / backend / app**
+**Two-layer architecture: core / backend**
 
 ```
-com.sushe/
+com.project/
 ├── core/          # Core shared module (platform-agnostic)
 │   ├── annotation/
 │   ├── config/
@@ -21,15 +21,12 @@ com.sushe/
 │   ├── exception/
 │   ├── result/
 │   └── util/
-├── backend/       # Backend management business logic
-│   ├── accommodation/
-│   ├── approval/
-│   ├── organization/
-│   ├── system/
-│   └── common/
-└── app/           # Mobile app specific logic
-    ├── controller/
-    └── service/
+└── backend/       # Backend management business logic
+    ├── accommodation/
+    ├── approval/
+    ├── organization/
+    ├── system/
+    └── common/
 ```
 
 ## Dependency Direction Rules
@@ -38,10 +35,7 @@ com.sushe/
 
 ```
 ✅ backend → core     (correct: backend depends on core)
-✅ app → core          (correct: app depends on core)
-✅ app → backend       (allowed: app can reuse backend services)
 ❌ core → backend      (forbidden: core cannot depend on business code)
-❌ core → app          (forbidden: core cannot depend on app code)
 ```
 
 ## Layer Responsibilities
@@ -50,7 +44,6 @@ com.sushe/
 |---------|---------------|----------|
 | **core** | Infrastructure, business-agnostic code | `R`, `BaseEntity`, `UserContext`, configs, enums |
 | **backend** | Backend management business logic | Controller, Service, Mapper, Entity, DTO, VO |
-| **app** | Mobile app specific logic | Mobile Controller and Service |
 
 ## Java File Header
 
@@ -77,12 +70,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
 
 // 3. Core module (core)
-import com.sushe.core.result.R;
-import com.sushe.core.exception.BusinessException;
+import com.project.core.result.R;
+import com.project.core.exception.BusinessException;
 
-// 4. Business module (backend or app)
-import com.sushe.backend.accommodation.entity.Student;
-import com.sushe.app.service.StudentService;
+// 4. Business module (backend)
+import com.project.backend.accommodation.entity.Student;
 ```
 
 ## RESTful API Design Standards
@@ -524,7 +516,7 @@ BeanUtil.copyProperties(entity, vo);
 ## Code Review Checklist
 
 ### Package Structure
-- [ ] Follows package structure? (core/backend/app)
+- [ ] Follows package structure? (core/backend)
 - [ ] Follows dependency direction? (downward only)
 - [ ] Uses correct package imports? (import core, not backend.common)
 
@@ -859,7 +851,7 @@ mybatis-plus:
 ### Token 安全
 
 - Access Token TTL 不超过 2 小时，依赖 Refresh Token 续期
-- 微信登录等第三方接口必须在生产环境调用真实 API，禁止直接使用前端参数作为身份标识
+- 第三方登录接口必须在生产环境调用真实 API，禁止直接使用前端参数作为身份标识
 
 ### CORS 配置
 

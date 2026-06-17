@@ -14,7 +14,7 @@ import org.springframework.context.annotation.FilterType;
  */
 @SpringBootApplication
 @ComponentScan(
-        basePackages = {"com.project.backend", "com.project.app", "com.project.core"},
+        basePackages = {"com.project.backend", "com.project.core"},
         excludeFilters = @ComponentScan.Filter(
                 type = FilterType.REGEX,
                 pattern = "com\\.project\\.core\\.upload\\..*"))

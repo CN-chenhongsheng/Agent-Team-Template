@@ -37,7 +37,7 @@ public class OperLogVO implements Serializable {
     @Schema(description = "请求方式")
     private String requestMethod;
 
-    @Schema(description = "操作类别：其它 1后台用户 2手机端用户）")
+    @Schema(description = "操作类别：后台用户）")
     private Integer operatorType;
 
     @Schema(description = "操作人员")

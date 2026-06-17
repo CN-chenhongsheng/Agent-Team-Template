@@ -4,7 +4,6 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.project.core.exception.BusinessException;
 import com.project.backend.system.dto.LoginDTO;
-import com.project.backend.system.dto.WxLoginDTO;
 import com.project.backend.system.entity.User;
 import com.project.backend.system.mapper.MenuMapper;
 import com.project.backend.system.mapper.RoleMapper;
@@ -383,13 +382,5 @@ public class AuthServiceImpl implements AuthService {
      */
     private boolean isProdEnvironment() {
         return "prod".equals(activeProfile);
-    }
-
-    @Override
-    public LoginVO wxLogin(WxLoginDTO wxLoginDTO, HttpServletRequest request, HttpServletResponse response) {
-        log.info("微信小程序登录, code={}", wxLoginDTO.getCode());
-
-        // TODO: 实现微信登录逻辑
-        throw new BusinessException("微信登录功能暂未实现");
     }
 }

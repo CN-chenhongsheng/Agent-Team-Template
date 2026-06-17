@@ -16,7 +16,7 @@ public class LoginLogQueryDTO {
     @Schema(description = "用户账号")
     private String username;
 
-    @Schema(description = "登录类型：password-密码登录 wechat-微信登录")
+    @Schema(description = "登录类型：password-密码登录")
     private String loginType;
 
     @Schema(description = "登录状态：0-失败 1-成功 2-登出")

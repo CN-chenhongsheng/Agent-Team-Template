@@ -1,6 +1,0 @@
-{
-  "enabledMcpjsonServers": [
-    "mysql-database"
-  ],
-  "enableAllProjectMcpServers": true
-}

@@ -31,7 +31,7 @@ public class LoginLog implements Serializable {
     @TableField("username")
     private String username;
 
-    @Schema(description = "登录类型：password-密码登录 wechat-微信登录")
+    @Schema(description = "登录类型：password-密码登录")
     @TableField("login_type")
     private String loginType;
 

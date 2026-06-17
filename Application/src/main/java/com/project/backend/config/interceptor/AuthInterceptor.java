@@ -33,7 +33,7 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     /**
      * 缓存键前缀：用户类型标记
-     * 格式：project:login_user:{userId} -> "admin:{username}:{nickname}:{avatar}" 或 "student:{studentNo}:{studentName}:"
+     * 格式：project:login_user:{userId} -> "admin:{username}:{nickname}:{avatar}"
      */
     private static final String CACHE_SEPARATOR = "\u001F"; // Unit Separator，不会出现在正常数据中
     private static final Duration CACHE_TTL = Duration.ofMinutes(CacheConstant.LOGIN_USER_TTL);
@@ -43,7 +43,6 @@ public class AuthInterceptor implements HandlerInterceptor {
      */
     private static final String[] WHITELIST = {
             "/v1/auth/login",           // 管理员登录
-            "/v1/auth/wx-login",        // 微信登录
             "/v1/auth/refresh",         // Token刷新
             "/v1/auth/logout",          // 登出
             "/doc.html",                // Swagger 文档
@@ -158,7 +157,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         loginUser.setAvatar(avatar);
         UserContext.setUser(loginUser);
 
-        log.debug("{}信息已从缓存恢复，用户ID：{}", "admin".equals(userType) ? "管理员" : "学生", userId);
+        log.debug("管理员信息已从缓存恢复，用户ID：{}", userId);
         return true;
     }
 

@@ -3,7 +3,6 @@ package com.project.backend.system.controller;
 import com.project.core.annotation.RateLimit;
 import com.project.core.result.R;
 import com.project.backend.system.dto.LoginDTO;
-import com.project.backend.system.dto.WxLoginDTO;
 import com.project.backend.system.service.AuthService;
 import com.project.backend.system.vo.LoginVO;
 import com.project.backend.system.vo.UserInfoVO;
@@ -42,20 +41,6 @@ public class AuthController {
                             HttpServletResponse response) {
         log.info("用户登录请求: {}", loginDTO.getUsername());
         LoginVO loginVO = authService.login(loginDTO, request, response);
-        return R.ok(loginVO);
-    }
-
-    /**
-     * 微信小程序登录
-     */
-    @Operation(summary = "微信小程序登录")
-    @PostMapping("/wx-login")
-    @RateLimit(key = "wx-login", time = 60, count = 10, message = "登录请求过于频繁，请稍后再试")
-    public R<LoginVO> wxLogin(@Valid @RequestBody WxLoginDTO wxLoginDTO,
-                              HttpServletRequest request,
-                              HttpServletResponse response) {
-        log.info("微信登录请求");
-        LoginVO loginVO = authService.wxLogin(wxLoginDTO, request, response);
         return R.ok(loginVO);
     }
 
