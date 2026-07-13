@@ -1,9 +1,11 @@
 package com.project.backend.system.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.project.core.annotation.Log;
+import com.project.core.annotation.PermissionAction;
+import com.project.core.annotation.PermissionModule;
 import com.project.core.result.PageResult;
 import com.project.core.result.R;
-import com.project.backend.controller.base.BatchDeleteController;
 import com.project.backend.system.dto.OperLogQueryDTO;
 import com.project.backend.system.service.OperLogService;
 import com.project.backend.system.vo.OperLogVO;
@@ -16,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 操作日志控制器
- * 
+ *
  * @author 陈鸿昇
  * @since 2026-01-01
  */
@@ -24,12 +26,14 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/v1/system/oper-log")
 @RequiredArgsConstructor
+@PermissionModule(value = "system:operlog")
 @Tag(name = "操作日志管理", description = "操作日志的查询、删除等")
-public class OperLogController implements BatchDeleteController {
+public class OperLogController {
 
     private final OperLogService operLogService;
 
     @GetMapping("/page")
+    @PermissionAction("view")
     @Operation(summary = "分页查询操作日志列表")
     public R<PageResult<OperLogVO>> page(OperLogQueryDTO queryDTO) {
         log.info("分页查询操作日志，参数：{}", queryDTO);
@@ -42,6 +46,7 @@ public class OperLogController implements BatchDeleteController {
     }
 
     @GetMapping("/{id}")
+    @SaCheckPermission(value = "system:operlog:detail", orRole = "SUPER_ADMIN")
     @Operation(summary = "根据ID查询操作日志详情")
     @Parameter(name = "id", description = "日志ID", required = true)
     public R<OperLogVO> getDetail(@PathVariable Long id) {
@@ -55,6 +60,7 @@ public class OperLogController implements BatchDeleteController {
     }
 
     @DeleteMapping("/batch")
+    @PermissionAction("delete")
     @Operation(summary = "批量删除操作日志")
     @Log(title = "批量删除操作日志", businessType = 3)
     public R<Void> batchDelete(@RequestBody Long[] ids) {
@@ -68,6 +74,7 @@ public class OperLogController implements BatchDeleteController {
     }
 
     @DeleteMapping("/clean")
+    @SaCheckPermission(value = "system:operlog:clean", orRole = "SUPER_ADMIN")
     @Operation(summary = "清空操作日志")
     @Log(title = "清空操作日志", businessType = 3)
     public R<Void> clean() {
@@ -78,15 +85,5 @@ public class OperLogController implements BatchDeleteController {
         } else {
             return R.fail("操作日志清空失败");
         }
-    }
-
-    @Override
-    public String getEntityName() {
-        return "操作日志";
-    }
-
-    @Override
-    public boolean callBatchDelete(Long[] ids) {
-        return operLogService.batchDelete(ids);
     }
 }

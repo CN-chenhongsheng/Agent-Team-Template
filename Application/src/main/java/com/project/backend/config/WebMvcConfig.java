@@ -1,5 +1,6 @@
 package com.project.backend.config;
 
+import cn.dev33.satoken.interceptor.SaInterceptor;
 import com.project.backend.config.interceptor.AuthInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,6 +9,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import com.project.core.constant.SecurityConstant;
 import com.project.core.util.FileUtils;
 
 /**
@@ -32,18 +34,15 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor)
-                .addPathPatterns("/**") // 拦截所有路径
-                .excludePathPatterns(
-                        "/v1/auth/login",          // 管理员/宿管员登录接口
-                        "/v1/auth/refresh",        // Token刷新接口
-                        "/v1/auth/logout",         // 登出接口（虽然可能需要token，但让拦截器内部处理）
-                        "/doc.html",               // Swagger 文档
-                        "/webjars/**",             // Swagger 静态资源
-                        "/swagger-resources/**",   // Swagger 资源
-                        "/v3/api-docs/**",         // Swagger API 文档
-                        "/favicon.ico",            // 网站图标
-                        "/error"                   // 错误页面
-                );
+                .addPathPatterns("/**")
+                .excludePathPatterns(SecurityConstant.PUBLIC_PATHS)
+                .order(1);
+
+        // 注解鉴权（@SaCheckPermission），登录校验由 AuthInterceptor 负责
+        registry.addInterceptor(new SaInterceptor(handle -> {}))
+                .addPathPatterns("/**")
+                .excludePathPatterns(SecurityConstant.PUBLIC_PATHS)
+                .order(2);
     }
 
     @Override

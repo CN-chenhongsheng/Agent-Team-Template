@@ -1,5 +1,6 @@
 package com.project.backend.system.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.BCrypt;
@@ -119,6 +120,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"userRoles", "userPermissions"}, key = "#saveDTO.id", condition = "#saveDTO.id != null")
     public boolean saveUser(UserSaveDTO saveDTO) {
         validateUsername(saveDTO);
         validateSuperAdminStatus(saveDTO);
@@ -392,7 +394,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         // 2. 使用通用工具类验证业务规则（超级管理员、不能删除自己等）
-        BusinessRuleUtils.validateUserDeletion(userId, user.getUsername());
+        List<String> roleCodes = roleMapper.selectRoleCodesByUserId(userId);
+        BusinessRuleUtils.validateUserDeletion(userId, user.getUsername(), roleCodes);
 
         // 3. 可以根据需要添加更多业务规则
         // 例如：检查用户是否有关联的业务数据等
@@ -594,6 +597,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"userInfo", "userMenuTree"}, allEntries = true)
     public boolean assignMenus(Long userId, Long[] menuIds) {
         log.info("分配用户菜单权限，用户ID：{}，菜单IDs：{}", userId, Arrays.toString(menuIds));
 
@@ -611,6 +615,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (menuIds != null && menuIds.length > 0) {
             insertUserMenus(userId, Arrays.asList(menuIds));
         }
+
+        // 权限变更后踢出在线会话，避免 Sa-Token 复用旧权限缓存
+        StpUtil.logout(userId);
 
         return true;
     }

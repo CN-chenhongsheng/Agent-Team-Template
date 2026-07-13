@@ -30,6 +30,15 @@ public interface MenuMapper extends BaseMapper<Menu> {
     List<String> selectPermissionsByUserId(Long userId);
 
     /**
+     * 查询所有有效权限标识
+     *
+     * @return 权限标识列表
+     */
+    @Select("SELECT DISTINCT permission FROM sys_menu " +
+            "WHERE status = 1 AND permission IS NOT NULL AND permission != '' AND deleted = 0")
+    List<String> selectAllPermissions();
+
+    /**
      * 根据用户ID查询该用户有权限的菜单列表（包含目录、菜单和按钮）
      * 只返回用户直接分配的权限（不包含角色权限）
      * 返回所有正常状态的菜单（包括visible=0的隐藏菜单和按钮权限）

@@ -8,6 +8,7 @@ import com.project.backend.system.entity.User;
 import com.project.backend.system.mapper.MenuMapper;
 import com.project.backend.system.mapper.RoleMapper;
 import com.project.backend.system.mapper.UserMapper;
+import com.project.backend.system.service.PermissionService;
 import com.project.backend.system.service.AuthService;
 import com.project.backend.system.service.LoginLogService;
 import com.project.backend.system.service.UserOnlineService;
@@ -41,6 +42,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
     private final MenuMapper menuMapper;
+    private final PermissionService permissionService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserOnlineService userOnlineService;
     private final LoginLogService loginLogService;
@@ -300,10 +302,10 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 3. 查询用户角色
-        List<String> roles = roleMapper.selectRoleCodesByUserId(userId);
+        List<String> roles = permissionService.getRoleCodes(userId);
 
         // 4. 查询用户权限
-        List<String> permissions = menuMapper.selectPermissionsByUserId(userId);
+        List<String> permissions = permissionService.getPermissionCodes(userId);
 
         // 5. 构建返回数据
         return UserInfoVO.builder()

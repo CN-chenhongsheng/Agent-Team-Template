@@ -1,6 +1,9 @@
 package com.project.backend.system.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.project.core.annotation.Log;
+import com.project.core.annotation.PermissionAction;
+import com.project.core.annotation.PermissionModule;
 import com.project.core.result.PageResult;
 import com.project.core.result.R;
 import com.project.backend.system.dto.RoleUserQueryDTO;
@@ -32,18 +35,21 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/v1/system/user")
 @RequiredArgsConstructor
+@PermissionModule(value = "system:user")
 @Tag(name = "系统用户管理", description = "用户增删改查、重置密码、状态管理等")
 public class UserController {
 
     private final UserService userService;
 
     @GetMapping("/page")
+    @PermissionAction("view")
     @Operation(summary = "查询用户列表（分页）", description = "支持按用户名、昵称、手机号、学院、状态查询")
     public R<PageResult<UserVO>> list(UserQueryDTO queryDTO) {
         return R.ok(userService.pageList(queryDTO));
     }
 
     @GetMapping("/{id}")
+    @PermissionAction("view")
     @Operation(summary = "根据ID查询用户详情")
     @Parameter(name = "id", description = "用户ID", required = true)
     public R<UserVO> getDetail(@PathVariable Long id) {
@@ -51,6 +57,7 @@ public class UserController {
     }
 
     @PostMapping
+    @PermissionAction("add")
     @Operation(summary = "新增用户")
     @Log(title = "新增用户", businessType = 1)
     public R<Void> add(@Valid @RequestBody UserSaveDTO saveDTO) {
@@ -60,6 +67,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @PermissionAction("edit")
     @Operation(summary = "编辑用户")
     @Parameter(name = "id", description = "用户ID", required = true)
     @Log(title = "编辑用户", businessType = 2)
@@ -70,6 +78,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PermissionAction("delete")
     @Operation(summary = "删除用户")
     @Parameter(name = "id", description = "用户ID", required = true)
     @Log(title = "删除用户", businessType = 3)
@@ -79,6 +88,7 @@ public class UserController {
     }
 
     @DeleteMapping("/batch")
+    @PermissionAction("delete")
     @Operation(summary = "批量删除用户")
     @Log(title = "批量删除用户", businessType = 3)
     public R<Void> batchDelete(@RequestBody Long[] ids) {
@@ -87,6 +97,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/reset-password")
+    @SaCheckPermission(value = "system:user:reset-pwd", orRole = "SUPER_ADMIN")
     @Operation(summary = "重置用户密码")
     @Parameter(name = "id", description = "用户ID", required = true)
     @Log(title = "重置用户密码", businessType = 0)
@@ -97,6 +108,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/status/{status}")
+    @PermissionAction("edit")
     @Operation(summary = "修改用户状态")
     @Parameter(name = "id", description = "用户ID", required = true)
     @Parameter(name = "status", description = "状态：1正常 0停用", required = true)
@@ -108,12 +120,14 @@ public class UserController {
     }
 
     @PostMapping("/by-roles")
+    @PermissionAction("view")
     @Operation(summary = "根据角色代码列表查询用户列表", description = "支持多个角色代码，返回Map格式，key为角色代码，value为用户列表")
     public R<Map<String, List<UserSimpleVO>>> getUsersByRoleCodes(@Valid @RequestBody RoleUserQueryDTO queryDTO) {
         return R.ok(userService.getUsersByRoleCodes(queryDTO));
     }
 
     @GetMapping("/{id}/permissions")
+    @SaCheckPermission(value = "system:user:assign-permission", orRole = "SUPER_ADMIN")
     @Operation(summary = "获取用户权限列表", description = "返回用户已分配的权限列表（包含菜单状态）")
     @Parameter(name = "id", description = "用户ID", required = true)
     public R<List<UserPermissionVO>> getUserPermissions(@PathVariable Long id) {
@@ -121,6 +135,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/permissions")
+    @SaCheckPermission(value = "system:user:assign-permission", orRole = "SUPER_ADMIN")
     @Operation(summary = "分配用户权限", description = "分配用户菜单权限，权限范围必须是用户所有角色的权限并集")
     @Parameter(name = "id", description = "用户ID", required = true)
     @Log(title = "分配用户权限", businessType = 0)
@@ -130,6 +145,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/available-menus")
+    @SaCheckPermission(value = "system:user:assign-permission", orRole = "SUPER_ADMIN")
     @Operation(summary = "获取用户可选的菜单列表", description = "返回用户所有角色的权限并集，用于权限分配界面")
     @Parameter(name = "id", description = "用户ID", required = true)
     public R<List<Long>> getUserAvailableMenus(@PathVariable Long id) {

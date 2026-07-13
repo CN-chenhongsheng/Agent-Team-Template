@@ -9,11 +9,14 @@ import com.project.core.exception.BusinessException;
 import com.project.core.result.PageResult;
 import com.project.backend.system.dto.DictTypeQueryDTO;
 import com.project.backend.system.dto.DictTypeSaveDTO;
+import com.project.backend.system.entity.DictData;
 import com.project.backend.system.entity.DictType;
+import com.project.backend.system.mapper.DictDataMapper;
 import com.project.backend.system.mapper.DictTypeMapper;
 import com.project.backend.system.service.DictTypeService;
 import com.project.backend.util.DictUtils;
 import com.project.backend.system.vo.DictTypeVO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +32,10 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> implements DictTypeService {
+
+    private final DictDataMapper dictDataMapper;
 
     /**
      * 分页查询字典类型列表
@@ -107,7 +113,16 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
             throw new BusinessException("字典类型ID不能为空");
         }
 
-        // TODO: 检查是否有字典数据使用该类型
+        DictType dictType = getById(id);
+        if (dictType == null) {
+            throw new BusinessException("字典类型不存在");
+        }
+
+        LambdaQueryWrapper<DictData> dataWrapper = new LambdaQueryWrapper<>();
+        dataWrapper.eq(DictData::getDictCode, dictType.getDictCode());
+        if (dictDataMapper.selectCount(dataWrapper) > 0) {
+            throw new BusinessException("该字典类型下存在字典数据，无法删除");
+        }
 
         return removeById(id);
     }

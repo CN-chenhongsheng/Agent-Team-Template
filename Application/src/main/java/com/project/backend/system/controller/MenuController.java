@@ -1,6 +1,9 @@
 package com.project.backend.system.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.project.core.annotation.Log;
+import com.project.core.annotation.PermissionAction;
+import com.project.core.annotation.PermissionModule;
 import com.project.core.result.R;
 import com.project.backend.system.dto.MenuQueryDTO;
 import com.project.backend.system.dto.MenuSaveDTO;
@@ -26,12 +29,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/v1/system/menu")
 @RequiredArgsConstructor
+@PermissionModule(value = "system:menu")
 @Tag(name = "系统菜单管理", description = "菜单树形列表、增删改查等")
 public class MenuController {
 
     private final MenuService menuService;
 
     @GetMapping("/tree")
+    @PermissionAction("view")
     @Operation(summary = "查询菜单树形列表", description = "返回树形结构的菜单列表")
     public R<List<MenuVO>> treeList(
             @Parameter(description = "菜单名称") @RequestParam(required = false) String menuName,
@@ -55,6 +60,7 @@ public class MenuController {
     }
 
     @GetMapping("/tree-select")
+    @PermissionAction("view")
     @Operation(summary = "获取菜单树形选择器", description = "用于上级菜单选择，包含顶级菜单")
     public R<List<MenuVO>> getTreeSelect() {
         log.info("获取菜单树形选择器");
@@ -67,6 +73,7 @@ public class MenuController {
     }
 
     @GetMapping("/tree-permission")
+    @SaCheckPermission(value = "system:role:assign", orRole = "SUPER_ADMIN")
     @Operation(summary = "获取菜单树用于权限分配", description = "包含所有类型（目录、菜单、按钮），不包含顶级菜单")
     public R<List<MenuVO>> getTreeForPermission() {
         log.info("获取菜单树用于权限分配");
@@ -87,6 +94,7 @@ public class MenuController {
     }
 
     @GetMapping("/{id}")
+    @PermissionAction("view")
     @Operation(summary = "根据ID查询菜单详情")
     @Parameter(name = "id", description = "菜单ID", required = true)
     public R<MenuVO> getDetail(@PathVariable Long id) {
@@ -100,6 +108,7 @@ public class MenuController {
     }
 
     @PostMapping
+    @PermissionAction("add")
     @Operation(summary = "新增菜单")
     @Log(title = "新增菜单", businessType = 1)
     public R<Void> add(@Valid @RequestBody MenuSaveDTO saveDTO) {
@@ -114,6 +123,7 @@ public class MenuController {
     }
 
     @PutMapping("/{id}")
+    @PermissionAction("edit")
     @Operation(summary = "编辑菜单")
     @Parameter(name = "id", description = "菜单ID", required = true)
     @Log(title = "编辑菜单", businessType = 2)
@@ -129,6 +139,7 @@ public class MenuController {
     }
 
     @DeleteMapping("/{id}")
+    @PermissionAction("delete")
     @Operation(summary = "删除菜单")
     @Parameter(name = "id", description = "菜单ID", required = true)
     @Log(title = "删除菜单", businessType = 3)
@@ -143,6 +154,7 @@ public class MenuController {
     }
 
     @PutMapping("/{id}/status/{status}")
+    @PermissionAction("edit")
     @Operation(summary = "修改菜单状态")
     @Parameter(name = "id", description = "菜单ID", required = true)
     @Parameter(name = "status", description = "状态：1正常 0停用", required = true)

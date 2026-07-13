@@ -112,15 +112,3 @@ chunk-upload:
 system:
   default-password: 123456  # 新建用户默认密码
 
-# 全局导入配置（大文件导入并行度等，可被多个模块复用）
-import:
-  global:
-    max-worker-count: 8     # 并行解析的最大 worker 线程数上限（<=0 时按 CPU 自动推算）
-    queue-capacity: 5000    # DTO 队列容量（用于平衡生产/消费速度，避免内存暴涨）
-    batch-save-size: 2000   # 单次批量写库的条数
-
-# 学生导入配置（学生模块自身的业务阈值）
-student:
-  import:
-    sync-threshold: 5000    # 行数小于等于此值同步导入，大于则异步
-

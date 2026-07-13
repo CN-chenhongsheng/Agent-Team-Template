@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  * @since 2025-12-30
  */
 @SpringBootTest
-class projectApplicationTests {
+class ApplicationTests {
 
     @Test
     void contextLoads() {

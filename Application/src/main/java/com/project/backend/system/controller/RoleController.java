@@ -1,6 +1,9 @@
 package com.project.backend.system.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.project.core.annotation.Log;
+import com.project.core.annotation.PermissionAction;
+import com.project.core.annotation.PermissionModule;
 import com.project.core.result.PageResult;
 import com.project.core.result.R;
 import com.project.backend.system.dto.RoleQueryDTO;
@@ -28,24 +31,28 @@ import java.util.List;
 @RestController
 @RequestMapping("/v1/system/role")
 @RequiredArgsConstructor
+@PermissionModule(value = "system:role")
 @Tag(name = "系统角色管理", description = "角色增删改查、权限分配等")
 public class RoleController {
 
     private final RoleService roleService;
 
     @GetMapping("/page")
+    @PermissionAction("view")
     @Operation(summary = "查询角色列表（分页）", description = "支持按角色编码、角色名称、状态查询")
     public R<PageResult<RoleVO>> list(RoleQueryDTO queryDTO) {
         return R.ok(roleService.pageList(queryDTO));
     }
 
     @GetMapping("/all")
+    @PermissionAction("view")
     @Operation(summary = "查询所有角色（不分页）", description = "用于下拉选择等场景")
     public R<List<RoleVO>> listAll() {
         return R.ok(roleService.listAll());
     }
 
     @GetMapping("/{id}")
+    @PermissionAction("view")
     @Operation(summary = "根据ID查询角色详情")
     @Parameter(name = "id", description = "角色ID", required = true)
     public R<RoleVO> getDetail(@PathVariable Long id) {
@@ -53,6 +60,7 @@ public class RoleController {
     }
 
     @PostMapping
+    @PermissionAction("add")
     @Operation(summary = "新增角色")
     @Log(title = "新增角色", businessType = 1)
     public R<Void> add(@Valid @RequestBody RoleSaveDTO saveDTO) {
@@ -62,6 +70,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id}")
+    @PermissionAction("edit")
     @Operation(summary = "编辑角色")
     @Parameter(name = "id", description = "角色ID", required = true)
     @Log(title = "编辑角色", businessType = 2)
@@ -72,6 +81,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}")
+    @PermissionAction("delete")
     @Operation(summary = "删除角色")
     @Parameter(name = "id", description = "角色ID", required = true)
     @Log(title = "删除角色", businessType = 3)
@@ -81,6 +91,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/batch")
+    @PermissionAction("delete")
     @Operation(summary = "批量删除角色")
     @Log(title = "批量删除角色", businessType = 3)
     public R<Void> batchDelete(@RequestBody Long[] ids) {
@@ -89,6 +100,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id}/permissions")
+    @SaCheckPermission(value = "system:role:assign", orRole = "SUPER_ADMIN")
     @Operation(summary = "分配角色菜单权限")
     @Parameter(name = "id", description = "角色ID", required = true)
     @Log(title = "分配角色权限", businessType = 0)
@@ -98,6 +110,7 @@ public class RoleController {
     }
 
     @GetMapping("/{id}/permissions")
+    @SaCheckPermission(value = "system:role:assign", orRole = "SUPER_ADMIN")
     @Operation(summary = "获取角色的菜单权限列表（包含菜单状态）")
     @Parameter(name = "id", description = "角色ID", required = true)
     public R<List<RolePermissionVO>> getPermissions(@PathVariable Long id) {
@@ -105,6 +118,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id}/status/{status}")
+    @PermissionAction("edit")
     @Operation(summary = "修改角色状态")
     @Parameter(name = "id", description = "角色ID", required = true)
     @Parameter(name = "status", description = "状态：1正常 0停用", required = true)

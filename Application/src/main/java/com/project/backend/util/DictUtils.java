@@ -43,14 +43,7 @@ public class DictUtils implements ApplicationContextAware {
             "sys_user_status",
             "sys_common_status",
             "sys_oper_business_type",
-            "sys_device_type",
-            "academic_status",
-            // 审批相关字典
-            "check_in_type",
-            "approval_business_type",
-            "approval_action",
-            "approval_instance_status",
-            "approval_assignee_type"
+            "sys_device_type"
     };
 
     @Override

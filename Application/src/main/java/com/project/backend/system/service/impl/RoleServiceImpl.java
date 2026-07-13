@@ -24,6 +24,7 @@ import com.project.backend.system.vo.RolePermissionVO;
 import com.project.backend.system.vo.RoleVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -108,6 +109,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"userRoles", "userPermissions"}, allEntries = true, condition = "#saveDTO.menuIds != null")
     public boolean saveRole(RoleSaveDTO saveDTO) {
         // 检查角色编码是否重复
         LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
@@ -140,8 +142,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
             success = updateById(role);
         }
 
-        // TODO: 保存角色菜单关联
-        if (success && saveDTO.getMenuIds() != null && saveDTO.getMenuIds().length > 0) {
+        if (success && saveDTO.getMenuIds() != null) {
             assignMenus(role.getId(), saveDTO.getMenuIds());
         }
 
@@ -153,6 +154,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"userRoles", "userPermissions"}, allEntries = true)
     public boolean deleteRole(Long id) {
         if (id == null) {
             throw new BusinessException("角色ID不能为空");
@@ -217,6 +219,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"userRoles", "userPermissions"}, allEntries = true)
     public boolean assignMenus(Long roleId, Long[] menuIds) {
         log.info("分配角色菜单权限，角色ID：{}，菜单IDs：{}", roleId, Arrays.toString(menuIds));
 
@@ -312,6 +315,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"userRoles", "userPermissions"}, allEntries = true)
     public boolean updateStatus(Long id, Integer status) {
         Role role = getById(id);
         if (role == null) {

@@ -1,5 +1,6 @@
 package com.project.backend.system.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.project.backend.system.service.UserOnlineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +29,7 @@ public class UserOnlineController {
     private final UserOnlineService userOnlineService;
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @SaCheckPermission(value = "system:user:view", orRole = "SUPER_ADMIN")
     @Operation(summary = "订阅用户在线状态流")
     public SseEmitter streamOnlineStatus(HttpServletResponse response) {
         // 手动设置 CORS 响应头，确保 SSE 请求可以跨域

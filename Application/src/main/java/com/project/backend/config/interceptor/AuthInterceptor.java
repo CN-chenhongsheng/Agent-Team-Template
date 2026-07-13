@@ -2,6 +2,7 @@ package com.project.backend.config.interceptor;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.project.core.constant.CacheConstant;
+import com.project.core.constant.SecurityConstant;
 import com.project.core.context.UserContext;
 import com.project.backend.system.entity.User;
 import com.project.backend.system.mapper.UserMapper;
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.PathMatcher;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.time.Duration;
@@ -37,19 +40,7 @@ public class AuthInterceptor implements HandlerInterceptor {
      */
     private static final String CACHE_SEPARATOR = "\u001F"; // Unit Separator，不会出现在正常数据中
     private static final Duration CACHE_TTL = Duration.ofMinutes(CacheConstant.LOGIN_USER_TTL);
-
-    /**
-     * 白名单路径（不需要登录验证）
-     */
-    private static final String[] WHITELIST = {
-            "/v1/auth/login",           // 管理员登录
-            "/v1/auth/refresh",         // Token刷新
-            "/v1/auth/logout",          // 登出
-            "/doc.html",                // Swagger 文档
-            "/webjars",                 // Swagger 静态资源
-            "/v3/api-docs",             // Swagger API 文档
-            "/favicon.ico"              // 网站图标
-    };
+    private static final PathMatcher PATH_MATCHER = new AntPathMatcher();
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -79,6 +70,9 @@ public class AuthInterceptor implements HandlerInterceptor {
             }
             Long userId = Long.valueOf(loginId.toString());
             log.debug("Token 验证成功，用户ID: {}", userId);
+
+            // 绑定当前请求的 Sa-Token 上下文，供 @SaCheckPermission 使用
+            StpUtil.setTokenValue(token);
 
             // 优先从 Redis 缓存获取用户信息
             String cacheKey = CacheConstant.LOGIN_USER_KEY + userId;
@@ -215,8 +209,8 @@ public class AuthInterceptor implements HandlerInterceptor {
      * 检查路径是否在白名单中
      */
     private boolean isWhitelist(String path) {
-        for (String whitePath : WHITELIST) {
-            if (path.startsWith(whitePath)) {
+        for (String pattern : SecurityConstant.PUBLIC_PATHS) {
+            if (PATH_MATCHER.match(pattern, path)) {
                 return true;
             }
         }

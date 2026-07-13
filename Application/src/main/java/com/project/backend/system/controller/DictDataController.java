@@ -1,6 +1,8 @@
 package com.project.backend.system.controller;
 
 import com.project.core.annotation.Log;
+import com.project.core.annotation.PermissionAction;
+import com.project.core.annotation.PermissionModule;
 import com.project.core.result.PageResult;
 import com.project.core.result.R;
 import com.project.backend.system.dto.DictDataQueryDTO;
@@ -27,12 +29,19 @@ import java.util.List;
 @RestController
 @RequestMapping("/v1/system/dict/data")
 @RequiredArgsConstructor
+@PermissionModule(
+        value = "system:dict",
+        add = "system:dict:data:add",
+        edit = "system:dict:data:edit",
+        delete = "system:dict:data:delete"
+)
 @Tag(name = "字典数据管理", description = "字典数据的增删改查")
 public class DictDataController {
 
     private final DictDataService dictDataService;
 
     @GetMapping("/page")
+    @PermissionAction("view")
     @Operation(summary = "分页查询字典数据列表")
     public R<PageResult<DictDataVO>> pageList(
             @Parameter(description = "字典编码") @RequestParam(required = false) String dictCode,
@@ -72,6 +81,7 @@ public class DictDataController {
     }
 
     @GetMapping("/{id}")
+    @PermissionAction("view")
     @Operation(summary = "根据ID查询字典数据详情")
     @Parameter(name = "id", description = "字典数据ID", required = true)
     public R<DictDataVO> getDetail(@PathVariable Long id) {
@@ -85,6 +95,7 @@ public class DictDataController {
     }
 
     @PostMapping
+    @PermissionAction("add")
     @Operation(summary = "新增字典数据")
     @Log(title = "新增字典数据", businessType = 1)
     public R<Void> add(@Valid @RequestBody DictDataSaveDTO saveDTO) {
@@ -99,6 +110,7 @@ public class DictDataController {
     }
 
     @PutMapping("/{id}")
+    @PermissionAction("edit")
     @Operation(summary = "编辑字典数据")
     @Parameter(name = "id", description = "字典数据ID", required = true)
     @Log(title = "编辑字典数据", businessType = 2)
@@ -114,6 +126,7 @@ public class DictDataController {
     }
 
     @DeleteMapping("/{id}")
+    @PermissionAction("delete")
     @Operation(summary = "删除字典数据")
     @Parameter(name = "id", description = "字典数据ID", required = true)
     @Log(title = "删除字典数据", businessType = 3)

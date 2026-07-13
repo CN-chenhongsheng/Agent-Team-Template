@@ -89,7 +89,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = "userMenuTree", allEntries = true)
+    @CacheEvict(value = {"userMenuTree", "userPermissions"}, allEntries = true)
     public boolean saveMenu(MenuSaveDTO saveDTO) {
         Menu menu = new Menu();
         BeanUtil.copyProperties(saveDTO, menu);
@@ -126,7 +126,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = "userMenuTree", allEntries = true)
+    @CacheEvict(value = {"userMenuTree", "userPermissions"}, allEntries = true)
     public boolean deleteMenu(Long id) {
         if (id == null) {
             throw new BusinessException("菜单ID不能为空");
@@ -304,7 +304,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = "userMenuTree", allEntries = true)
+    @CacheEvict(value = {"userMenuTree", "userPermissions"}, allEntries = true)
     public boolean updateStatus(Long id, Integer status) {
         Menu menu = getById(id);
         if (menu == null) {

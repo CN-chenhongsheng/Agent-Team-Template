@@ -1,5 +1,6 @@
 package com.project.backend.system.controller;
 
+import com.project.core.annotation.PermissionModule;
 import com.project.core.result.PageResult;
 import com.project.core.result.R;
 import com.project.backend.controller.base.BaseCrudController;
@@ -29,6 +30,13 @@ import java.util.Map;
 @RestController
 @RequestMapping("/v1/system/dict/type")
 @RequiredArgsConstructor
+@PermissionModule(
+        value = "system:dict:type",
+        view = "system:dict:view",
+        add = "system:dict:type:add",
+        edit = "system:dict:type:edit",
+        delete = "system:dict:type:delete"
+)
 @Tag(name = "字典类型管理", description = "字典类型的增删改查")
 public class DictTypeController extends BaseCrudController<DictTypeVO, DictTypeQueryDTO, DictTypeSaveDTO> {
 

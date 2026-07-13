@@ -54,30 +54,6 @@ public class CacheConstant {
     public static final String DICT_DATA_KEY = CACHE_NAMESPACE + "dict_data:";
     public static final long DICT_DATA_TTL = Long.MAX_VALUE;
 
-    /**
-     * 校区信息缓存
-     * 缓存时间1小时
-     */
-    public static final String CAMPUS_KEY = CACHE_NAMESPACE + "campus:";
-    public static final long CAMPUS_TTL = 1;
-    public static final TimeUnit CAMPUS_TIME_UNIT = TimeUnit.HOURS;
-
-    /**
-     * 院系信息缓存
-     * 缓存时间1小时
-     */
-    public static final String DEPARTMENT_KEY = CACHE_NAMESPACE + "department:";
-    public static final long DEPARTMENT_TTL = 1;
-    public static final TimeUnit DEPARTMENT_TIME_UNIT = TimeUnit.HOURS;
-
-    /**
-     * 床位状态缓存
-     * 缓存时间10分钟
-     */
-    public static final String BED_STATUS_KEY = CACHE_NAMESPACE + "bed_status:";
-    public static final long BED_STATUS_TTL = 10;
-    public static final TimeUnit BED_STATUS_TIME_UNIT = TimeUnit.MINUTES;
-
     private CacheConstant() {
         throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
     }

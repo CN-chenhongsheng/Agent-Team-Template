@@ -3,6 +3,7 @@ package com.project.core.util;
 import com.project.core.context.UserContext;
 import com.project.core.exception.BusinessException;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -106,10 +107,15 @@ public class BusinessRuleUtils {
      *
      * @param userId 用户ID
      * @param username 用户名
+     * @param roleCodes 用户角色编码列表
      * @throws BusinessException 如果用户不能删除（超级管理员或自己）
      */
-    public static void validateUserDeletion(Long userId, String username) {
+    public static void validateUserDeletion(Long userId, String username, List<String> roleCodes) {
         validateNotSuperAdminUser(username, "不能删除超级管理员");
+
+        if (roleCodes != null && roleCodes.stream().anyMatch(BusinessRuleUtils::isSuperAdminRole)) {
+            throw new BusinessException("不能删除超级管理员");
+        }
 
         Long currentUserId = UserContext.getUserId();
         if (Objects.equals(currentUserId, userId)) {

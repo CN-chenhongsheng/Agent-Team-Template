@@ -1,6 +1,7 @@
 package com.project.backend.controller.base;
 
 import com.project.core.annotation.Log;
+import com.project.core.annotation.PermissionAction;
 import com.project.core.result.PageResult;
 import com.project.core.result.R;
 import io.swagger.v3.oas.annotations.Operation;
@@ -66,6 +67,7 @@ public abstract class BaseCrudController<VO, QueryDTO, SaveDTO> {
      */
     @GetMapping("/page")
     @Operation(summary = "分页查询列表")
+    @PermissionAction("view")
     public R<PageResult<VO>> page(QueryDTO queryDTO) {
         log.info("分页查询{}列表，参数：{}", getEntityName(), queryDTO);
         PageResult<VO> result = callPageList(queryDTO);
@@ -78,6 +80,7 @@ public abstract class BaseCrudController<VO, QueryDTO, SaveDTO> {
     @GetMapping("/{id}")
     @Operation(summary = "根据ID查询详情")
     @Parameter(name = "id", description = "主键ID", required = true)
+    @PermissionAction("view")
     public R<VO> getDetail(@PathVariable Long id) {
         log.info("查询{}详情，ID：{}", getEntityName(), id);
         VO result = callGetDetailById(id);
@@ -90,6 +93,7 @@ public abstract class BaseCrudController<VO, QueryDTO, SaveDTO> {
     @PostMapping
     @Operation(summary = "新增")
     @Log(title = "新增", businessType = 1)
+    @PermissionAction("add")
     public R<Void> add(@Valid @RequestBody SaveDTO saveDTO) {
         log.info("新增{}，参数：{}", getEntityName(), saveDTO);
         // 确保ID为空
@@ -109,6 +113,7 @@ public abstract class BaseCrudController<VO, QueryDTO, SaveDTO> {
     @Operation(summary = "编辑")
     @Parameter(name = "id", description = "主键ID", required = true)
     @Log(title = "编辑", businessType = 2)
+    @PermissionAction("edit")
     public R<Void> update(@PathVariable Long id, @Valid @RequestBody SaveDTO saveDTO) {
         log.info("编辑{}，ID：{}，参数：{}", getEntityName(), id, saveDTO);
         setIdIfExists(saveDTO, id);
@@ -126,6 +131,7 @@ public abstract class BaseCrudController<VO, QueryDTO, SaveDTO> {
     @PutMapping
     @Operation(summary = "编辑（从请求体中读取ID）")
     @Log(title = "编辑", businessType = 2)
+    @PermissionAction("edit")
     public R<Void> updateFromBody(@Valid @RequestBody SaveDTO saveDTO) {
         Long id = getIdFromSaveDTO(saveDTO);
         if (id == null) {
@@ -148,6 +154,7 @@ public abstract class BaseCrudController<VO, QueryDTO, SaveDTO> {
     @Operation(summary = "删除")
     @Parameter(name = "id", description = "主键ID", required = true)
     @Log(title = "删除", businessType = 3)
+    @PermissionAction("delete")
     public R<Void> delete(@PathVariable Long id) {
         log.info("删除{}，ID：{}", getEntityName(), id);
         boolean success = callDelete(id);
