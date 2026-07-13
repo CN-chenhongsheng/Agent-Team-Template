@@ -1,6 +1,7 @@
 {
   "name": "art-design-pro",
   "version": "0.0.0",
+  "packageManager": "pnpm@10.28.2",
   "type": "module",
   "engines": {
     "node": ">=20.19.0",

@@ -153,41 +153,54 @@
   let showDrawer: (row: UserListItem) => void
 
   /**
+   * 判断是否为超级管理员用户
+   */
+  const isSuperAdminUser = (row: UserListItem): boolean =>
+    row.username === 'superAdmin' || row.roleNames?.includes('超级管理员') === true
+
+  /**
    * 获取用户操作配置（复用于操作列和右键菜单）
    */
-  const getUserActions = (row: UserListItem): ActionButtonConfig[] => [
-    {
-      type: 'view',
-      label: '查看',
-      onClick: () => showDrawer(row),
-      auth: 'system:user:view'
-    },
-    {
-      type: 'edit',
-      label: '编辑',
-      onClick: () => showDialog('edit', row),
-      auth: 'system:user:edit'
-    },
-    {
-      type: 'reset',
-      label: '重置密码',
-      onClick: () => handleResetPassword(row),
-      auth: 'system:user:reset-pwd'
-    },
-    {
-      type: 'share',
-      label: '分配权限',
-      onClick: () => showPermissionDialog(row),
-      auth: 'system:user:assign-permission'
-    },
-    {
-      type: 'delete',
-      label: '删除',
-      onClick: () => deleteUser(row),
-      auth: 'system:user:delete',
-      danger: true
+  const getUserActions = (row: UserListItem): ActionButtonConfig[] => {
+    const actions: ActionButtonConfig[] = [
+      {
+        type: 'view',
+        label: '查看',
+        onClick: () => showDrawer(row),
+        auth: 'system:user:view'
+      },
+      {
+        type: 'edit',
+        label: '编辑',
+        onClick: () => showDialog('edit', row),
+        auth: 'system:user:edit'
+      },
+      {
+        type: 'reset',
+        label: '重置密码',
+        onClick: () => handleResetPassword(row),
+        auth: 'system:user:reset-pwd'
+      },
+      {
+        type: 'share',
+        label: '分配权限',
+        onClick: () => showPermissionDialog(row),
+        auth: 'system:user:assign-permission'
+      }
+    ]
+
+    if (!isSuperAdminUser(row)) {
+      actions.push({
+        type: 'delete',
+        label: '删除',
+        onClick: () => deleteUser(row),
+        auth: 'system:user:delete',
+        danger: true
+      })
     }
-  ]
+
+    return actions
+  }
 
   const {
     columns,
@@ -320,7 +333,7 @@
           label: '系统状态',
           width: 100,
           formatter: (row) => {
-            const isSuperAdmin = row.username === 'superAdmin'
+            const isSuperAdmin = isSuperAdminUser(row)
             return h(ArtSwitch, {
               modelValue: row.status === 1,
               inlinePrompt: true,
@@ -418,6 +431,11 @@
    * 删除用户
    */
   deleteUser = async (row: UserListItem): Promise<void> => {
+    if (isSuperAdminUser(row)) {
+      ElMessage.warning('超级管理员不允许删除')
+      return
+    }
+
     try {
       await ElMessageBox.confirm(
         `确定要删除用户 "${row.username}" 吗？此操作不可恢复！`,
@@ -444,6 +462,12 @@
   const handleBatchDelete = async (): Promise<void> => {
     if (selectedCount.value === 0) {
       ElMessage.warning('请先选择要删除的用户')
+      return
+    }
+
+    const hasSuperAdmin = selectedRows.value.some((row) => isSuperAdminUser(row))
+    if (hasSuperAdmin) {
+      ElMessage.warning('选中的用户中包含超级管理员，无法删除')
       return
     }
 
@@ -475,7 +499,7 @@
    */
   const handleStatusChange = async (row: UserListItem, status: number): Promise<void> => {
     // 超级管理员不允许关闭
-    if (row.username === 'superAdmin' && status === 0) {
+    if (isSuperAdminUser(row) && status === 0) {
       ElMessage.warning('超级管理员不允许停用')
       return
     }

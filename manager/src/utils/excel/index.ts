@@ -23,4 +23,4 @@ export {
 } from './validators/baseValidators'
 
 // 导出模板生成器
-export { generateTemplate, type TemplateColumn } from './templateGenerator'
+export { generateTemplate, type TemplateColumn, type CascadeData } from './templateGenerator'

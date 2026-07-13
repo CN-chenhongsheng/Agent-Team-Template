@@ -146,14 +146,15 @@
           label: '登录状态',
           width: 100,
           formatter: (row: LoginLogListItem) => {
-            const typeMap = {
-              0: 'danger', // 失败
-              1: 'success', // 成功
-              2: 'info' // 登出
+            const typeMap: Record<0 | 1 | 2, 'danger' | 'success' | 'info'> = {
+              0: 'danger',
+              1: 'success',
+              2: 'info'
             }
+            const status = row.loginStatus as 0 | 1 | 2
             return h(
               ElTag,
-              { type: typeMap[row.loginStatus as 0 | 1 | 2] || 'info', size: 'small' },
+              { type: typeMap[status] ?? 'info', size: 'small' },
               () => row.loginStatusText || '-'
             )
           }
