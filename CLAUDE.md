@@ -4,12 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-宿舍管理系统（Dormitory Management System），采用前后端分离的多模块 monorepo 架构，包含两个独立子项目：
+通用后台管理模板（Admin Management Template），采用前后端分离的 monorepo 架构，包含两个独立子项目：
 
 | 模块 | 路径 | 技术栈 | 用途 |
 |------|------|--------|------|
 | **Application** | `Application/` | Java 21 + Spring Boot 3.2 + MyBatis-Plus + MySQL + Redis | 后端 API 服务 |
 | **manager** | `manager/` | Vue 3 + TypeScript + Element Plus + Tailwind CSS 4 + Vite | 管理后台 Web 端 |
+
+当前内置能力：认证登录、用户/角色/菜单/字典、操作日志、登录日志、文件上传、通用导入等系统管理能力。不包含具体行业业务模块。
 
 ## 常用命令
 
@@ -25,8 +27,8 @@ cd Application && mvn compile
 # 打包
 cd Application && mvn package -DskipTests
 
-# 运行测试
-cd Application && mvn test
+# 运行测试（若本机 Maven 全局配置了 maven.test.skip=true，需显式覆盖）
+cd Application && mvn test -Dmaven.test.skip=false
 ```
 
 ### 管理后台 (manager/)
@@ -61,24 +63,24 @@ com.project.backend/  — 管理后台 API 层：面向 manager 前端的接口
 
 ### 业务模块组织
 
-每个业务模块按功能域划分子包：`controller/`、`service/`（含 `impl/`）、`mapper/`、`entity/`、`dto/`、`vo/`。
+每个模块按功能域划分子包：`controller/`、`service/`（含 `impl/`）、`mapper/`、`entity/`、`dto/`、`vo/`。
 
-现有业务模块：`accommodation`（住宿管理）、`approval`（审批流程）、`organization`（组织架构）、`room`（房间管理）、`school`（学校管理）、`system`（系统管理）等。
+现有模块：`system`（系统管理）、`common`（公共能力，如文件上传）。
 
 ### 关键技术组件
 
-- **认证授权**：Sa-Token（非 Spring Security），JWT + Redis 会话管理
+- **认证授权**：Sa-Token（非 Spring Security），JWT + Redis 会话管理；接口使用 `@SaCheckPermission` 校验权限码
 - **ORM**：MyBatis-Plus，实体继承 `BaseEntity`
 - **API 文档**：Knife4j (OpenAPI 3)
 - **统一响应**：`R<T>` 包装类 + `ResultCode` 错误码 + `PageResult<T>` 分页
 - **异常处理**：`BusinessException` + `GlobalExceptionHandler`
 - **密码加密**：Spring Security Crypto（仅加密模块，不含认证框架）
 - **工具库**：Hutool、Guava
-- **数据库**：MySQL，数据库名 `project_management`，可通过 MCP 工具直接访问
+- **数据库**：MySQL，数据库名 `project_management`
 
 ### 后端命名约定
 
-- Controller：`XxxController`，URL 路径 `/api/模块/资源`
+- Controller：`XxxController`，URL 路径 `/api/v1/模块/资源`
 - Service 接口：`XxxService`，实现类：`XxxServiceImpl`
 - DTO：`XxxQueryDTO`（查询）、`XxxSaveDTO`（新增/修改）
 - VO：`XxxVO`（返回前端的视图对象）
@@ -93,13 +95,12 @@ com.project.backend/  — 管理后台 API 层：面向 manager 前端的接口
 - **组件优先级**：ArtTable > ArtForm > ArtSwitch > Element Plus 原生组件
 - **表格**：统一使用 `useTable` hook + `ArtTable` 组件，禁止直接使用 `el-table`
 - **表单**：使用 `ArtForm` 配置式表单，通过 `FormConfig[]` 定义字段
-- **API 文件**：放在 `src/api/` 下，函数命名 `verbNounApi`（如 `getUserListApi`），类型定义在同文件或 `types/` 目录
+- **API 文件**：放在 `src/api/` 下，函数命名 `fetchXxxApi`，类型定义在 `src/types/api/`
 - **路由**：动态路由，权限守卫在 `router/core/` 中
 - **状态管理**：Pinia + 持久化插件
 - **样式**：Tailwind CSS 4 + SCSS 主题系统
-- **自动导入**：通过 unplugin-auto-import 和 unplugin-vue-components 自动导入 Vue API 和 Element Plus 组件
 
-详细前端规范见 `manager/CLAUDE.md`。
+详细前端规范见 `manager/AGENTS.md`。
 
 ## Git 提交规范
 

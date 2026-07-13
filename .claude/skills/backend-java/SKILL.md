@@ -22,9 +22,6 @@ com.project/
 │   ├── result/
 │   └── util/
 └── backend/       # Backend management business logic
-    ├── accommodation/
-    ├── approval/
-    ├── organization/
     ├── system/
     └── common/
 ```
@@ -74,7 +71,7 @@ import com.project.core.result.R;
 import com.project.core.exception.BusinessException;
 
 // 4. Business module (backend)
-import com.project.backend.accommodation.entity.Student;
+import com.project.backend.system.entity.User;
 ```
 
 ## RESTful API Design Standards
