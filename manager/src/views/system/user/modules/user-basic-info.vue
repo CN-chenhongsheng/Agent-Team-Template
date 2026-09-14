@@ -119,12 +119,9 @@
     data: () => ({})
   })
 
-  const { onlineStatusMap } = useUserOnlineStatus()
+  const { isUserOnline } = useUserOnlineStatus()
 
-  const isOnline = computed(() => {
-    if (!props.data.id) return false
-    return onlineStatusMap.value[props.data.id] ?? false
-  })
+  const isOnline = computed(() => isUserOnline(props.data.id, props.data.isOnline))
 </script>
 
 <style lang="scss" scoped>

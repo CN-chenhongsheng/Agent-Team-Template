@@ -36,7 +36,7 @@ CREATE TABLE `sys_dict_data`  (
   `create_by` bigint NULL DEFAULT NULL COMMENT '创建人ID',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `update_by` bigint NULL DEFAULT NULL COMMENT '更新人ID',
-  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 1-已删除',
+  `deleted` bigint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 非0-已删除（值为记录主键ID）',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_dict_code`(`dict_code` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE,
@@ -92,7 +92,7 @@ CREATE TABLE `sys_dict_type`  (
   `create_by` bigint NULL DEFAULT NULL COMMENT '创建人ID',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `update_by` bigint NULL DEFAULT NULL COMMENT '更新人ID',
-  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 1-已删除',
+  `deleted` bigint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 非0-已删除（值为记录主键ID）',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_dict_code`(`dict_code` ASC, `deleted` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE
@@ -166,7 +166,7 @@ CREATE TABLE `sys_menu`  (
   `create_by` bigint NULL DEFAULT NULL COMMENT '创建人ID',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `update_by` bigint NULL DEFAULT NULL COMMENT '更新人ID',
-  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 1-已删除',
+  `deleted` bigint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 非0-已删除（值为记录主键ID）',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_parent_id`(`parent_id` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 184 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '系统菜单表' ROW_FORMAT = DYNAMIC;
@@ -284,7 +284,7 @@ CREATE TABLE `sys_role`  (
   `sort` int NULL DEFAULT 0 COMMENT '排序',
   `status` tinyint NULL DEFAULT 1 COMMENT '状态：0-停用 1-正常',
   `remark` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '备注',
-  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 1-已删除',
+  `deleted` bigint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 非0-已删除（值为记录主键ID）',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `create_by` bigint NULL DEFAULT NULL COMMENT '创建人ID',
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -311,7 +311,7 @@ CREATE TABLE `sys_role_menu`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `create_by` bigint NULL DEFAULT NULL COMMENT '创建人ID',
   `update_by` bigint NULL DEFAULT NULL COMMENT '更新人ID',
-  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 1-已删除',
+  `deleted` bigint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 非0-已删除（值为记录主键ID）',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_role_menu`(`role_id` ASC, `menu_id` ASC, `deleted` ASC) USING BTREE,
   INDEX `idx_role_id`(`role_id` ASC) USING BTREE,
@@ -445,6 +445,9 @@ INSERT INTO `sys_role_menu` VALUES (3257, 1, 12, '2026-03-08 12:14:17', '2026-03
 INSERT INTO `sys_role_menu` VALUES (3258, 1, 13, '2026-03-08 12:14:17', '2026-03-08 12:14:17', 1, 1, 0);
 INSERT INTO `sys_role_menu` VALUES (3259, 1, 14, '2026-03-08 12:14:17', '2026-03-08 12:14:17', 1, 1, 0);
 
+-- 逻辑删除值规范化：已删除记录的 deleted 存储记录主键ID（与后端 @TableLogic(value = "0", delval = "id") 保持一致）
+UPDATE `sys_role_menu` SET `deleted` = `id` WHERE `deleted` = 1;
+
 -- ----------------------------
 -- Table structure for sys_user
 -- ----------------------------
@@ -466,7 +469,7 @@ CREATE TABLE `sys_user`  (
   `gender` int NULL DEFAULT NULL COMMENT '性别：1-男 2-女 0-未知',
   `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '地址',
   `introduction` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '个人介绍',
-  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 1-已删除',
+  `deleted` bigint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 非0-已删除（值为记录主键ID）',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_username`(`username` ASC, `deleted` ASC) USING BTREE,
   INDEX `idx_phone`(`phone` ASC) USING BTREE
@@ -478,6 +481,9 @@ CREATE TABLE `sys_user`  (
 INSERT INTO `sys_user` VALUES (1, 'superAdmin', '$2a$10$LGpvVk9hFrfIIVRnWHoRVe.FkSVbqJ0CtyrY/WPLUva9e6xU7b/Ta', '超级管理员', NULL, 'superAdmin@example.com', '17876648229', 1, '2025-12-30 17:19:05', NULL, '2026-02-24 00:22:08', 1, NULL, NULL, NULL, NULL, 0);
 INSERT INTO `sys_user` VALUES (2, 'testuser', '$2a$10$LGpvVk9hFrfIIVRnWHoRVe.FkSVbqJ0CtyrY/WPLUva9e6xU7b/Ta', '测试用户', NULL, 'test@example.com', '13800138000', 1, '2025-12-31 11:41:22', NULL, '2026-01-03 16:43:14', 1, NULL, NULL, NULL, NULL, 0);
 INSERT INTO `sys_user` VALUES (3, 'testminuser', '$2a$10$UbN1rmnnbg/b5tybLDza0.8i0PGS4xNcVKEBHk7Fjp3USv88RdcFK', '测试小用户', NULL, '', '17877778888', 1, '2026-01-30 17:58:06', 1, '2026-01-30 17:58:15', 1, NULL, NULL, NULL, NULL, 1);
+
+-- 逻辑删除值规范化：已删除记录的 deleted 存储记录主键ID（与后端 @TableLogic(value = "0", delval = "id") 保持一致）
+UPDATE `sys_user` SET `deleted` = `id` WHERE `deleted` = 1;
 
 -- ----------------------------
 -- Table structure for sys_user_menu
@@ -491,7 +497,7 @@ CREATE TABLE `sys_user_menu`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `create_by` bigint NULL DEFAULT NULL COMMENT '创建人ID',
   `update_by` bigint NULL DEFAULT NULL COMMENT '更新人ID',
-  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 1-已删除',
+  `deleted` bigint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 非0-已删除（值为记录主键ID）',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_user_menu`(`user_id` ASC, `menu_id` ASC, `deleted` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
@@ -662,6 +668,9 @@ INSERT INTO `sys_user_menu` VALUES (2502, 1, 12, '2026-03-08 12:14:24', '2026-03
 INSERT INTO `sys_user_menu` VALUES (2503, 1, 13, '2026-03-08 12:14:24', '2026-03-08 12:14:24', 1, 1, 0);
 INSERT INTO `sys_user_menu` VALUES (2504, 1, 14, '2026-03-08 12:14:24', '2026-03-08 12:14:24', 1, 1, 0);
 
+-- 逻辑删除值规范化：已删除记录的 deleted 存储记录主键ID（与后端 @TableLogic(value = "0", delval = "id") 保持一致）
+UPDATE `sys_user_menu` SET `deleted` = `id` WHERE `deleted` = 1;
+
 -- ----------------------------
 -- Table structure for sys_user_role
 -- ----------------------------
@@ -674,7 +683,7 @@ CREATE TABLE `sys_user_role`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `create_by` bigint NULL DEFAULT NULL COMMENT '创建人ID',
   `update_by` bigint NULL DEFAULT NULL COMMENT '更新人ID',
-  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 1-已删除',
+  `deleted` bigint NOT NULL DEFAULT 0 COMMENT '删除标记：0-未删除 非0-已删除（值为记录主键ID）',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_user_role`(`user_id` ASC, `role_id` ASC, `deleted` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
@@ -693,5 +702,8 @@ INSERT INTO `sys_user_role` VALUES (77, 2, 6, '2026-01-03 16:43:14', '2026-01-03
 INSERT INTO `sys_user_role` VALUES (80, 1, 1, '2026-01-21 19:48:52', '2026-02-24 00:22:07', NULL, NULL, 1);
 INSERT INTO `sys_user_role` VALUES (81, 3, 6, '2026-01-30 17:58:06', '2026-01-30 17:58:06', 1, 1, 1);
 INSERT INTO `sys_user_role` VALUES (82, 1, 1, '2026-02-24 00:22:08', '2026-02-24 00:22:08', 1, 1, 0);
+
+-- 逻辑删除值规范化：已删除记录的 deleted 存储记录主键ID（与后端 @TableLogic(value = "0", delval = "id") 保持一致）
+UPDATE `sys_user_role` SET `deleted` = `id` WHERE `deleted` = 1;
 
 SET FOREIGN_KEY_CHECKS = 1;

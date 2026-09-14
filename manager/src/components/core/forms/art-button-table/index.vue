@@ -1,16 +1,20 @@
-<!-- 表格按钮 -->
+<!-- 表格按钮：必须用原生 button，Page Agent 才能识别操作列（查看/编辑等） -->
 <template>
-  <div
+  <button
+    type="button"
     :class="[
       'art-button-table inline-flex items-center justify-center min-w-8 h-8 px-2.5 mr-2.5 text-sm c-p rounded-md align-middle',
       isTextMode ? 'text-mode' : isCompactIconMode ? 'compact-icon-mode' : buttonClass
     ]"
     :style="buttonStyle"
+    :disabled="disabled"
+    :aria-label="accessibleName"
+    :title="accessibleName"
     @click="handleClick"
   >
     <ArtSvgIcon v-if="!isTextMode" :icon="iconContent" />
     <span v-else class="button-text">{{ buttonText }}</span>
-  </div>
+  </button>
 </template>
 
 <script setup lang="ts">
@@ -32,6 +36,10 @@
     iconColor?: string
     /** 按钮背景色 */
     buttonBgColor?: string
+    /** 无障碍名称（图标模式下给 Page Agent / 屏幕阅读器看） */
+    label?: string
+    /** 是否禁用 */
+    disabled?: boolean
   }
 
   const props = withDefaults(defineProps<Props>(), {})
@@ -74,8 +82,10 @@
 
   // 获取按钮文本
   const buttonText = computed(() => {
-    return props.type ? buttonConfigs.value[props.type]?.text || '' : ''
+    return props.label || (props.type ? buttonConfigs.value[props.type]?.text || '' : '')
   })
+
+  const accessibleName = computed(() => buttonText.value || props.type || '操作')
 
   // 获取按钮样式类
   const buttonClass = computed(() => {
@@ -138,6 +148,11 @@
 
 <style scoped lang="scss">
   .art-button-table {
+    border: none;
+    font: inherit;
+    color: inherit;
+    appearance: none;
+
     :deep(.art-svg-icon) {
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       transform-origin: center;

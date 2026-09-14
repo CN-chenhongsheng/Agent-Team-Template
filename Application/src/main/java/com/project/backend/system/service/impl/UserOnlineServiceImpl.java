@@ -8,8 +8,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -40,7 +44,8 @@ public class UserOnlineServiceImpl implements UserOnlineService {
         });
 
         try {
-            emitter.send(SseEmitter.event().name("init").data("Connected"));
+            String snapshot = String.format("{\"onlineUserIds\": %s}", getOnlineUserIds());
+            emitter.send(SseEmitter.event().name("init").data(snapshot));
             log.debug("SSE connection established");
         } catch (IOException e) {
             log.error("SSE init error", e);
@@ -65,6 +70,25 @@ public class UserOnlineServiceImpl implements UserOnlineService {
     @Override
     public boolean isUserOnline(Long userId) {
         return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(ONLINE_USERS_KEY, userId.toString()));
+    }
+
+    @Override
+    public List<Long> getOnlineUserIds() {
+        Set<Object> members = redisTemplate.opsForSet().members(ONLINE_USERS_KEY);
+        if (members == null || members.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return members.stream()
+                .filter(Objects::nonNull)
+                .map(item -> {
+                    try {
+                        return Long.parseLong(item.toString());
+                    } catch (NumberFormatException ex) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private void broadcastStatusChange(Long userId, boolean isOnline) {

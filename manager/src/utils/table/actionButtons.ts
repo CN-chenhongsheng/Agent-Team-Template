@@ -123,6 +123,7 @@ export function renderActionButtons(buttons: ActionButtonConfig[], maxVisible: n
         h(ArtButtonTable, {
           type: btn.type,
           disabled: btn.disabled,
+          label: btn.label,
           onClick: btn.onClick
         })
       )
@@ -148,6 +149,7 @@ export function renderActionButtons(buttons: ActionButtonConfig[], maxVisible: n
       h(ArtButtonTable, {
         type: btn.type,
         disabled: btn.disabled,
+        label: btn.label,
         onClick: btn.onClick
       })
     ),

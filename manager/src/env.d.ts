@@ -30,5 +30,11 @@ declare module 'qrcode.vue' {
   export default QrcodeVue
 }
 
+interface ImportMetaEnv {
+  readonly VITE_PAGE_AGENT_API_KEY?: string
+  readonly VITE_PAGE_AGENT_BASE_URL?: string
+  readonly VITE_PAGE_AGENT_MODEL?: string
+}
+
 // 全局变量声明
 declare const __APP_VERSION__: string // 版本号

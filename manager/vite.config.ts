@@ -29,8 +29,17 @@ export default ({ mode }: { mode: string }) => {
       port: Number(VITE_PORT),
       proxy: {
         '/api': {
-          target: VITE_API_PROXY_URL,
-          changeOrigin: true
+          // 后端 context-path 已是 /api，target 只能是 origin。若带 /api 后缀会变成 /api/api/...
+          target: (VITE_API_PROXY_URL || 'http://localhost:8080').replace(/\/api\/?$/, ''),
+          changeOrigin: true,
+          timeout: 0,
+          proxyTimeout: 0
+        },
+        // Page Agent 在浏览器里调 DeepSeek，官方接口无 CORS，开发走本地代理
+        '/deepseek-api': {
+          target: 'https://api.deepseek.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/deepseek-api/, '')
         }
       },
       host: true

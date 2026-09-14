@@ -16,11 +16,11 @@ import org.apache.ibatis.annotations.Param;
 public interface UserMenuMapper extends BaseMapper<UserMenu> {
 
     /**
-     * 物理删除指定用户的所有已软删除记录
+     * 物理删除指定用户的所有已逻辑删除记录
      *
      * @param userId 用户ID
      * @return 删除的记录数
      */
-    @Delete("DELETE FROM sys_user_menu WHERE user_id = #{userId} AND deleted = 1")
+    @Delete("DELETE FROM sys_user_menu WHERE user_id = #{userId} AND deleted <> 0")
     int deletePhysicallyByUserId(@Param("userId") Long userId);
 }

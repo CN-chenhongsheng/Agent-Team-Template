@@ -35,13 +35,54 @@ export interface OnlineStatusUpdate {
   isOnline: boolean
 }
 
+/** 多处调用时共用同一份状态，避免抽屉各自一份空 Map 永远显示离线 */
+const onlineStatusMap = ref<Record<number, boolean>>({})
+
+function parseJsonPayload(data: unknown): Record<string, unknown> | null {
+  let payload: unknown = data
+  if (typeof payload === 'string') {
+    try {
+      payload = JSON.parse(payload)
+    } catch {
+      return null
+    }
+  }
+  if (!payload || typeof payload !== 'object') {
+    return null
+  }
+  return payload as Record<string, unknown>
+}
+
+function applyStatusUpdate(data: unknown) {
+  const payload = parseJsonPayload(data)
+  if (!payload) return
+
+  const userId = Number(payload.userId)
+  const isOnline = payload.isOnline
+  if (!Number.isFinite(userId) || typeof isOnline !== 'boolean') return
+
+  onlineStatusMap.value = { ...onlineStatusMap.value, [userId]: isOnline }
+}
+
+function applyInitSnapshot(data: unknown) {
+  const payload = parseJsonPayload(data)
+  const ids = payload?.onlineUserIds
+  if (!Array.isArray(ids)) return
+
+  const next = { ...onlineStatusMap.value }
+  ids.forEach((id) => {
+    const userId = Number(id)
+    if (Number.isFinite(userId)) {
+      next[userId] = true
+    }
+  })
+  onlineStatusMap.value = next
+}
+
 /**
  * 用户在线状态 Hook
  */
 export function useUserOnlineStatus() {
-  // 用户在线状态映射：userId -> isOnline
-  const onlineStatusMap = ref<Record<number, boolean>>({})
-
   // 使用 SSE 连接订阅在线状态流
   const { isConnected, error, connect, disconnect } = useSSE({
     url: '/api/v1/system/user/online/stream',
@@ -51,16 +92,11 @@ export function useUserOnlineStatus() {
     reconnectDelay: 3000,
     maxReconnectAttempts: 5,
     events: {
-      'status-update': (data: OnlineStatusUpdate) => {
-        if (data && typeof data.userId === 'number' && typeof data.isOnline === 'boolean') {
-          onlineStatusMap.value[data.userId] = data.isOnline
-          console.log(
-            `[UserOnlineStatus] 用户 ${data.userId} 现在是 ${data.isOnline ? '在线' : '离线'}`
-          )
-        }
+      'status-update': (data: OnlineStatusUpdate | string) => {
+        applyStatusUpdate(data)
       },
-      init: (data: any) => {
-        console.log('[UserOnlineStatus] SSE 连接成功:', data)
+      init: (data: unknown) => {
+        applyInitSnapshot(data)
       }
     },
     onError: (err) => {
@@ -87,13 +123,25 @@ export function useUserOnlineStatus() {
     }
   )
 
+  // 当前登录用户正在使用本页，至少自己应显示在线
+  watch(
+    () => userStore.info.userId,
+    (userId) => {
+      if (typeof userId === 'number') {
+        applyStatusUpdate({ userId, isOnline: true })
+      }
+    },
+    { immediate: true }
+  )
+
   /**
    * 查询用户是否在线
    * @param userId 用户 ID
-   * @returns 是否在线，如果状态未知则返回 undefined
+   * @param fallback SSE 尚未同步时，使用接口返回的 isOnline
    */
-  const isUserOnline = (userId: number): boolean | undefined => {
-    return onlineStatusMap.value[userId]
+  const isUserOnline = (userId?: number, fallback?: boolean): boolean => {
+    if (!userId) return false
+    return onlineStatusMap.value[userId] ?? fallback ?? false
   }
 
   /**

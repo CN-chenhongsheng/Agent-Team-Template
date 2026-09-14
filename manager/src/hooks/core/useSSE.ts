@@ -119,7 +119,7 @@ export function useSSE(options: UseSSEOptions): UseSSEReturn {
    * 构建完整的 SSE URL
    */
   const buildUrl = (): string => {
-    const baseURL = import.meta.env.VITE_API_URL || ''
+    const baseURL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
     const fullUrl = url.startsWith('http') ? url : `${baseURL}${url}`
     const urlParams = new URLSearchParams()
 

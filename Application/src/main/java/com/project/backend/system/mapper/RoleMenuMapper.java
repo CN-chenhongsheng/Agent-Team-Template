@@ -16,11 +16,11 @@ import org.apache.ibatis.annotations.Param;
 public interface RoleMenuMapper extends BaseMapper<RoleMenu> {
 
     /**
-     * 物理删除指定角色的所有已软删除记录
+     * 物理删除指定角色的所有已逻辑删除记录
      *
      * @param roleId 角色ID
      * @return 删除的记录数
      */
-    @Delete("DELETE FROM sys_role_menu WHERE role_id = #{roleId} AND deleted = 1")
+    @Delete("DELETE FROM sys_role_menu WHERE role_id = #{roleId} AND deleted <> 0")
     int deletePhysicallyByRoleId(@Param("roleId") Long roleId);
 }

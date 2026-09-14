@@ -2,6 +2,8 @@ package com.project.backend.system.service;
 
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.List;
+
 /**
  * 用户在线状态服务
  * 
@@ -33,4 +35,9 @@ public interface UserOnlineService {
      * @return 是否在线
      */
     boolean isUserOnline(Long userId);
+
+    /**
+     * 当前在线用户 ID 列表（供 SSE 订阅时下发快照）
+     */
+    List<Long> getOnlineUserIds();
 }

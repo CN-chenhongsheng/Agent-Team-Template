@@ -642,10 +642,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * 删除用户菜单关联
      */
     private void deleteUserMenus(Long userId) {
-        // 1. 先物理删除该用户所有已软删除的旧记录（避免唯一索引冲突）
+        // 1. 先物理删除该用户所有已逻辑删除的旧记录（清理历史数据，避免关联表数据膨胀）
         userMenuMapper.deletePhysicallyByUserId(userId);
 
-        // 2. 软删除该用户当前活跃的菜单权限
+        // 2. 逻辑删除该用户当前活跃的菜单权限
         LambdaQueryWrapper<UserMenu> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserMenu::getUserId, userId);
         userMenuMapper.delete(wrapper);

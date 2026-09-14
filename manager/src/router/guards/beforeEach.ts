@@ -45,7 +45,6 @@ import { useAppStore } from '@/store/modules/app'
 import { setWorktab } from '@/utils/navigation'
 import { setPageTitle } from '@/utils/router'
 import { RoutesAlias } from '../routesAlias'
-import { staticRoutes } from '../routes/staticRoutes'
 import { loadingService } from '@/utils/ui'
 import { useCommon } from '@/hooks/core/useCommon'
 import { useWorktabStore } from '@/store/modules/worktab'
@@ -209,22 +208,32 @@ async function handleLoginStatus(
   userStore: ReturnType<typeof useUserStore>,
   next: NavigationGuardNext
 ): Promise<boolean> {
-  // 已登录或访问登录页或静态路由，直接放行
-  if (userStore.isLogin || to.path === RoutesAlias.Login || isStaticRoute(to.path)) {
+  // 登录/注册等认证页直接放行（避免刷新恢复逻辑干扰）
+  if (to.path === RoutesAlias.Login || isAuthStaticRoute(to.path)) {
     return true
   }
 
-  // 如果用户信息存在但 Access Token 丢失（页面刷新场景），尝试通过 Refresh Token 恢复
-  if (hasCachedUserInfo(userStore) && !userStore.accessToken) {
+  // 页面刷新后 isLogin 仍在 localStorage，但 accessToken 只存在内存里会丢。
+  // 必须先用 HttpOnly Cookie 换新 Token，再放行；否则后续接口 401 会把用户踢回登录页。
+  if ((userStore.isLogin || hasCachedUserInfo(userStore)) && !userStore.accessToken) {
     try {
       const newAccessToken = await fetchRefreshToken()
       userStore.setToken(newAccessToken)
       userStore.setLoginStatus(true)
       return true
     } catch (error) {
-      // Refresh Token 无效或过期，清除用户信息并跳转登录页
       console.warn('[RouteGuard] Refresh Token 无效，跳转登录页:', error)
+      userStore.logOut()
+      next({
+        name: 'Login',
+        query: { redirect: to.fullPath }
+      })
+      return false
     }
+  }
+
+  if (userStore.isLogin) {
+    return true
   }
 
   // 未登录且访问需要权限的页面，跳转到登录页并携带 redirect 参数
@@ -237,27 +246,10 @@ async function handleLoginStatus(
 }
 
 /**
- * 检查路由是否为静态路由
+ * 无需登录即可访问的静态页（不含 404 通配，避免 /dashboard 被误判）
  */
-function isStaticRoute(path: string): boolean {
-  const checkRoute = (routes: any[], targetPath: string): boolean => {
-    return routes.some((route) => {
-      // 处理动态路由参数匹配
-      const routePath = route.path
-      const pattern = routePath.replace(/:[^/]+/g, '[^/]+').replace(/\*/g, '.*')
-      const regex = new RegExp(`^${pattern}$`)
-
-      if (regex.test(targetPath)) {
-        return true
-      }
-      if (route.children && route.children.length > 0) {
-        return checkRoute(route.children, targetPath)
-      }
-      return false
-    })
-  }
-
-  return checkRoute(staticRoutes, path)
+function isAuthStaticRoute(path: string): boolean {
+  return ['/auth/register', '/auth/forget-password', '/403', '/500'].includes(path)
 }
 
 /**

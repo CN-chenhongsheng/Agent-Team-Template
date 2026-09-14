@@ -187,8 +187,10 @@ public class AuthServiceImpl implements AuthService {
         // 3. 验证用户状态
         validateUserStatus(userId, response);
 
-        // 4. 生成新的 Access Token
-        return generateNewAccessToken(userId);
+        // 4. 生成新的 Access Token，并重新标记在线（页面刷新只换 Token，不会再走登录）
+        String accessToken = generateNewAccessToken(userId);
+        userOnlineService.userOnline(userId);
+        return accessToken;
     }
 
     /**

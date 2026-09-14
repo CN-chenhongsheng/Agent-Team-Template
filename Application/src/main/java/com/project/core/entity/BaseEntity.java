@@ -43,11 +43,13 @@ public abstract class BaseEntity implements Serializable {
     private Long updateBy;
 
     /**
-     * 删除标记：0-未删除 1-已删除
+     * 删除标记：0-未删除 非0-已删除（已删除时值为记录主键ID）
+     * 使用主键ID作为逻辑删除值，避免唯一索引包含 deleted 列时，
+     * 同名记录「删除→重建→再删除」触发唯一键冲突
      * 所有继承 BaseEntity 的实体类自动获得逻辑删除功能
      */
-    @Schema(description = "删除标记：0-未删除 1-已删除")
+    @Schema(description = "删除标记：0-未删除 非0-已删除")
     @TableField("deleted")
-    @com.baomidou.mybatisplus.annotation.TableLogic(value = "0", delval = "1")
-    private Integer deleted;
+    @com.baomidou.mybatisplus.annotation.TableLogic(value = "0", delval = "id")
+    private Long deleted;
 }

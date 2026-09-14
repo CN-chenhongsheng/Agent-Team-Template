@@ -1,8 +1,12 @@
 <!-- 更多按钮 -->
 <template>
   <div>
-    <ElDropdown v-if="hasAnyAuthItem">
-      <div
+    <ElDropdown v-if="hasAnyAuthItem" :trigger="['click', 'hover']">
+      <button
+        type="button"
+        aria-label="更多"
+        title="更多"
+        aria-haspopup="menu"
         :class="[
           'art-button-more inline-flex items-center justify-center min-w-8 h-8 px-2.5 mr-2.5 text-sm c-p rounded-md align-middle cursor-pointer',
           isTextMode
@@ -15,7 +19,7 @@
       >
         <ArtSvgIcon v-if="!isTextMode" icon="ri:more-2-fill" />
         <span v-else class="button-text">更多</span>
-      </div>
+      </button>
       <template #dropdown>
         <ElDropdownMenu>
           <template v-for="item in list" :key="item.key">
@@ -122,6 +126,11 @@
 
 <style scoped lang="scss">
   .art-button-more {
+    border: none;
+    font: inherit;
+    color: inherit;
+    appearance: none;
+
     :deep(.art-svg-icon) {
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       transform-origin: center;

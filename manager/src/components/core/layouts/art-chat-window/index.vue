@@ -1,86 +1,136 @@
-<!-- 系统聊天窗口 -->
+<!-- 系统聊天窗口：右侧抽屉，作为 Page Agent 的输入面（替代内置底部悬浮条） -->
 <template>
   <div>
-    <ElDrawer v-model="isDrawerVisible" :size="isMobile ? '100%' : '480px'" :with-header="false">
-      <div class="mb-5 flex-cb">
-        <div>
-          <span class="text-base font-medium">Art Bot</span>
-          <div class="mt-1.5 flex-c gap-1">
-            <div
-              class="h-2 w-2 rounded-full"
-              :class="isOnline ? 'bg-success/100' : 'bg-danger/100'"
-            ></div>
-            <span class="text-xs text-g-600">{{ isOnline ? '在线' : '离线' }}</span>
+    <Teleport to="body">
+      <div
+        v-if="showStopFab"
+        class="page-agent-stop-fab"
+        data-page-agent-not-interactive="true"
+        :style="{
+          position: 'fixed',
+          right: '24px',
+          bottom: '24px',
+          zIndex: DRAWER_Z_INDEX
+        }"
+      >
+        <ElButton type="danger" @click="stopTask">停止</ElButton>
+      </div>
+    </Teleport>
+    <ElDrawer
+      v-model="isDrawerVisible"
+      class="page-agent-chat-drawer"
+      :size="isMobile ? '100%' : '480px'"
+      :with-header="false"
+      :modal="false"
+      :close-on-click-modal="false"
+      destroy-on-close
+      :z-index="DRAWER_Z_INDEX"
+      @closed="onDrawerClosed"
+    >
+      <div class="flex h-full flex-col" data-page-agent-not-interactive="true">
+        <div class="mb-5 flex-cb">
+          <div>
+            <span class="text-base font-medium">页面助手</span>
+            <div class="mt-1.5 flex-c gap-1">
+              <div
+                class="h-2 w-2 rounded-full"
+                :class="statusDotClass"
+              ></div>
+              <span class="text-xs text-g-600">{{ statusLabel }}</span>
+            </div>
+          </div>
+          <div class="flex-c gap-2">
+            <ElButton
+              v-if="isRunning"
+              type="danger"
+              size="small"
+              plain
+              @click="stopTask"
+            >
+              停止
+            </ElButton>
+            <ElIcon class="c-p" :size="20" @click="closeChat">
+              <Close />
+            </ElIcon>
           </div>
         </div>
-        <div>
-          <ElIcon class="c-p" :size="20" @click="closeChat">
-            <Close />
-          </ElIcon>
-        </div>
-      </div>
-      <div class="flex h-[calc(100%-70px)] flex-col">
-        <!-- 聊天消息区域 -->
-        <div
-          class="flex-1 overflow-y-auto border-t-d px-4 py-7.5 [&::-webkit-scrollbar]:!w-1"
-          ref="messageContainer"
-        >
-          <template v-for="(message, index) in messages" :key="index">
-            <div
-              :class="[
-                'mb-7.5 flex w-full items-start gap-2',
-                message.isMe ? 'flex-row-reverse' : 'flex-row'
-              ]"
-            >
-              <ElAvatar :size="32" :src="message.avatar" class="shrink-0" />
-              <div
-                :class="['flex max-w-[70%] flex-col', message.isMe ? 'items-end' : 'items-start']"
-              >
-                <div
-                  :class="[
-                    'mb-1 flex gap-2 text-xs',
-                    message.isMe ? 'flex-row-reverse' : 'flex-row'
-                  ]"
-                >
-                  <span class="font-medium">{{ message.sender }}</span>
-                  <span class="text-g-600">{{ message.time }}</span>
-                </div>
-                <div
-                  :class="[
-                    'rounded-md px-3.5 py-2.5 text-sm leading-[1.4] text-g-900',
-                    message.isMe ? 'message-right bg-theme/15' : 'message-left bg-g-300/50'
-                  ]"
-                  >{{ message.content }}</div
-                >
-              </div>
-            </div>
-          </template>
-        </div>
-
-        <!-- 聊天输入区域 -->
-        <div class="px-4 pt-4">
-          <ElInput
-            v-model="messageText"
-            type="textarea"
-            :rows="3"
-            placeholder="输入消息"
-            resize="none"
-            @keyup.enter.prevent="sendMessage"
+        <div class="flex h-[calc(100%-70px)] flex-col">
+          <!-- 聊天消息区域 -->
+          <div
+            class="flex-1 overflow-y-auto overflow-x-hidden border-t-d px-4 py-7.5 [&::-webkit-scrollbar]:!w-1"
+            ref="messageContainer"
           >
-            <template #append>
-              <div class="flex gap-2 py-2">
-                <ElButton :icon="Paperclip" circle plain />
-                <ElButton :icon="Picture" circle plain />
-                <ElButton type="primary" @click="sendMessage" v-ripple>发送</ElButton>
+            <template v-for="(message, index) in messages" :key="index">
+              <div
+                :class="[
+                  'mb-7.5 flex w-full items-start gap-2',
+                  message.isMe ? 'flex-row-reverse' : 'flex-row'
+                ]"
+              >
+                <ElAvatar :size="32" :src="message.avatar" class="shrink-0" />
+                <div
+                  :class="['flex min-w-0 max-w-[70%] flex-col', message.isMe ? 'items-end' : 'items-start']"
+                >
+                  <div
+                    :class="[
+                      'mb-1 flex gap-2 text-xs',
+                      message.isMe ? 'flex-row-reverse' : 'flex-row'
+                    ]"
+                  >
+                    <span class="font-medium">{{ message.sender }}</span>
+                    <span class="text-g-600">{{ message.time }}</span>
+                  </div>
+                  <div
+                    :class="[
+                      'max-w-full min-w-0 rounded-md px-3.5 py-2.5 text-sm leading-[1.4] text-g-900 whitespace-pre-wrap break-all',
+                      message.isMe ? 'message-right bg-theme/15' : 'message-left bg-g-300/50'
+                    ]"
+                  >
+                    {{ message.content }}
+                  </div>
+                </div>
               </div>
             </template>
-          </ElInput>
-          <div class="mt-3 flex-cb">
-            <div class="flex-c">
-              <ArtSvgIcon icon="ri:image-line" class="mr-5 c-p text-g-600 text-lg" />
-              <ArtSvgIcon icon="ri:emotion-happy-line" class="mr-5 c-p text-g-600 text-lg" />
+            <div v-if="isRunning && activityText" class="text-xs text-g-600">
+              {{ activityText }}
             </div>
-            <ElButton type="primary" @click="sendMessage" v-ripple class="min-w-20">发送</ElButton>
+          </div>
+
+          <!-- 聊天输入区域 -->
+          <div class="px-4 pt-4">
+            <ElInput
+              v-model="messageText"
+              type="textarea"
+              :rows="3"
+              :placeholder="inputPlaceholder"
+              resize="none"
+              @keydown.enter.exact.prevent="sendMessage"
+            />
+            <div class="mt-3 flex-cb">
+              <div class="flex-c">
+                <ArtSvgIcon icon="ri:image-line" class="mr-5 c-p text-g-600 text-lg" />
+                <ArtSvgIcon icon="ri:emotion-happy-line" class="mr-5 c-p text-g-600 text-lg" />
+              </div>
+              <ElButton
+                v-if="isRunning && !pendingAsk"
+                type="danger"
+                class="min-w-20"
+                @click="stopTask"
+                v-ripple
+              >
+                停止
+              </ElButton>
+              <ElButton
+                v-else
+                type="primary"
+                class="min-w-20"
+                :disabled="!messageText.trim()"
+                @click="sendMessage"
+                v-ripple
+              >
+                发送
+              </ElButton>
+            </div>
           </div>
         </div>
       </div>
@@ -89,14 +139,19 @@
 </template>
 
 <script setup lang="ts">
-  import { Picture, Paperclip, Close } from '@element-plus/icons-vue'
+  import { Close } from '@element-plus/icons-vue'
+  import type { AgentActivity } from 'page-agent'
   import { mittBus } from '@/utils/sys'
+  import {
+    getPageAgent,
+    pageAgentReady,
+    setPageAgentAskUser
+  } from '@/utils/sys/page-agent'
   import meAvatar from '@/assets/images/avatar/avatar5.webp'
   import aiAvatar from '@/assets/images/avatar/avatar10.webp'
 
   defineOptions({ name: 'ArtChatWindow' })
 
-  // 类型定义
   interface ChatMessage {
     id: number
     sender: string
@@ -106,108 +161,89 @@
     avatar: string
   }
 
-  // 常量定义
+  type PendingAsk = {
+    resolve: (answer: string) => void
+    reject: (reason?: unknown) => void
+  }
+
+  /** 高于 Page Agent SimulatorMask（2147483641），任务执行时仍可在右侧输入 */
+  const DRAWER_Z_INDEX = 2147483643
   const MOBILE_BREAKPOINT = 640
   const SCROLL_DELAY = 100
-  const BOT_NAME = 'Art Bot'
-  const USER_NAME = 'Ricky'
+  const BOT_NAME = '页面助手'
+  const USER_NAME = '我'
 
-  // 响应式布局
-  const { width } = useWindowSize()
-  const isMobile = computed(() => width.value < MOBILE_BREAKPOINT)
-
-  // 组件状态
-  const isDrawerVisible = ref(false)
-  const isOnline = ref(true)
-
-  // 消息相关状态
-  const messageText = ref('')
-  const messageId = ref(10)
-  const messageContainer = ref<HTMLElement | null>(null)
-
-  // 初始化聊天消息数据
-  const initializeMessages = (): ChatMessage[] => [
-    {
-      id: 1,
-      sender: BOT_NAME,
-      content: '你好！我是你的AI助手，有什么我可以帮你的吗？',
-      time: '10:00',
-      isMe: false,
-      avatar: aiAvatar
-    },
-    {
-      id: 2,
-      sender: USER_NAME,
-      content: '我想了解一下系统的使用方法。',
-      time: '10:01',
-      isMe: true,
-      avatar: meAvatar
-    },
-    {
-      id: 3,
-      sender: BOT_NAME,
-      content: '好的，我来为您介绍系统的主要功能。首先，您可以通过左侧菜单访问不同的功能模块...',
-      time: '10:02',
-      isMe: false,
-      avatar: aiAvatar
-    },
-    {
-      id: 4,
-      sender: USER_NAME,
-      content: '听起来很不错，能具体讲讲数据分析部分吗？',
-      time: '10:05',
-      isMe: true,
-      avatar: meAvatar
-    },
-    {
-      id: 5,
-      sender: BOT_NAME,
-      content: '当然可以。数据分析模块可以帮助您实时监控关键指标，并生成详细的报表...',
-      time: '10:06',
-      isMe: false,
-      avatar: aiAvatar
-    },
-    {
-      id: 6,
-      sender: USER_NAME,
-      content: '太好了，那我如何开始使用呢？',
-      time: '10:08',
-      isMe: true,
-      avatar: meAvatar
-    },
-    {
-      id: 7,
-      sender: BOT_NAME,
-      content: '您可以先创建一个项目，然后在项目中添加相关的数据源，系统会自动进行分析。',
-      time: '10:09',
-      isMe: false,
-      avatar: aiAvatar
-    },
-    {
-      id: 8,
-      sender: USER_NAME,
-      content: '明白了，谢谢你的帮助！',
-      time: '10:10',
-      isMe: true,
-      avatar: meAvatar
-    },
-    {
-      id: 9,
-      sender: BOT_NAME,
-      content: '不客气，有任何问题随时联系我。',
-      time: '10:11',
-      isMe: false,
-      avatar: aiAvatar
-    }
-  ]
-
-  const messages = ref<ChatMessage[]>(initializeMessages())
-
-  // 工具函数
-  const formatCurrentTime = (): string => {
+  function formatCurrentTime(): string {
     return new Date().toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit'
+    })
+  }
+
+  const { width } = useWindowSize()
+  const isMobile = computed(() => width.value < MOBILE_BREAKPOINT)
+
+  const isDrawerVisible = ref(false)
+  const isRunning = ref(false)
+  const activityText = ref('')
+  const messageText = ref('')
+  const messageId = ref(2)
+  const messageContainer = ref<HTMLElement | null>(null)
+  const pendingAsk = ref<PendingAsk | null>(null)
+
+  const messages = ref<ChatMessage[]>([
+    {
+      id: 1,
+      sender: BOT_NAME,
+      content:
+        '你好，我是页面助手。直接说你想在当前页面做什么，例如「打开用户管理」或「把表单填成测试数据」。',
+      time: formatCurrentTime(),
+      isMe: false,
+      avatar: aiAvatar
+    }
+  ])
+
+  const statusLabel = computed(() => {
+    if (!pageAgentReady.value) return '离线'
+    if (isRunning.value) return activityText.value || '执行中'
+    return '在线'
+  })
+
+  const statusDotClass = computed(() => {
+    if (!pageAgentReady.value) return 'bg-danger/100'
+    if (isRunning.value) return 'bg-warning/100'
+    return 'bg-success/100'
+  })
+
+  const inputPlaceholder = computed(() => {
+    if (pendingAsk.value) return '输入回答后发送'
+    if (isRunning.value) return '正在操作当前页面…'
+    return '输入任务，Enter 发送'
+  })
+
+  const showStopFab = computed(
+    () => isRunning.value && !isDrawerVisible.value && !pendingAsk.value
+  )
+
+  let drawerClosedResolver: (() => void) | null = null
+
+  const onDrawerClosed = (): void => {
+    drawerClosedResolver?.()
+    drawerClosedResolver = null
+  }
+
+  const closeDrawerAndWait = async (): Promise<void> => {
+    if (!isDrawerVisible.value) return
+
+    await new Promise<void>((resolve) => {
+      drawerClosedResolver = resolve
+      isDrawerVisible.value = false
+      window.setTimeout(() => {
+        if (drawerClosedResolver === resolve) {
+          drawerClosedResolver = null
+          resolve()
+        }
+      }, 500)
     })
   }
 
@@ -221,28 +257,109 @@
     })
   }
 
-  // 消息处理方法
-  const sendMessage = (): void => {
-    const text = messageText.value.trim()
-    if (!text) return
-
-    const newMessage: ChatMessage = {
+  const pushMessage = (content: string, isMe: boolean): void => {
+    messages.value.push({
       id: messageId.value++,
-      sender: USER_NAME,
-      content: text,
+      sender: isMe ? USER_NAME : BOT_NAME,
+      content,
       time: formatCurrentTime(),
-      isMe: true,
-      avatar: meAvatar
-    }
-
-    messages.value.push(newMessage)
-    messageText.value = ''
+      isMe,
+      avatar: isMe ? meAvatar : aiAvatar
+    })
     scrollToBottom()
   }
 
-  // 聊天窗口控制方法
+  const formatActivity = (activity: AgentActivity): string => {
+    switch (activity.type) {
+      case 'thinking':
+        return '正在思考…'
+      case 'executing':
+        return `正在执行 ${activity.tool}`
+      case 'executed':
+        return activity.output
+      case 'retrying':
+        return `模型重试 ${activity.attempt}/${activity.maxAttempts}`
+      case 'error':
+        return activity.message
+      default:
+        return ''
+    }
+  }
+
+  const onStatusChange = (): void => {
+    const agent = getPageAgent()
+    isRunning.value = agent?.status === 'running'
+    if (!isRunning.value) {
+      activityText.value = ''
+    }
+  }
+
+  const onActivity = (event: Event): void => {
+    const activity = (event as CustomEvent<AgentActivity>).detail
+    activityText.value = formatActivity(activity)
+    scrollToBottom()
+  }
+
+  const bindAgentEvents = (): void => {
+    const agent = getPageAgent()
+    if (!agent) return
+    agent.removeEventListener('statuschange', onStatusChange)
+    agent.removeEventListener('activity', onActivity)
+    agent.addEventListener('statuschange', onStatusChange)
+    agent.addEventListener('activity', onActivity)
+    onStatusChange()
+  }
+
+  const sendMessage = async (): Promise<void> => {
+    const text = messageText.value.trim()
+    if (!text) return
+
+    if (pendingAsk.value) {
+      const ask = pendingAsk.value
+      pendingAsk.value = null
+      messageText.value = ''
+      pushMessage(text, true)
+      await closeDrawerAndWait()
+      ask.resolve(text)
+      return
+    }
+
+    const agent = getPageAgent()
+    if (!agent) {
+      ElMessage.warning('页面助手未就绪，请确认已配置 DeepSeek API Key 并重启开发服务')
+      return
+    }
+
+    if (agent.status === 'running') {
+      ElMessage.warning('当前任务还在执行，请等待结束或点击停止')
+      return
+    }
+
+    messageText.value = ''
+    pushMessage(text, true)
+    await closeDrawerAndWait()
+
+    try {
+      const result = await agent.execute(text)
+      const summary = result.data?.trim() || (result.success ? '任务完成' : '任务未完成')
+      pushMessage(summary, false)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      pushMessage(message, false)
+    } finally {
+      openChat()
+    }
+  }
+
+  const stopTask = async (): Promise<void> => {
+    const agent = getPageAgent()
+    if (!agent || agent.status !== 'running') return
+    await agent.stop()
+  }
+
   const openChat = (): void => {
     isDrawerVisible.value = true
+    bindAgentEvents()
     scrollToBottom()
   }
 
@@ -250,13 +367,39 @@
     isDrawerVisible.value = false
   }
 
-  // 生命周期
+  const handleAskUser: (
+    question: string,
+    options?: { signal: AbortSignal }
+  ) => Promise<string> = (question, options) => {
+    openChat()
+    pushMessage(question, false)
+
+    return new Promise((resolve, reject) => {
+      const abort = () => {
+        if (!pendingAsk.value) return
+        pendingAsk.value = null
+        reject(options?.signal.reason ?? new DOMException('Aborted', 'AbortError'))
+      }
+
+      pendingAsk.value = { resolve, reject }
+      options?.signal.addEventListener('abort', abort, { once: true })
+    })
+  }
+
   onMounted(() => {
     scrollToBottom()
     mittBus.on('openChat', openChat)
+    mittBus.on('pageAgentReady', bindAgentEvents)
+    setPageAgentAskUser(handleAskUser)
+    bindAgentEvents()
   })
 
   onUnmounted(() => {
+    const agent = getPageAgent()
+    agent?.removeEventListener('statuschange', onStatusChange)
+    agent?.removeEventListener('activity', onActivity)
+    setPageAgentAskUser(null)
     mittBus.off('openChat', openChat)
+    mittBus.off('pageAgentReady', bindAgentEvents)
   })
 </script>

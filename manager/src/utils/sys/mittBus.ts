@@ -53,6 +53,8 @@ type Events = {
   openSearchDialog: void
   // 打开聊天窗口事件 - 无参数
   openChat: void
+  // Page Agent 初始化完成 - 无参数
+  pageAgentReady: void
   // 打开锁屏事件 - 无参数
   openLockScreen: void
 }

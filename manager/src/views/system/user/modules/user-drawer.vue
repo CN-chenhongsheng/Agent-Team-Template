@@ -10,11 +10,13 @@
     <div class="user-detail-content">
       <!-- 顶部用户卡片 -->
       <div class="user-header-card">
-        <ElImage
-          :src="detailData.avatar || '/default-avatar.png'"
-          class="user-avatar"
-          fit="cover"
-        />
+        <ElImage :src="detailData.avatar || undefined" class="user-avatar" fit="cover">
+          <template #error>
+            <div class="user-avatar-empty">
+              <ElIcon :size="28"><User /></ElIcon>
+            </div>
+          </template>
+        </ElImage>
         <div class="user-info">
           <div class="user-name">{{ detailData.nickname || '--' }}</div>
           <div class="user-meta">
@@ -52,6 +54,7 @@
   import UserPermissionInfo from './user-permission-info.vue'
   import { fetchGetUserDetail } from '@/api/system-manage'
   import { useUserOnlineStatus } from '@/hooks/core/useUserOnlineStatus'
+  import { User } from '@element-plus/icons-vue'
 
   defineOptions({ name: 'UserDrawer' })
 
@@ -81,17 +84,13 @@
     set: (value) => emit('update:visible', value)
   })
 
-  const { onlineStatusMap } = useUserOnlineStatus()
+  const { isUserOnline } = useUserOnlineStatus()
 
   const activeTab = ref('basic')
   const loading = ref(false)
   const detailData = ref<Partial<UserListItem>>({})
 
-  // 在线状态
-  const isOnline = computed(() => {
-    if (!detailData.value.id) return false
-    return onlineStatusMap.value[detailData.value.id] ?? false
-  })
+  const isOnline = computed(() => isUserOnline(detailData.value.id, detailData.value.isOnline))
 
   // 加载用户详情
   const loadUserDetail = async () => {
@@ -167,10 +166,43 @@
     border-radius: 8px;
 
     .user-avatar {
+      box-sizing: border-box;
       flex-shrink: 0;
       width: 64px;
       height: 64px;
+      overflow: hidden;
+      background: var(--el-bg-color);
+      border: 1px solid var(--el-border-color);
       border-radius: 50%;
+
+      :deep(.el-image__wrapper),
+      :deep(.el-image__inner),
+      :deep(.el-image__error),
+      :deep(.el-image__placeholder) {
+        width: 100%;
+        height: 100%;
+      }
+
+      :deep(.el-image__error) {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        background: var(--el-fill-color-light);
+      }
+
+      :deep(.el-image__inner) {
+        border-radius: 50%;
+      }
+    }
+
+    .user-avatar-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      color: var(--el-text-color-placeholder);
     }
 
     .user-info {
