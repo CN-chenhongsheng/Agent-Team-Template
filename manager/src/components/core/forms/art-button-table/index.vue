@@ -18,12 +18,15 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { storeToRefs } from 'pinia'
   import { useTableStore } from '@/store/modules/table'
   import { useDictStore } from '@/store/modules/dict'
   import { TableSizeEnum } from '@/enums/formEnum'
 
   defineOptions({ name: 'ArtButtonTable' })
+
+  const { t } = useI18n()
 
   interface Props {
     /** 按钮类型 */
@@ -85,7 +88,9 @@
     return props.label || (props.type ? buttonConfigs.value[props.type]?.text || '' : '')
   })
 
-  const accessibleName = computed(() => buttonText.value || props.type || '操作')
+  const accessibleName = computed(
+    () => buttonText.value || props.type || t('system.common.operation')
+  )
 
   // 获取按钮样式类
   const buttonClass = computed(() => {

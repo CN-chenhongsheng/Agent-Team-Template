@@ -20,9 +20,9 @@
 
     <template #footer>
       <ElSpace>
-        <ElButton @click="handleClose">取消</ElButton>
+        <ElButton @click="handleClose">{{ $t('common.cancel') }}</ElButton>
         <ElButton type="primary" :loading="submitLoading" @click="handleSubmit">
-          {{ submitLoading ? '提交中...' : '确定' }}
+          {{ submitLoading ? $t('system.common.saving') : $t('common.confirm') }}
         </ElButton>
       </ElSpace>
     </template>
@@ -30,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import {
     fetchAddDictType,
     fetchUpdateDictType,
@@ -38,12 +39,15 @@
   import type { FormRules } from 'element-plus'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
   import type { FormItem } from '@/components/core/forms/art-form/index.vue'
+  import type { DialogType } from '@/types'
+
+  const { t } = useI18n()
 
   type DictTypeListItem = Api.SystemManage.DictTypeListItem
 
   interface Props {
     modelValue: boolean
-    dialogType: 'add' | 'edit'
+    dialogType: DialogType
     typeData?: DictTypeListItem
   }
 
@@ -69,7 +73,9 @@
   })
 
   const dialogTitle = computed(() => {
-    return props.dialogType === 'add' ? '新增字典类型' : '编辑字典类型'
+    return props.dialogType === 'add'
+      ? t('system.dict.typeForm.addTitle')
+      : t('system.dict.typeForm.editTitle')
   })
 
   /**
@@ -78,39 +84,39 @@
   const formItems = computed<FormItem[]>(() => [
     {
       key: 'dictName',
-      label: '字典名称',
+      label: t('system.dict.typeForm.dictName'),
       type: 'input',
       span: 24,
       props: {
-        placeholder: '请输入字典名称',
+        placeholder: t('system.dict.typeForm.namePlaceholder'),
         maxlength: 100,
         showWordLimit: true
       }
     },
     {
       key: 'dictCode',
-      label: '字典编码',
+      label: t('system.dict.typeForm.dictCode'),
       type: 'input',
       span: 24,
       props: {
-        placeholder: '请输入字典编码（如：sys_user_sex）',
+        placeholder: t('system.dict.typeForm.codePlaceholder'),
         maxlength: 100,
         showWordLimit: true,
         disabled: props.dialogType === 'edit'
       },
       slots: {
-        default: () => h('div', { class: 'form-tip' }, '编码唯一，编辑后不可修改')
+        default: () => h('div', { class: 'form-tip' }, t('system.dict.typeForm.codeTip'))
       }
     },
     {
       key: 'remark',
-      label: '备注',
+      label: t('system.dict.typeForm.remark'),
       type: 'input',
       span: 24,
       props: {
         type: 'textarea',
         rows: 3,
-        placeholder: '请输入备注',
+        placeholder: t('system.dict.typeForm.remarkPlaceholder'),
         maxlength: 500,
         showWordLimit: true
       }
@@ -125,12 +131,14 @@
   })
 
   const rules = computed<FormRules>(() => ({
-    dictName: [{ required: true, message: '请输入字典名称', trigger: 'blur' }],
+    dictName: [
+      { required: true, message: t('system.dict.typeForm.dictNameRequired'), trigger: 'blur' }
+    ],
     dictCode: [
-      { required: true, message: '请输入字典编码', trigger: 'blur' },
+      { required: true, message: t('system.dict.typeForm.dictCodeRequired'), trigger: 'blur' },
       {
         pattern: /^[a-z][a-z0-9_]*$/,
-        message: '字典编码只能包含小写字母、数字和下划线，且必须以字母开头',
+        message: t('system.dict.typeForm.dictCodePattern'),
         trigger: 'blur'
       }
     ]

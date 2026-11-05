@@ -69,14 +69,7 @@ export default [
   },
   // 忽略文件
   {
-    ignores: [
-      'node_modules',
-      'dist',
-      'public',
-      '.vscode/**',
-      'src/assets/**',
-      'src/utils/console.ts'
-    ]
+    ignores: ['node_modules', 'dist', 'public', '.vscode/**', 'src/assets/**']
   },
   // prettier 配置
   eslintPluginPrettierRecommended

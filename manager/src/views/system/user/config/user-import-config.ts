@@ -5,45 +5,78 @@
 import type { GenericImportConfig } from '@/composables/useGenericImport'
 import type { TemplateColumn } from '@/utils/excel'
 import { fetchImportUsers } from '@/api/system-manage'
+import i18n from '@/locales'
 
-/**
- * 用户导入模板列配置
- */
-export const userTemplateColumns: TemplateColumn[] = [
-  { title: '用户名', key: 'username', width: 20, required: true, example: 'zhangsan' },
-  { title: '昵称', key: 'nickname', width: 20, required: true, example: '张三' },
-  { title: '手机号', key: 'phone', width: 20, required: true, example: '13800138000' },
-  { title: '邮箱', key: 'email', width: 25, required: false, example: 'zhangsan@example.com' },
+const t = (key: string): string => (i18n.global.t as (key: string) => string)(key)
+
+const buildTemplateColumns = (): TemplateColumn[] => [
   {
-    title: '性别',
+    title: t('system.user.importConfig.columns.username'),
+    key: 'username',
+    width: 20,
+    required: true,
+    example: 'zhangsan'
+  },
+  {
+    title: t('system.user.importConfig.columns.nickname'),
+    key: 'nickname',
+    width: 20,
+    required: true,
+    example: t('system.user.importConfig.examples.nickname')
+  },
+  {
+    title: t('system.user.importConfig.columns.phone'),
+    key: 'phone',
+    width: 20,
+    required: true,
+    example: '13800138000'
+  },
+  {
+    title: t('system.user.importConfig.columns.email'),
+    key: 'email',
+    width: 25,
+    required: false,
+    example: 'zhangsan@example.com'
+  },
+  {
+    title: t('system.user.importConfig.columns.gender'),
     key: 'gender',
     width: 10,
     required: false,
-    example: '男',
+    example: t('system.user.importConfig.examples.gender'),
     dropdown: { dictCode: 'sys_user_sex' }
   },
-  { title: '角色', key: 'roles', width: 30, required: true, example: '普通用户' },
   {
-    title: '状态',
+    title: t('system.user.importConfig.columns.role'),
+    key: 'roles',
+    width: 30,
+    required: true,
+    example: t('system.user.importConfig.examples.role')
+  },
+  {
+    title: t('system.user.importConfig.columns.status'),
     key: 'status',
     width: 10,
     required: false,
-    example: '正常',
+    example: t('system.user.importConfig.examples.status'),
     dropdown: { dictCode: 'sys_user_status' }
   }
 ]
-
-export const USER_TEMPLATE_FILENAME = '用户导入模板'
-export const USER_TEMPLATE_SHEET_NAME = '用户数据'
 
 /**
  * 用户导入配置
  */
 export const userImportConfig: GenericImportConfig<Api.SystemManage.UserImportResult> = {
   // 模板配置
-  templateColumns: userTemplateColumns,
-  templateFilename: USER_TEMPLATE_FILENAME,
-  templateSheetName: USER_TEMPLATE_SHEET_NAME,
+  get templateColumns() {
+    return buildTemplateColumns()
+  },
+  get templateFilename() {
+    return t('system.user.importConfig.filename')
+  },
+  get templateSheetName() {
+    return t('system.user.importConfig.sheetName')
+  },
 
   // 不需要上下文数据（无级联下拉）
   fetchContextData: async () => ({}),
@@ -63,5 +96,7 @@ export const userImportConfig: GenericImportConfig<Api.SystemManage.UserImportRe
   skipScanThreshold: 50 * 1024 * 1024, // 50MB
 
   // 进度标题
-  progressTitle: '用户导入'
+  get progressTitle() {
+    return t('system.user.importConfig.progressTitle')
+  }
 }

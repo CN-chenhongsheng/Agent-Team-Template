@@ -13,7 +13,7 @@
           zIndex: DRAWER_Z_INDEX
         }"
       >
-        <ElButton type="danger" @click="stopTask">停止</ElButton>
+        <ElButton type="danger" @click="stopTask">{{ $t('system.pageAgent.stop') }}</ElButton>
       </div>
     </Teleport>
     <ElDrawer
@@ -30,24 +30,15 @@
       <div class="flex h-full flex-col" data-page-agent-not-interactive="true">
         <div class="mb-5 flex-cb">
           <div>
-            <span class="text-base font-medium">页面助手</span>
+            <span class="text-base font-medium">{{ $t('system.pageAgent.title') }}</span>
             <div class="mt-1.5 flex-c gap-1">
-              <div
-                class="h-2 w-2 rounded-full"
-                :class="statusDotClass"
-              ></div>
+              <div class="h-2 w-2 rounded-full" :class="statusDotClass"></div>
               <span class="text-xs text-g-600">{{ statusLabel }}</span>
             </div>
           </div>
           <div class="flex-c gap-2">
-            <ElButton
-              v-if="isRunning"
-              type="danger"
-              size="small"
-              plain
-              @click="stopTask"
-            >
-              停止
+            <ElButton v-if="isRunning" type="danger" size="small" plain @click="stopTask">
+              {{ $t('system.pageAgent.stop') }}
             </ElButton>
             <ElIcon class="c-p" :size="20" @click="closeChat">
               <Close />
@@ -69,7 +60,10 @@
               >
                 <ElAvatar :size="32" :src="message.avatar" class="shrink-0" />
                 <div
-                  :class="['flex min-w-0 max-w-[70%] flex-col', message.isMe ? 'items-end' : 'items-start']"
+                  :class="[
+                    'flex min-w-0 max-w-[70%] flex-col',
+                    message.isMe ? 'items-end' : 'items-start'
+                  ]"
                 >
                   <div
                     :class="[
@@ -118,7 +112,7 @@
                 @click="stopTask"
                 v-ripple
               >
-                停止
+                {{ $t('system.pageAgent.stop') }}
               </ElButton>
               <ElButton
                 v-else
@@ -128,7 +122,7 @@
                 @click="sendMessage"
                 v-ripple
               >
-                发送
+                {{ $t('system.pageAgent.send') }}
               </ElButton>
             </div>
           </div>
@@ -139,18 +133,17 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { Close } from '@element-plus/icons-vue'
   import type { AgentActivity } from 'page-agent'
   import { mittBus } from '@/utils/sys'
-  import {
-    getPageAgent,
-    pageAgentReady,
-    setPageAgentAskUser
-  } from '@/utils/sys/page-agent'
+  import { getPageAgent, pageAgentReady, setPageAgentAskUser } from '@/utils/sys/page-agent'
   import meAvatar from '@/assets/images/avatar/avatar5.webp'
   import aiAvatar from '@/assets/images/avatar/avatar10.webp'
 
   defineOptions({ name: 'ArtChatWindow' })
+
+  const { t } = useI18n()
 
   interface ChatMessage {
     id: number
@@ -170,8 +163,8 @@
   const DRAWER_Z_INDEX = 2147483643
   const MOBILE_BREAKPOINT = 640
   const SCROLL_DELAY = 100
-  const BOT_NAME = '页面助手'
-  const USER_NAME = '我'
+  const BOT_NAME = computed(() => t('system.pageAgent.botName'))
+  const USER_NAME = computed(() => t('system.pageAgent.userName'))
 
   function formatCurrentTime(): string {
     return new Date().toLocaleTimeString([], {
@@ -194,9 +187,8 @@
   const messages = ref<ChatMessage[]>([
     {
       id: 1,
-      sender: BOT_NAME,
-      content:
-        '你好，我是页面助手。直接说你想在当前页面做什么，例如「打开用户管理」或「把表单填成测试数据」。',
+      sender: BOT_NAME.value,
+      content: t('system.pageAgent.greeting'),
       time: formatCurrentTime(),
       isMe: false,
       avatar: aiAvatar
@@ -204,9 +196,9 @@
   ])
 
   const statusLabel = computed(() => {
-    if (!pageAgentReady.value) return '离线'
-    if (isRunning.value) return activityText.value || '执行中'
-    return '在线'
+    if (!pageAgentReady.value) return t('system.pageAgent.statusOffline')
+    if (isRunning.value) return activityText.value || t('system.pageAgent.statusRunning')
+    return t('system.pageAgent.statusOnline')
   })
 
   const statusDotClass = computed(() => {
@@ -216,14 +208,12 @@
   })
 
   const inputPlaceholder = computed(() => {
-    if (pendingAsk.value) return '输入回答后发送'
-    if (isRunning.value) return '正在操作当前页面…'
-    return '输入任务，Enter 发送'
+    if (pendingAsk.value) return t('system.pageAgent.inputAsk')
+    if (isRunning.value) return t('system.pageAgent.inputRunning')
+    return t('system.pageAgent.inputIdle')
   })
 
-  const showStopFab = computed(
-    () => isRunning.value && !isDrawerVisible.value && !pendingAsk.value
-  )
+  const showStopFab = computed(() => isRunning.value && !isDrawerVisible.value && !pendingAsk.value)
 
   let drawerClosedResolver: (() => void) | null = null
 
@@ -260,7 +250,7 @@
   const pushMessage = (content: string, isMe: boolean): void => {
     messages.value.push({
       id: messageId.value++,
-      sender: isMe ? USER_NAME : BOT_NAME,
+      sender: isMe ? USER_NAME.value : BOT_NAME.value,
       content,
       time: formatCurrentTime(),
       isMe,
@@ -272,13 +262,16 @@
   const formatActivity = (activity: AgentActivity): string => {
     switch (activity.type) {
       case 'thinking':
-        return '正在思考…'
+        return t('system.pageAgent.thinking')
       case 'executing':
-        return `正在执行 ${activity.tool}`
+        return t('system.pageAgent.executing', { tool: activity.tool })
       case 'executed':
         return activity.output
       case 'retrying':
-        return `模型重试 ${activity.attempt}/${activity.maxAttempts}`
+        return t('system.pageAgent.retrying', {
+          attempt: activity.attempt,
+          max: activity.maxAttempts
+        })
       case 'error':
         return activity.message
       default:
@@ -326,12 +319,12 @@
 
     const agent = getPageAgent()
     if (!agent) {
-      ElMessage.warning('页面助手未就绪，请确认已配置 DeepSeek API Key 并重启开发服务')
+      ElMessage.warning(t('system.pageAgent.notReady'))
       return
     }
 
     if (agent.status === 'running') {
-      ElMessage.warning('当前任务还在执行，请等待结束或点击停止')
+      ElMessage.warning(t('system.pageAgent.busy'))
       return
     }
 
@@ -341,7 +334,9 @@
 
     try {
       const result = await agent.execute(text)
-      const summary = result.data?.trim() || (result.success ? '任务完成' : '任务未完成')
+      const summary =
+        result.data?.trim() ||
+        (result.success ? t('system.pageAgent.taskDone') : t('system.pageAgent.taskNotDone'))
       pushMessage(summary, false)
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -367,10 +362,10 @@
     isDrawerVisible.value = false
   }
 
-  const handleAskUser: (
-    question: string,
-    options?: { signal: AbortSignal }
-  ) => Promise<string> = (question, options) => {
+  const handleAskUser: (question: string, options?: { signal: AbortSignal }) => Promise<string> = (
+    question,
+    options
+  ) => {
     openChat()
     pushMessage(question, false)
 

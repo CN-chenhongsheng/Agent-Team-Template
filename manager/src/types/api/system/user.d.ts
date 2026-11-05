@@ -38,15 +38,7 @@ declare namespace Api {
     }
 
     /** 用户分页响应 */
-    interface UserPageResponse extends Api.Common.PaginatedResponse<UserListItem> {
-      records: UserListItem[]
-      current: number
-      size: number
-      total: number
-    }
-
-    /** 用户列表 */
-    type UserList = UserPageResponse
+    type UserPageResponse = Api.Common.PaginatedResponse<UserListItem>
 
     /** 用户列表项 */
     interface UserListItem {
@@ -60,8 +52,6 @@ declare namespace Api {
       genderText?: string
       status: number
       statusText?: string
-      gender?: number
-      genderText?: string
       address?: string
       introduction?: string
       roleIds?: number[]

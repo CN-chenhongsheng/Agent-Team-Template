@@ -2,8 +2,8 @@
   <div class="art-card h-105 p-5 mb-5 max-sm:mb-4">
     <div class="art-card-header">
       <div class="title">
-        <h4>访问量</h4>
-        <p>今年增长<span class="text-success">+15%</span></p>
+        <h4>{{ $t('dashboard.sales.title') }}</h4>
+        <p> {{ $t('dashboard.sales.growth') }}<span class="text-success">+15%</span> </p>
       </div>
     </div>
     <ArtLineChart
@@ -17,6 +17,10 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+
+  const { t } = useI18n()
+
   /**
    * 全年访问量数据
    * 记录每月的访问量统计
@@ -26,18 +30,7 @@
   /**
    * X 轴月份标签
    */
-  const xAxisData = [
-    '1月',
-    '2月',
-    '3月',
-    '4月',
-    '5月',
-    '6月',
-    '7月',
-    '8月',
-    '9月',
-    '10月',
-    '11月',
-    '12月'
-  ]
+  const xAxisData = computed(() =>
+    Array.from({ length: 12 }, (_, index) => t(`dashboard.sales.months.${index}`))
+  )
 </script>

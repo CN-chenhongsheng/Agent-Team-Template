@@ -84,13 +84,46 @@ export class MenuProcessor {
    * 将后端菜单数据转换为前端路由格式
    */
   private convertMenuToRoutes(menuList: any[]): AppRouteRecord[] {
+    const menuTitleKeys: Record<string, string> = {
+      '/dashboard': 'menus.dashboard.title',
+      '/dashboard/console': 'menus.dashboard.console',
+      console: 'menus.dashboard.console',
+      '/system': 'menus.system.title',
+      '/system/user': 'menus.system.user',
+      user: 'menus.system.user',
+      '/system/role': 'menus.system.role',
+      role: 'menus.system.role',
+      '/system/menu': 'menus.system.menu',
+      menu: 'menus.system.menu',
+      '/system/dict': 'menus.system.dict',
+      dict: 'menus.system.dict',
+      '/system/user-center': 'menus.system.userCenter',
+      'user-center': 'menus.system.userCenter',
+      '/system/oper-log': 'menus.system.operLog',
+      'oper-log': 'menus.system.operLog',
+      '/system/login-log': 'menus.system.loginLog',
+      'login-log': 'menus.system.loginLog',
+      '/exception': 'menus.exception.title',
+      '/exception/403': 'menus.exception.forbidden',
+      '403': 'menus.exception.forbidden',
+      '/exception/404': 'menus.exception.notFound',
+      '404': 'menus.exception.notFound',
+      '/exception/500': 'menus.exception.serverError',
+      '500': 'menus.exception.serverError',
+      '/result': 'menus.result.title',
+      '/result/success': 'menus.result.success',
+      success: 'menus.result.success',
+      '/result/fail': 'menus.result.fail',
+      fail: 'menus.result.fail'
+    }
+
     return menuList.map((menu) => {
       const route: AppRouteRecord = {
         name: this.generateRouteName(menu.menuName, menu.id),
         path: menu.path,
         component: menu.component,
         meta: {
-          title: menu.menuName,
+          title: menuTitleKeys[menu.path] || menu.menuName,
           icon: menu.icon,
           isHide: menu.visible === 0,
           keepAlive: menu.keepAlive === 1

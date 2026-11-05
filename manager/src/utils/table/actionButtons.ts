@@ -13,31 +13,32 @@ import ArtButtonMore from '@/components/core/forms/art-button-more/index.vue'
 import type { ButtonMoreItem } from '@/components/core/forms/art-button-more/index.vue'
 import type { ActionButtonConfig } from '@/types/component'
 import { hasPermission } from '@/directives/core/permission'
+import { $t } from '@/locales'
 
 /**
- * 按钮类型对应的标签文本
+ * 按钮类型对应的文案 key
  */
-const BUTTON_LABELS: Record<string, string> = {
-  view: '查看',
-  add: '新增',
-  edit: '编辑',
-  delete: '删除',
-  detail: '详情',
-  download: '下载',
-  upload: '上传',
-  assign: '分配',
-  reset: '重置',
-  share: '分配',
-  link: '绑定',
-  notify: '提醒',
-  copy: '复制',
-  play: '执行',
-  pause: '暂停',
-  cancel: '取消',
-  refresh: '刷新',
-  export: '导出',
-  import: '导入',
-  print: '打印'
+const BUTTON_LABEL_KEYS: Record<string, string> = {
+  view: 'utils.actionButtons.view',
+  add: 'utils.actionButtons.add',
+  edit: 'utils.actionButtons.edit',
+  delete: 'utils.actionButtons.delete',
+  detail: 'utils.actionButtons.detail',
+  download: 'utils.actionButtons.download',
+  upload: 'utils.actionButtons.upload',
+  assign: 'utils.actionButtons.assign',
+  reset: 'utils.actionButtons.reset',
+  share: 'utils.actionButtons.share',
+  link: 'utils.actionButtons.link',
+  notify: 'utils.actionButtons.notify',
+  copy: 'utils.actionButtons.copy',
+  play: 'utils.actionButtons.play',
+  pause: 'utils.actionButtons.pause',
+  cancel: 'utils.actionButtons.cancel',
+  refresh: 'utils.actionButtons.refresh',
+  export: 'utils.actionButtons.export',
+  import: 'utils.actionButtons.import',
+  print: 'utils.actionButtons.print'
 }
 
 /**
@@ -70,7 +71,8 @@ export const BUTTON_ICONS: Record<string, string> = {
  * 获取按钮的标签文本
  */
 function getButtonLabel(type: string): string {
-  return BUTTON_LABELS[type] || type
+  const key = BUTTON_LABEL_KEYS[type]
+  return key ? $t(key) : type
 }
 
 /**

@@ -4,8 +4,8 @@
     <ElDropdown v-if="hasAnyAuthItem" :trigger="['click', 'hover']">
       <button
         type="button"
-        aria-label="更多"
-        title="更多"
+        :aria-label="$t('system.common.more')"
+        :title="$t('system.common.more')"
         aria-haspopup="menu"
         :class="[
           'art-button-more inline-flex items-center justify-center min-w-8 h-8 px-2.5 mr-2.5 text-sm c-p rounded-md align-middle cursor-pointer',
@@ -18,7 +18,7 @@
         :style="buttonStyle"
       >
         <ArtSvgIcon v-if="!isTextMode" icon="ri:more-2-fill" />
-        <span v-else class="button-text">更多</span>
+        <span v-else class="button-text">{{ $t('system.common.more') }}</span>
       </button>
       <template #dropdown>
         <ElDropdownMenu>

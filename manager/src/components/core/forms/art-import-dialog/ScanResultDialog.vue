@@ -6,7 +6,7 @@
     append-to-body
     destroy-on-close
     class="scan-result-dialog"
-    title="扫描结果"
+    :title="$t('system.scanResult.title')"
   >
     <div class="scan-result-layout h-full flex flex-col gap-4">
       <ElCard
@@ -16,10 +16,10 @@
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div class="text-sm font-medium text-[var(--el-text-color-primary)]">
-              前端校验未通过，请根据列表逐行修正数据
+              {{ $t('system.scanResult.frontendFailed') }}
             </div>
             <div class="mt-1 text-xs text-[var(--el-text-color-secondary)]">
-              建议按行从上到下依次处理，修正后重新导出并再次扫描。
+              {{ $t('system.scanResult.suggestion') }}
             </div>
           </div>
           <div class="flex items-center gap-3">
@@ -28,14 +28,16 @@
                 <span class="text-2xl font-semibold text-[var(--el-color-danger)]">
                   {{ meta?.errorCount ?? 0 }}
                 </span>
-                <span class="text-xs text-[var(--el-text-color-secondary)]">处问题</span>
+                <span class="text-xs text-[var(--el-text-color-secondary)]">
+                  {{ $t('system.scanResult.issueCount', { count: meta?.errorCount ?? 0 }) }}
+                </span>
               </div>
               <ElTag v-if="meta" type="danger" size="small">
-                预览前 {{ meta.preview.length }} 条
-                <span v-if="meta.truncated">（已截断）</span>
+                {{ $t('system.scanResult.preview', { count: meta.preview.length }) }}
+                <span v-if="meta.truncated">{{ $t('system.scanResult.truncated') }}</span>
               </ElTag>
             </div>
-            <ElTooltip content="下载错误 Excel" placement="top">
+            <ElTooltip :content="$t('system.scanResult.downloadErrors')" placement="top">
               <ElButton
                 size="small"
                 type="default"
@@ -57,12 +59,22 @@
           <div v-if="tableRows.length > 0">
             <ElTable :data="tableRows" border size="small" class="scan-result-table">
               <ElTableColumn prop="index" label="#" width="60" />
-              <ElTableColumn prop="row" label="行号" width="80" />
-              <ElTableColumn prop="column" label="字段" width="130" show-overflow-tooltip />
-              <ElTableColumn prop="value" label="原值" min-width="160" show-overflow-tooltip />
+              <ElTableColumn prop="row" :label="$t('system.scanResult.row')" width="80" />
+              <ElTableColumn
+                prop="column"
+                :label="$t('system.scanResult.column')"
+                width="130"
+                show-overflow-tooltip
+              />
+              <ElTableColumn
+                prop="value"
+                :label="$t('system.scanResult.value')"
+                min-width="160"
+                show-overflow-tooltip
+              />
               <ElTableColumn
                 prop="message"
-                label="错误原因"
+                :label="$t('system.scanResult.reason')"
                 min-width="220"
                 show-overflow-tooltip
               />
@@ -73,7 +85,7 @@
             v-else
             class="flex flex-1 items-center justify-center text-xs text-[var(--el-text-color-secondary)]"
           >
-            暂无扫描结果
+            {{ $t('system.scanResult.empty') }}
           </div>
         </div>
 
@@ -81,10 +93,10 @@
         <div class="flex w-80 flex-col gap-3">
           <ElCard shadow="never" class="shrink-0 !rounded-[calc(var(--el-border-radius-base))]">
             <div class="mb-2 text-sm font-medium text-[var(--el-text-color-primary)]">
-              按行查看错误
+              {{ $t('system.scanResult.byRow') }}
             </div>
             <div class="text-xs text-[var(--el-text-color-secondary)] leading-relaxed">
-              列表按照 Excel 行号分组，建议从上到下逐行修正。修正后可重新导出并再次扫描。
+              {{ $t('system.scanResult.byRowHint') }}
             </div>
           </ElCard>
 
@@ -101,10 +113,10 @@
                   <span
                     class="inline-flex h-5 items-center rounded-full bg-[var(--el-color-primary-light-9)] px-2 text-[11px] text-[var(--el-color-primary)]"
                   >
-                    第 {{ group.row }} 行
+                    {{ $t('system.scanResult.rowLabel', { row: group.row }) }}
                   </span>
                   <span class="ml-2 text-[var(--el-text-color-secondary)]">
-                    共 {{ group.items.length }} 处
+                    {{ $t('system.scanResult.groupCount', { count: group.items.length }) }}
                   </span>
                 </div>
               </div>
@@ -114,10 +126,11 @@
                   :key="idx"
                   class="text-[11px] leading-relaxed text-[var(--el-text-color-regular)]"
                 >
-                  <span class="font-medium">{{ item.column }}：</span>
+                  <span class="font-medium">{{ item.column }}: </span>
                   <span>{{ item.message }}</span>
                   <span v-if="item.value" class="ml-1 text-[var(--el-text-color-secondary)]">
-                    原值：<code class="rounded bg-[var(--el-fill-color-light)] px-1 py-0.5">{{
+                    {{ $t('system.scanResult.originalValue')
+                    }}<code class="rounded bg-[var(--el-fill-color-light)] px-1 py-0.5">{{
                       item.value
                     }}</code>
                   </span>
@@ -132,6 +145,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { computed } from 'vue'
   import {
     ElDialog,
@@ -147,6 +161,8 @@
   import * as XLSX from 'xlsx'
   import FileSaver from 'file-saver'
 
+  const { t } = useI18n()
+
   interface PreviewItem {
     row: number
     column: string
@@ -161,19 +177,22 @@
   }
 
   interface Props {
-    visible: boolean
+    modelValue: boolean
     meta: Meta | null
   }
 
-  const props = defineProps<Props>()
+  const props = withDefaults(defineProps<Props>(), {
+    modelValue: false,
+    meta: null
+  })
 
   const emit = defineEmits<{
-    (e: 'update:visible', value: boolean): void
+    (e: 'update:modelValue', value: boolean): void
   }>()
 
   const dialogVisible = computed({
-    get: () => props.visible,
-    set: (value: boolean) => emit('update:visible', value)
+    get: () => props.modelValue,
+    set: (value: boolean) => emit('update:modelValue', value)
   })
 
   const meta = computed(() => props.meta)
@@ -204,21 +223,21 @@
 
   const handleDownloadErrorExcel = () => {
     if (!props.meta || !props.meta.preview.length) {
-      ElMessage.warning('暂无可导出的错误数据')
+      ElMessage.warning(t('system.scanResult.noErrorData'))
       return
     }
 
     const rows = props.meta.preview.map((item, index) => ({
-      序号: index + 1,
-      行号: item.row,
-      字段: item.column,
-      原值: item.value ?? '',
-      错误原因: item.message
+      [t('system.scanResult.exportIndex')]: index + 1,
+      [t('system.scanResult.exportRow')]: item.row,
+      [t('system.scanResult.exportColumn')]: item.column,
+      [t('system.scanResult.exportValue')]: item.value ?? '',
+      [t('system.scanResult.exportReason')]: item.message
     }))
 
     const worksheet = XLSX.utils.json_to_sheet(rows)
     const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, '错误明细')
+    XLSX.utils.book_append_sheet(workbook, worksheet, t('system.scanResult.sheetName'))
 
     const excelBuffer = XLSX.write(workbook, {
       bookType: 'xlsx',
@@ -230,7 +249,7 @@
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     })
 
-    const filename = `学生导入错误明细_${new Date().toISOString().slice(0, 10)}.xlsx`
+    const filename = `${t('system.scanResult.filenamePrefix')}_${new Date().toISOString().slice(0, 10)}.xlsx`
     FileSaver.saveAs(blob, filename)
   }
 </script>

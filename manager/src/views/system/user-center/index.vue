@@ -10,9 +10,11 @@
             class="relative z-10 w-20 h-20 mt-30 mx-auto object-cover border-2 border-white rounded-full"
             :src="userProfile?.avatar || defaultAvatar"
           />
-          <h2 class="mt-5 text-xl font-normal">{{ userProfile?.nickname || '加载中...' }}</h2>
+          <h2 class="mt-5 text-xl font-normal">
+            {{ userProfile?.nickname || $t('system.userCenter.loading') }}
+          </h2>
           <p class="mt-5 text-sm text-g-500">{{
-            userProfile?.introduction || '这个人很懒，什么都没写~'
+            userProfile?.introduction || $t('system.userCenter.introFallback')
           }}</p>
 
           <div class="w-75 mx-auto mt-7.5 text-left">
@@ -22,7 +24,7 @@
             </div>
             <div class="mt-2.5" v-if="userProfile?.genderText">
               <ArtSvgIcon icon="ri:user-3-line" class="text-g-700" />
-              <span class="ml-2 text-sm">{{ userProfile.genderText }}</span>
+              <span class="ml-2 text-sm">{{ genderLabel }}</span>
             </div>
             <div class="mt-2.5" v-if="userProfile?.address">
               <ArtSvgIcon icon="ri:map-pin-line" class="text-g-700" />
@@ -51,7 +53,7 @@
 
           <!-- 管理范围 -->
           <div class="mt-10" v-if="userProfile?.manageScope">
-            <h3 class="text-sm font-medium">管理范围</h3>
+            <h3 class="text-sm font-medium">{{ $t('system.userCenter.scope') }}</h3>
             <div class="flex flex-wrap justify-center mt-3.5">
               <ElTag
                 v-for="(part, index) in manageScopeTags"
@@ -72,7 +74,9 @@
       <div class="flex-1 overflow-hidden max-md:w-full max-md:mt-3.5">
         <!-- 基本设置表单 -->
         <div class="art-card-sm">
-          <h1 class="p-4 text-xl font-normal border-b border-g-300">基本设置</h1>
+          <h1 class="p-4 text-xl font-normal border-b border-g-300">
+            {{ $t('system.userCenter.basicSettings') }}
+          </h1>
 
           <ElForm
             :model="form"
@@ -83,11 +87,19 @@
             label-position="top"
           >
             <ElRow>
-              <ElFormItem label="昵称" prop="nickname">
-                <ElInput v-model="form.nickname" :disabled="!isEdit" placeholder="请输入昵称" />
+              <ElFormItem :label="$t('system.userCenter.nickname')" prop="nickname">
+                <ElInput
+                  v-model="form.nickname"
+                  :disabled="!isEdit"
+                  :placeholder="$t('system.userCenter.nicknamePlaceholder')"
+                />
               </ElFormItem>
-              <ElFormItem label="性别" prop="gender" class="ml-5">
-                <ElSelect v-model="form.gender" placeholder="请选择性别" :disabled="!isEdit">
+              <ElFormItem :label="$t('system.userCenter.gender')" prop="gender" class="ml-5">
+                <ElSelect
+                  v-model="form.gender"
+                  :placeholder="$t('system.userCenter.genderPlaceholder')"
+                  :disabled="!isEdit"
+                >
                   <ElOption
                     v-for="item in genderOptions"
                     :key="item.value"
@@ -99,30 +111,48 @@
             </ElRow>
 
             <ElRow>
-              <ElFormItem label="邮箱" prop="email">
-                <ElInput v-model="form.email" :disabled="!isEdit" placeholder="请输入邮箱" />
+              <ElFormItem :label="$t('system.userCenter.email')" prop="email">
+                <ElInput
+                  v-model="form.email"
+                  :disabled="!isEdit"
+                  :placeholder="$t('system.userCenter.emailPlaceholder')"
+                />
               </ElFormItem>
-              <ElFormItem label="手机" prop="phone" class="ml-5">
-                <ElInput v-model="form.phone" :disabled="!isEdit" placeholder="请输入手机号" />
+              <ElFormItem :label="$t('system.userCenter.phone')" prop="phone" class="ml-5">
+                <ElInput
+                  v-model="form.phone"
+                  :disabled="!isEdit"
+                  :placeholder="$t('system.userCenter.phonePlaceholder')"
+                />
               </ElFormItem>
             </ElRow>
 
-            <ElFormItem label="地址" prop="address">
-              <ElInput v-model="form.address" :disabled="!isEdit" placeholder="请输入地址" />
+            <ElFormItem :label="$t('system.userCenter.address')" prop="address">
+              <ElInput
+                v-model="form.address"
+                :disabled="!isEdit"
+                :placeholder="$t('system.userCenter.addressPlaceholder')"
+              />
             </ElFormItem>
 
-            <ElFormItem label="个人介绍" prop="introduction" class="h-32">
+            <ElFormItem
+              :label="$t('system.userCenter.introduction')"
+              prop="introduction"
+              class="h-32"
+            >
               <ElInput
                 type="textarea"
                 :rows="4"
                 v-model="form.introduction"
                 :disabled="!isEdit"
-                placeholder="请输入个人介绍"
+                :placeholder="$t('system.userCenter.introPlaceholder')"
               />
             </ElFormItem>
 
             <div class="flex-c justify-end [&_.el-button]:!w-27.5">
-              <ElButton v-if="isEdit" class="mr-2.5" v-ripple @click="cancelEdit"> 取消 </ElButton>
+              <ElButton v-if="isEdit" class="mr-2.5" v-ripple @click="cancelEdit">
+                {{ $t('system.userCenter.cancel') }}
+              </ElButton>
               <ElButton
                 type="primary"
                 class="w-22.5"
@@ -130,7 +160,7 @@
                 :loading="profileLoading"
                 @click="handleProfileSubmit"
               >
-                {{ isEdit ? '保存' : '编辑' }}
+                {{ isEdit ? $t('system.userCenter.save') : $t('system.userCenter.edit') }}
               </ElButton>
             </div>
           </ElForm>
@@ -138,7 +168,9 @@
 
         <!-- 更改密码表单 -->
         <div class="art-card-sm my-5">
-          <h1 class="p-4 text-xl font-normal border-b border-g-300">更改密码</h1>
+          <h1 class="p-4 text-xl font-normal border-b border-g-300">
+            {{ $t('system.userCenter.changePassword') }}
+          </h1>
 
           <ElForm
             :model="pwdForm"
@@ -148,39 +180,39 @@
             label-width="86px"
             label-position="top"
           >
-            <ElFormItem label="当前密码" prop="oldPassword">
+            <ElFormItem :label="$t('system.userCenter.currentPassword')" prop="oldPassword">
               <ElInput
                 v-model="pwdForm.oldPassword"
                 type="password"
                 :disabled="!isEditPwd"
                 show-password
-                placeholder="请输入当前密码"
+                :placeholder="$t('system.userCenter.currentPasswordPlaceholder')"
               />
             </ElFormItem>
 
-            <ElFormItem label="新密码" prop="newPassword">
+            <ElFormItem :label="$t('system.userCenter.newPassword')" prop="newPassword">
               <ElInput
                 v-model="pwdForm.newPassword"
                 type="password"
                 :disabled="!isEditPwd"
                 show-password
-                placeholder="请输入新密码（6-20位）"
+                :placeholder="$t('system.userCenter.newPasswordPlaceholder')"
               />
             </ElFormItem>
 
-            <ElFormItem label="确认新密码" prop="confirmPassword">
+            <ElFormItem :label="$t('system.userCenter.confirmPassword')" prop="confirmPassword">
               <ElInput
                 v-model="pwdForm.confirmPassword"
                 type="password"
                 :disabled="!isEditPwd"
                 show-password
-                placeholder="请再次输入新密码"
+                :placeholder="$t('system.userCenter.confirmPasswordPlaceholder')"
               />
             </ElFormItem>
 
             <div class="flex-c justify-end [&_.el-button]:!w-27.5">
               <ElButton v-if="isEditPwd" class="mr-2.5" v-ripple @click="cancelPwdEdit">
-                取消
+                {{ $t('system.userCenter.cancel') }}
               </ElButton>
               <ElButton
                 type="primary"
@@ -189,7 +221,7 @@
                 :loading="pwdLoading"
                 @click="handlePwdSubmit"
               >
-                {{ isEditPwd ? '保存' : '编辑' }}
+                {{ isEditPwd ? $t('system.userCenter.save') : $t('system.userCenter.edit') }}
               </ElButton>
             </div>
           </ElForm>
@@ -200,10 +232,13 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import type { FormInstance, FormRules } from 'element-plus'
   import { fetchGetUserProfile, fetchUpdateUserProfile, fetchChangePassword } from '@/api/auth'
   import { useDictStore } from '@/store/modules/dict'
   import defaultAvatarImg from '@/assets/images/user/avatar.webp'
+
+  const { t } = useI18n()
 
   defineOptions({ name: 'UserCenter' })
 
@@ -214,11 +249,23 @@
   const userProfile = ref<Api.Auth.UserProfile | null>(null)
 
   // 性别选项（从字典获取）
-  const genderOptions = ref<{ label: string; value: number }[]>([
-    { label: '未知', value: 0 },
-    { label: '男', value: 1 },
-    { label: '女', value: 2 }
-  ])
+  const genderDictOptions = ref<{ label: string; value: number }[]>([])
+
+  const genderOptions = computed(() =>
+    genderDictOptions.value.length
+      ? genderDictOptions.value
+      : [
+          { label: t('system.userCenter.genderUnknown'), value: 0 },
+          { label: t('system.userCenter.genderMale'), value: 1 },
+          { label: t('system.userCenter.genderFemale'), value: 2 }
+        ]
+  )
+
+  const genderLabel = computed(() => {
+    if (userProfile.value?.gender === 1) return t('system.userCenter.genderMale')
+    if (userProfile.value?.gender === 2) return t('system.userCenter.genderFemale')
+    return t('system.userCenter.genderUnknown')
+  })
 
   // 使用字典 store
   const dictStore = useDictStore()
@@ -264,38 +311,42 @@
   })
 
   // 个人信息表单验证规则
-  const profileRules = reactive<FormRules>({
+  const profileRules = computed<FormRules>(() => ({
     nickname: [
-      { required: true, message: '请输入昵称', trigger: 'blur' },
-      { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+      { required: true, message: t('system.userCenter.nicknameRequired'), trigger: 'blur' },
+      { min: 2, max: 50, message: t('system.userCenter.nicknameLength'), trigger: 'blur' }
     ],
-    email: [{ type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }],
-    phone: [{ pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式', trigger: 'blur' }],
-    address: [{ max: 255, message: '地址长度不能超过255个字符', trigger: 'blur' }],
-    introduction: [{ max: 500, message: '个人介绍长度不能超过500个字符', trigger: 'blur' }]
-  })
+    email: [{ type: 'email', message: t('system.userCenter.emailInvalid'), trigger: 'blur' }],
+    phone: [
+      { pattern: /^1[3-9]\d{9}$/, message: t('system.userCenter.phoneInvalid'), trigger: 'blur' }
+    ],
+    address: [{ max: 255, message: t('system.userCenter.addressMax'), trigger: 'blur' }],
+    introduction: [{ max: 500, message: t('system.userCenter.introMax'), trigger: 'blur' }]
+  }))
 
   // 确认密码验证
   const validateConfirmPassword = (_rule: any, value: string, callback: any) => {
     if (value !== pwdForm.newPassword) {
-      callback(new Error('两次输入的密码不一致'))
+      callback(new Error(t('system.userCenter.passwordMismatch')))
     } else {
       callback()
     }
   }
 
   // 密码表单验证规则
-  const pwdRules = reactive<FormRules>({
-    oldPassword: [{ required: true, message: '请输入当前密码', trigger: 'blur' }],
+  const pwdRules = computed<FormRules>(() => ({
+    oldPassword: [
+      { required: true, message: t('system.userCenter.currentPasswordRequired'), trigger: 'blur' }
+    ],
     newPassword: [
-      { required: true, message: '请输入新密码', trigger: 'blur' },
-      { min: 6, max: 20, message: '密码长度应在 6 到 20 个字符', trigger: 'blur' }
+      { required: true, message: t('system.userCenter.newPasswordRequired'), trigger: 'blur' },
+      { min: 6, max: 20, message: t('system.userCenter.newPasswordLength'), trigger: 'blur' }
     ],
     confirmPassword: [
-      { required: true, message: '请再次输入新密码', trigger: 'blur' },
+      { required: true, message: t('system.userCenter.confirmPasswordRequired'), trigger: 'blur' },
       { validator: validateConfirmPassword, trigger: 'blur' }
     ]
-  })
+  }))
 
   /**
    * 获取用户个人信息
@@ -328,7 +379,7 @@
       // 使用 store 加载字典数据（自动缓存）
       const data = await dictStore.loadDictData('sys_user_sex')
       if (data && data.length > 0) {
-        genderOptions.value = data.map((item: Api.SystemManage.DictDataListItem) => ({
+        genderDictOptions.value = data.map((item: Api.SystemManage.DictDataListItem) => ({
           label: item.label,
           value: Number(item.value)
         }))

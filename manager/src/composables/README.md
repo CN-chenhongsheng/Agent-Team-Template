@@ -191,10 +191,9 @@ export const yourImportConfig: GenericImportConfig = {
 
 完整示例请参考：
 
-- **学生导入**：`src/views/student/manage/`
-  - 配置文件：`config/student-import-config.ts`
+- **用户导入**：`src/views/system/user/`
+  - 配置文件：`config/user-import-config.ts`
   - 页面组件：`index.vue`
-  - Worker：`src/workers/student-import.worker.ts`
 
 ## 常见问题
 

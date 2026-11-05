@@ -11,7 +11,10 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { useDictStore } from '@/store/modules/dict'
+
+  const { t } = useI18n()
 
   interface Props {
     modelValue: Record<string, any>
@@ -52,18 +55,18 @@
    */
   const formItems = computed(() => [
     {
-      label: '菜单名称',
+      label: t('system.menu.search.menuName'),
       key: 'menuName',
       type: 'input',
-      props: { clearable: true, placeholder: '请输入菜单名称' }
+      props: { clearable: true, placeholder: t('system.menu.search.menuNamePlaceholder') }
     },
     {
-      label: '状态',
+      label: t('system.menu.search.status'),
       key: 'status',
       type: 'select',
       props: {
         clearable: true,
-        placeholder: '请选择状态',
+        placeholder: t('system.menu.search.statusPlaceholder'),
         options: statusOptions.value
       }
     }

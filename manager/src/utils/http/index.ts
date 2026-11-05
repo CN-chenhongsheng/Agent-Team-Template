@@ -92,7 +92,7 @@ axiosInstance.interceptors.request.use(
     ) {
       // 如果刷新已经失败过，不再尝试刷新，直接让请求失败
       if (refreshFailed) {
-        throw createHttpError('会话已过期，请重新登录', ApiStatus.unauthorized)
+        throw createHttpError($t('httpMsg.unauthorized'), ApiStatus.unauthorized)
       }
 
       // 如果已经在刷新中，等待刷新完成

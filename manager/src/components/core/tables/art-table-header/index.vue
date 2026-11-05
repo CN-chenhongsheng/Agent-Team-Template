@@ -223,8 +223,8 @@
 
   const refreshTooltip = computed(() =>
     autoRefreshEnabled.value
-      ? '左键：刷新表格；右键：关闭自动刷新'
-      : '左键：刷新表格；右键：开启自动刷新'
+      ? t('system.common.refreshHintStop')
+      : t('system.common.refreshHintStart')
   )
 
   /**

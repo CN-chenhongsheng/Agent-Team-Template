@@ -4,7 +4,7 @@
     <!-- 搜索栏 -->
     <LoginLogSearch
       v-show="showSearchBar"
-      v-model="searchForm"
+      v-model="formFilters"
       @search="handleSearch"
       @reset="resetSearchParams"
     ></LoginLogSearch>
@@ -27,12 +27,17 @@
               :disabled="selectedCount === 0"
               @click="handleBatchDelete"
               v-ripple
-              v-permission="'system:loginlog:delete'"
+              v-permission="PERMISSIONS.system.loginLog.delete"
             >
-              批量删除{{ selectedCount > 0 ? `(${selectedCount})` : '' }}
+              {{ $t('system.loginLog.batchDelete')
+              }}{{ selectedCount > 0 ? `(${selectedCount})` : '' }}
             </ElButton>
-            <ElButton @click="handleClean" v-ripple v-permission="'system:loginlog:clean'">
-              清空日志
+            <ElButton
+              @click="handleClean"
+              v-ripple
+              v-permission="PERMISSIONS.system.loginLog.clean"
+            >
+              {{ $t('system.loginLog.clean') }}
             </ElButton>
           </ElSpace>
         </template>
@@ -55,12 +60,13 @@
       </ArtTable>
 
       <!-- 详情弹窗 -->
-      <LoginLogDetail v-model:visible="detailDialogVisible" :log-data="currentLogData" />
+      <LoginLogDetail v-model="detailDialogVisible" :log-data="currentLogData" />
     </ElCard>
   </div>
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { useTable } from '@/hooks/core/useTable'
   import {
     fetchGetLoginLogList,
@@ -69,9 +75,13 @@
   } from '@/api/system-manage'
   import LoginLogSearch from './modules/login-log-search.vue'
   import LoginLogDetail from './modules/login-log-detail.vue'
+  import type { ActionButtonConfig } from '@/types/component'
+  import { PERMISSIONS } from '@/utils/constants'
   import { h } from 'vue'
 
   defineOptions({ name: 'LoginLog' })
+
+  const { t } = useI18n()
 
   type LoginLogListItem = Api.SystemManage.LoginLogListItem
 
@@ -84,7 +94,7 @@
   const selectedCount = computed(() => selectedRows.value.length)
 
   // 搜索表单
-  const searchForm = ref<Api.SystemManage.LoginLogSearchParams>({
+  const formFilters = ref<Api.SystemManage.LoginLogSearchParams>({
     pageNum: 1,
     username: undefined,
     loginType: undefined,
@@ -92,6 +102,25 @@
     startTime: undefined,
     endTime: undefined
   })
+
+  /**
+   * 获取登入日志操作配置
+   */
+  const getLoginLogActions = (row: LoginLogListItem): ActionButtonConfig[] => [
+    {
+      type: 'view',
+      label: t('system.common.view'),
+      onClick: () => handleViewDetail(row),
+      auth: PERMISSIONS.system.loginLog.detail
+    },
+    {
+      type: 'delete',
+      label: t('system.common.delete'),
+      onClick: () => handleDelete(row),
+      auth: PERMISSIONS.system.loginLog.delete,
+      danger: true
+    }
+  ]
 
   const {
     columns,
@@ -114,7 +143,7 @@
       apiFn: fetchGetLoginLogList,
       apiParams: computed(() => {
         return {
-          ...searchForm.value
+          ...formFilters.value
         } as Api.SystemManage.LoginLogSearchParams
       }),
       // 自定义分页字段映射
@@ -126,12 +155,12 @@
         { type: 'selection' }, // 勾选列
         {
           prop: 'username',
-          label: '用户账号',
+          label: t('system.loginLog.userAccount'),
           minWidth: 120
         },
         {
           prop: 'loginTypeText',
-          label: '登录类型',
+          label: t('system.loginLog.loginType'),
           width: 100,
           formatter: (row: LoginLogListItem) => {
             return h(
@@ -143,7 +172,7 @@
         },
         {
           prop: 'loginStatusText',
-          label: '登录状态',
+          label: t('system.loginLog.loginStatus'),
           width: 100,
           formatter: (row: LoginLogListItem) => {
             const typeMap: Record<0 | 1 | 2, 'danger' | 'success' | 'info'> = {
@@ -161,52 +190,38 @@
         },
         {
           prop: 'ipAddress',
-          label: 'IP地址',
+          label: t('system.loginLog.ip'),
           width: 130
         },
         {
           prop: 'loginLocation',
-          label: '登录地点',
+          label: t('system.loginLog.location'),
           minWidth: 150
         },
         {
           prop: 'browser',
-          label: '浏览器',
+          label: t('system.loginLog.browser'),
           minWidth: 120,
           showOverflowTooltip: true
         },
         {
           prop: 'os',
-          label: '操作系统',
+          label: t('system.loginLog.os'),
           minWidth: 120,
           showOverflowTooltip: true
         },
         {
           prop: 'loginTime',
-          label: '登录时间',
+          label: t('system.loginLog.loginTime'),
           width: 180,
           sortable: true
         },
         {
           prop: 'action',
-          label: '操作',
+          label: t('system.loginLog.action'),
           width: 150,
           fixed: 'right',
-          formatter: (row: LoginLogListItem) => [
-            {
-              type: 'view',
-              label: '查看',
-              onClick: () => handleViewDetail(row),
-              auth: 'system:loginlog:detail'
-            },
-            {
-              type: 'delete',
-              label: '删除',
-              onClick: () => handleDelete(row),
-              auth: 'system:loginlog:delete',
-              danger: true
-            }
-          ]
+          formatter: getLoginLogActions
         }
       ]
     },
@@ -222,8 +237,8 @@
    * 处理搜索
    */
   const handleSearch = (params: Record<string, any>) => {
-    searchForm.value = {
-      ...searchForm.value,
+    formFilters.value = {
+      ...formFilters.value,
       ...params,
       pageNum: 1
     }
@@ -249,10 +264,10 @@
    * 删除单条日志
    */
   const handleDelete = (row: LoginLogListItem) => {
-    ElMessageBox.confirm('确定要删除这条登入日志吗？', '提示', {
+    ElMessageBox.confirm(t('system.loginLog.deleteConfirm'), t('system.common.tip'), {
       type: 'warning',
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel')
     })
       .then(async () => {
         await fetchBatchDeleteLoginLog([row.id])
@@ -266,15 +281,19 @@
    */
   const handleBatchDelete = () => {
     if (selectedCount.value === 0) {
-      ElMessage.warning('请选择要删除的日志')
+      ElMessage.warning(t('system.loginLog.selectToDelete'))
       return
     }
 
-    ElMessageBox.confirm(`确定要删除选中的 ${selectedCount.value} 条登入日志吗？`, '提示', {
-      type: 'warning',
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
+    ElMessageBox.confirm(
+      t('system.loginLog.batchDeleteConfirm', { count: selectedCount.value }),
+      t('system.common.tip'),
+      {
+        type: 'warning',
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel')
+      }
+    )
       .then(async () => {
         const ids = selectedRows.value.map((row) => row.id)
         await fetchBatchDeleteLoginLog(ids)
@@ -288,10 +307,10 @@
    * 清空日志
    */
   const handleClean = () => {
-    ElMessageBox.confirm('确定要清空所有登入日志吗？此操作不可恢复！', '危险操作', {
+    ElMessageBox.confirm(t('system.loginLog.cleanConfirm'), t('system.common.dangerTitle'), {
       type: 'warning',
-      confirmButtonText: '确定清空',
-      cancelButtonText: '取消',
+      confirmButtonText: t('system.common.confirmClean'),
+      cancelButtonText: t('common.cancel'),
       confirmButtonClass: 'el-button--danger'
     })
       .then(async () => {

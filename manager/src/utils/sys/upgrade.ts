@@ -37,6 +37,10 @@
 import { upgradeLogList } from '@/mock/upgrade/changeLog'
 import { useUserStore } from '@/store/modules/user'
 import { StorageConfig } from '@/utils/storage/storage-config'
+import i18n from '@/locales'
+
+const t = (key: string, params?: Record<string, unknown>): string =>
+  (i18n.global.t as any)(key, params)
 
 /**
  * 版本管理器
@@ -133,14 +137,14 @@ class VersionManager {
 
     const messageParts = [
       `<p style="color: var(--art-gray-800) !important; padding-bottom: 5px;">`,
-      `系统已升级到 ${StorageConfig.CURRENT_VERSION} 版本，此次更新带来了以下改进：`,
+      t('utils.upgrade.intro', { version: StorageConfig.CURRENT_VERSION }),
       `</p>`,
       content
     ]
 
     if (requireReLogin) {
       messageParts.push(
-        `<p style="color: var(--theme-color); padding-top: 5px;">升级完成，请重新登录后继续使用。</p>`
+        `<p style="color: var(--theme-color); padding-top: 5px;">${t('utils.upgrade.footer')}</p>`
       )
     }
 
@@ -152,7 +156,7 @@ class VersionManager {
    */
   private showUpgradeNotification(message: string): void {
     ElNotification({
-      title: '系统升级公告',
+      title: t('utils.upgrade.title'),
       message,
       duration: 0,
       type: 'success',

@@ -39,12 +39,7 @@ declare namespace Api {
     }
 
     /** 字典类型分页响应 */
-    interface DictTypePageResponse extends Api.Common.PaginatedResponse<DictTypeListItem> {
-      records: DictTypeListItem[]
-      current: number
-      size: number
-      total: number
-    }
+    type DictTypePageResponse = Api.Common.PaginatedResponse<DictTypeListItem>
 
     /** ==================== 字典数据管理 ==================== */
     /** 字典数据查询参数 */
@@ -88,12 +83,7 @@ declare namespace Api {
     }
 
     /** 字典数据分页响应 */
-    interface DictDataPageResponse extends Api.Common.PaginatedResponse<DictDataListItem> {
-      records: DictDataListItem[]
-      current: number
-      size: number
-      total: number
-    }
+    type DictDataPageResponse = Api.Common.PaginatedResponse<DictDataListItem>
 
     /** 字典数据列表 */
     type DictDataList = DictDataListItem[]

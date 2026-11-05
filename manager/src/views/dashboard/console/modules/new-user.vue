@@ -2,13 +2,13 @@
   <div class="art-card p-5 h-128 overflow-hidden mb-5 max-sm:mb-4">
     <div class="art-card-header">
       <div class="title">
-        <h4>新用户</h4>
-        <p>这个月增长<span class="text-success">+20%</span></p>
+        <h4>{{ $t('dashboard.newUser.title') }}</h4>
+        <p> {{ $t('dashboard.newUser.growth') }}<span class="text-success">+20%</span> </p>
       </div>
       <ElRadioGroup v-model="radio2">
-        <ElRadioButton value="本月" label="本月"></ElRadioButton>
-        <ElRadioButton value="上月" label="上月"></ElRadioButton>
-        <ElRadioButton value="今年" label="今年"></ElRadioButton>
+        <ElRadioButton value="thisMonth" :label="$t('dashboard.newUser.thisMonth')" />
+        <ElRadioButton value="lastMonth" :label="$t('dashboard.newUser.lastMonth')" />
+        <ElRadioButton value="thisYear" :label="$t('dashboard.newUser.thisYear')" />
       </ElRadioGroup>
     </div>
     <ArtTable
@@ -21,7 +21,7 @@
       :header-cell-style="{ background: 'transparent' }"
     >
       <template #default>
-        <ElTableColumn label="头像" prop="avatar" width="150px">
+        <ElTableColumn :label="$t('dashboard.newUser.avatar')" prop="avatar" width="150px">
           <template #default="scope">
             <div style="display: flex; align-items: center">
               <img class="size-9 rounded-lg" :src="scope.row.avatar" alt="avatar" />
@@ -29,21 +29,32 @@
             </div>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="地区" prop="province" />
-        <ElTableColumn label="性别" prop="avatar">
+        <ElTableColumn :label="$t('dashboard.newUser.region')" prop="provinceIndex">
+          <template #default="scope">
+            {{ $t(`dashboard.newUser.provinces.${scope.row.provinceIndex ?? 0}`) }}
+          </template>
+        </ElTableColumn>
+        <ElTableColumn :label="$t('dashboard.newUser.gender')" prop="avatar">
           <template #default="scope">
             <div style="display: flex; align-items: center">
-              <span style="margin-left: 10px">{{ scope.row.sex === 1 ? '男' : '女' }}</span>
+              <span style="margin-left: 10px">{{
+                scope.row.sex === 1 ? $t('dashboard.newUser.male') : $t('dashboard.newUser.female')
+              }}</span>
             </div>
           </template>
         </ElTableColumn>
-        <ElTableColumn label="进度" width="240">
+        <ElTableColumn :label="$t('dashboard.newUser.progress')" width="240">
           <template #default="scope">
             <ElProgress
               :percentage="scope.row.pro"
               :color="scope.row.color"
               :stroke-width="4"
-              :aria-label="`${scope.row.username}的完成进度: ${scope.row.pro}%`"
+              :aria-label="
+                $t('dashboard.newUser.completion', {
+                  name: scope.row.username,
+                  percent: scope.row.pro
+                })
+              "
             />
           </template>
         </ElTableColumn>
@@ -62,7 +73,7 @@
 
   interface UserTableItem {
     username: string
-    province: string
+    provinceIndex: number
     sex: 0 | 1
     age: number
     percentage: number
@@ -73,7 +84,7 @@
 
   const ANIMATION_DELAY = 100
 
-  const radio2 = ref('本月')
+  const radio2 = ref('thisMonth')
 
   /**
    * 新用户表格数据
@@ -82,7 +93,7 @@
   const tableData = reactive<UserTableItem[]>([
     {
       username: '中小鱼',
-      province: '北京',
+      provinceIndex: 0,
       sex: 0,
       age: 22,
       percentage: 60,
@@ -92,7 +103,7 @@
     },
     {
       username: '何小荷',
-      province: '深圳',
+      provinceIndex: 1,
       sex: 1,
       age: 21,
       percentage: 20,
@@ -102,7 +113,7 @@
     },
     {
       username: '誶誶淰',
-      province: '上海',
+      provinceIndex: 2,
       sex: 1,
       age: 23,
       percentage: 60,
@@ -112,7 +123,7 @@
     },
     {
       username: '发呆草',
-      province: '长沙',
+      provinceIndex: 3,
       sex: 0,
       age: 28,
       percentage: 50,
@@ -122,7 +133,7 @@
     },
     {
       username: '甜筒',
-      province: '浙江',
+      provinceIndex: 4,
       sex: 1,
       age: 26,
       percentage: 70,
@@ -132,7 +143,7 @@
     },
     {
       username: '冷月呆呆',
-      province: '湖北',
+      provinceIndex: 5,
       sex: 1,
       age: 25,
       percentage: 90,

@@ -23,19 +23,27 @@
       >
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple v-permission="'system:user:add'">
-              新增用户
+            <ElButton
+              @click="showDialog('add')"
+              v-ripple
+              v-permission="PERMISSIONS.system.user.add"
+            >
+              {{ $t('system.user.add') }}
             </ElButton>
-            <ElButton @click="showImportDialog" v-ripple v-permission="'system:user:import'">
-              导入用户
+            <ElButton
+              @click="showImportDialog"
+              v-ripple
+              v-permission="PERMISSIONS.system.user.import"
+            >
+              {{ $t('system.user.import') }}
             </ElButton>
             <ElButton
               :disabled="selectedCount === 0"
               @click="handleBatchDelete"
               v-ripple
-              v-permission="'system:user:delete'"
+              v-permission="PERMISSIONS.system.user.delete"
             >
-              批量删除{{ selectedCount > 0 ? `(${selectedCount})` : '' }}
+              {{ $t('system.user.batchDelete') }}{{ selectedCount > 0 ? `(${selectedCount})` : '' }}
             </ElButton>
           </ElSpace>
         </template>
@@ -59,10 +67,10 @@
 
       <!-- 用户弹窗 -->
       <UserDialog
-        v-model:visible="dialogVisible"
-        :type="dialogType"
+        v-model="dialogVisible"
+        :dialog-type="dialogType"
         :user-data="editData"
-        @submit="handleDialogSubmit"
+        @success="handleDialogSubmit"
       />
 
       <!-- 权限分配弹窗 -->
@@ -73,12 +81,12 @@
       />
 
       <!-- 用户查看抽屉 -->
-      <UserDrawer v-model:visible="drawerVisible" :user-id="currentUserId" />
+      <UserDrawer v-model="drawerVisible" :user-id="currentUserId" />
 
       <!-- 用户导入弹窗 -->
       <ArtImportDialog
         v-model="importDialogVisible"
-        title="导入用户"
+        :title="$t('system.user.importTitle')"
         :template-download-fn="handleDownloadTemplate"
         :scan-with-progress-fn="handleScanFile"
         @upload-success="handleUploadSuccess"
@@ -89,8 +97,9 @@
 </template>
 
 <script setup lang="ts">
-  import { ACCOUNT_TABLE_DATA } from '@/mock/temp/formData'
+  import { useI18n } from 'vue-i18n'
   import { useTable } from '@/hooks/core/useTable'
+  import defaultAvatar from '@/assets/images/user/avatar.webp'
   import {
     fetchGetUserPage,
     fetchDeleteUser,
@@ -111,8 +120,11 @@
   import type { ActionButtonConfig } from '@/types/component'
   import { useUserOnlineStatus } from '@/hooks/core/useUserOnlineStatus'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import { PERMISSIONS } from '@/utils/constants'
 
   defineOptions({ name: 'User' })
+
+  const { t } = useI18n()
 
   type UserListItem = Api.SystemManage.UserListItem
 
@@ -165,36 +177,36 @@
     const actions: ActionButtonConfig[] = [
       {
         type: 'view',
-        label: '查看',
+        label: t('system.common.view'),
         onClick: () => showDrawer(row),
-        auth: 'system:user:view'
+        auth: PERMISSIONS.system.user.view
       },
       {
         type: 'edit',
-        label: '编辑',
+        label: t('system.common.edit'),
         onClick: () => showDialog('edit', row),
-        auth: 'system:user:edit'
+        auth: PERMISSIONS.system.user.edit
       },
       {
         type: 'reset',
-        label: '重置密码',
+        label: t('system.user.resetPassword'),
         onClick: () => handleResetPassword(row),
-        auth: 'system:user:reset-pwd'
+        auth: PERMISSIONS.system.user.resetPwd
       },
       {
         type: 'share',
-        label: '分配权限',
+        label: t('system.user.assignPermission'),
         onClick: () => showPermissionDialog(row),
-        auth: 'system:user:assign-permission'
+        auth: PERMISSIONS.system.user.assignPermission
       }
     ]
 
     if (!isSuperAdminUser(row)) {
       actions.push({
         type: 'delete',
-        label: '删除',
+        label: t('system.common.delete'),
         onClick: () => deleteUser(row),
-        auth: 'system:user:delete',
+        auth: PERMISSIONS.system.user.delete,
         danger: true
       })
     }
@@ -238,7 +250,7 @@
         { type: 'selection' }, // 勾选列
         {
           prop: 'userInfo',
-          label: '用户信息',
+          label: t('system.user.userInfo'),
           minWidth: 250,
           formatter: (row) => {
             return h('div', { class: 'user flex-c' }, [
@@ -250,14 +262,18 @@
               }),
               h('div', { class: 'ml-2' }, [
                 h('p', { class: 'nickname text-sm text-gray-500' }, `${row.nickname}#${row.id}`),
-                h('p', { class: 'email text-xs text-gray-400' }, row.email || '未设置邮箱')
+                h(
+                  'p',
+                  { class: 'email text-xs text-gray-400' },
+                  row.email || t('system.user.noEmail')
+                )
               ])
             ])
           }
         },
         {
           prop: 'genderText',
-          label: '性别',
+          label: t('system.user.gender'),
           width: 70,
           formatter: (row) => {
             const genderIcon = {
@@ -265,7 +281,15 @@
               2: 'ri-women-line'
             }
             return h('div', { class: 'flex items-center gap-1' }, [
-              h('span', { class: 'text-g-700 text-sm' }, row.genderText),
+              h(
+                'span',
+                { class: 'text-g-700 text-sm' },
+                row.gender === 1
+                  ? t('system.userCenter.genderMale')
+                  : row.gender === 2
+                    ? t('system.userCenter.genderFemale')
+                    : t('system.userCenter.genderUnknown')
+              ),
               h(ArtSvgIcon, {
                 icon: genderIcon[row.gender as keyof typeof genderIcon] as string,
                 class: `text-g-700 text-md ${row.gender === 1 ? 'text-primary' : 'text-pink-500'}`
@@ -275,12 +299,12 @@
         },
         {
           prop: 'phone',
-          label: '手机号',
+          label: t('system.user.phone'),
           width: 125
         },
         {
           prop: 'roleNames',
-          label: '角色',
+          label: t('system.user.role'),
           minWidth: 150,
           formatter: (row) => {
             const roleList = Array.isArray(row.roleNames)
@@ -289,7 +313,7 @@
                 ? (row.roleNames as unknown as string).split(',')
                 : []
             if (roleList.length === 0) {
-              return h('span', { class: 'text-gray-400' }, '暂无角色')
+              return h('span', { class: 'text-gray-400' }, t('system.user.noRole'))
             }
 
             // 如果只有一个角色，直接显示
@@ -298,7 +322,7 @@
             }
 
             // 多个角色：显示第一个 + [+N]，hover 显示全部
-            const tooltipContent = roleList.join('、')
+            const tooltipContent = roleList.join(t('system.common.listSeparator'))
             const displayTags = [
               h(ElTag, { size: 'small', type: 'primary' }, () => roleList[0]),
               h(ElTag, { size: 'small', type: 'primary' }, () => `+${roleList.length - 1}`)
@@ -319,18 +343,18 @@
         },
         {
           prop: 'onlineStatus',
-          label: '在线状态',
+          label: t('system.user.onlineStatus'),
           width: 100,
           formatter: (row) => {
             const isOnline = onlineStatusMap.value[row.id] ?? (row as any).isOnline
             return h(ElTag, { type: isOnline ? 'success' : 'info', size: 'small' }, () =>
-              isOnline ? '在线' : '离线'
+              isOnline ? t('system.user.online') : t('system.user.offline')
             )
           }
         },
         {
           prop: 'status',
-          label: '系统状态',
+          label: t('system.user.systemStatus'),
           width: 100,
           formatter: (row) => {
             const isSuperAdmin = isSuperAdminUser(row)
@@ -347,23 +371,23 @@
         },
         {
           prop: 'lastLoginTime',
-          label: '最后登录',
+          label: t('system.user.lastLogin'),
           width: 180,
           sortable: true,
-          formatter: (row) => row.lastLoginTime || '未登录'
+          formatter: (row) => row.lastLoginTime || t('system.user.neverLogin')
         },
         {
           prop: 'createTime',
-          label: '创建时间',
+          label: t('system.common.createTime'),
           width: 180,
           sortable: true
         },
         {
           prop: 'action',
-          label: '操作',
+          label: t('system.common.actions'),
           width: 180,
           fixed: 'right',
-          formatter: (row) => getUserActions(row)
+          formatter: getUserActions
         }
       ]
     },
@@ -376,11 +400,11 @@
           return []
         }
 
-        // 使用本地头像替换接口返回的头像（如果接口没有返回头像）
-        return records.map((item, index: number) => {
+        // 接口没有返回头像时使用本地默认头像
+        return records.map((item) => {
           return {
             ...item,
-            avatar: item.avatar || ACCOUNT_TABLE_DATA[index % ACCOUNT_TABLE_DATA.length].avatar
+            avatar: item.avatar || defaultAvatar
           }
         })
       }
@@ -432,17 +456,17 @@
    */
   deleteUser = async (row: UserListItem): Promise<void> => {
     if (isSuperAdminUser(row)) {
-      ElMessage.warning('超级管理员不允许删除')
+      ElMessage.warning(t('system.user.superAdminDeleteForbidden'))
       return
     }
 
     try {
       await ElMessageBox.confirm(
-        `确定要删除用户 "${row.username}" 吗？此操作不可恢复！`,
-        '删除用户',
+        t('system.user.deleteConfirm', { name: row.username }),
+        t('system.user.deleteTitle'),
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning'
         }
       )
@@ -461,23 +485,23 @@
    */
   const handleBatchDelete = async (): Promise<void> => {
     if (selectedCount.value === 0) {
-      ElMessage.warning('请先选择要删除的用户')
+      ElMessage.warning(t('system.user.selectToDelete'))
       return
     }
 
     const hasSuperAdmin = selectedRows.value.some((row) => isSuperAdminUser(row))
     if (hasSuperAdmin) {
-      ElMessage.warning('选中的用户中包含超级管理员，无法删除')
+      ElMessage.warning(t('system.user.batchContainsSuperAdmin'))
       return
     }
 
     try {
       await ElMessageBox.confirm(
-        `确定要删除选中的 ${selectedCount.value} 个用户吗？此操作不可恢复！`,
-        '批量删除',
+        t('system.user.batchDeleteConfirm', { count: selectedCount.value }),
+        t('system.user.batchDelete'),
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning'
         }
       )
@@ -500,7 +524,7 @@
   const handleStatusChange = async (row: UserListItem, status: number): Promise<void> => {
     // 超级管理员不允许关闭
     if (isSuperAdminUser(row) && status === 0) {
-      ElMessage.warning('超级管理员不允许停用')
+      ElMessage.warning(t('system.user.superAdminStatusForbidden'))
       return
     }
 
@@ -521,13 +545,13 @@
   handleResetPassword = async (row: UserListItem): Promise<void> => {
     try {
       const { value: newPassword } = await ElMessageBox.prompt(
-        '请输入新密码（至少6位）',
-        `重置用户 "${row.nickname}" 的密码`,
+        t('system.user.resetPasswordPrompt'),
+        t('system.user.resetPasswordMessage', { name: row.nickname }),
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           inputPattern: /.{6,}/,
-          inputErrorMessage: '密码长度不能少于6位',
+          inputErrorMessage: t('system.user.resetPasswordInvalid'),
           inputType: 'password'
         }
       )

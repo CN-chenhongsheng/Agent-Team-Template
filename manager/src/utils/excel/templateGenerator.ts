@@ -9,6 +9,11 @@
 import ExcelJS from 'exceljs'
 import FileSaver from 'file-saver'
 import { useDictStore } from '@/store/modules/dict'
+import AppConfig from '@/config'
+import i18n from '@/locales'
+
+const t = (key: string, params?: Record<string, unknown>): string =>
+  (i18n.global.t as any)(key, params)
 
 /**
  * 模板列配置接口
@@ -168,26 +173,32 @@ function generateSmartNote(column: TemplateColumn, options: string[] | null): st
 
   // 必填提示
   if (column.required) {
-    notes.push('⚠️ 此字段为必填项')
+    notes.push(t('utils.excel.notes.required'))
   }
 
   // 自定义批注
   if (column.comment) {
-    notes.push(`📝 ${column.comment}`)
+    notes.push(t('utils.excel.notes.comment', { comment: column.comment }))
   }
 
   // 下拉选项提示
   if (options && options.length > 0) {
+    const separator = t('utils.excel.validation.separator')
     if (options.length <= 10) {
-      notes.push(`📋 可选值: ${options.join('、')}`)
+      notes.push(t('utils.excel.notes.options', { values: options.join(separator) }))
     } else {
-      notes.push(`📋 可选值: ${options.slice(0, 8).join('、')}... 等${options.length}项`)
+      notes.push(
+        t('utils.excel.notes.optionsMore', {
+          values: options.slice(0, 8).join(separator),
+          count: options.length
+        })
+      )
     }
   }
 
   // 示例提示
   if (column.example) {
-    notes.push(`💡 示例: ${column.example}`)
+    notes.push(t('utils.excel.notes.example', { example: column.example }))
   }
 
   return notes.join('\n')
@@ -236,7 +247,7 @@ export async function generateTemplate(config: TemplateConfig): Promise<void> {
 
   // 4. 创建工作簿和工作表
   const workbook = new ExcelJS.Workbook()
-  workbook.creator = '宿舍管理系统'
+  workbook.creator = AppConfig.systemInfo.name
   workbook.created = new Date()
   workbook.modified = new Date()
 
@@ -406,8 +417,8 @@ export async function generateTemplate(config: TemplateConfig): Promise<void> {
         allowBlank: true,
         formulae: [formulae],
         showErrorMessage: true,
-        errorTitle: '输入错误',
-        error: '请从下拉列表中选择有效值'
+        errorTitle: t('utils.excel.notes.dropdownErrorTitle'),
+        error: t('utils.excel.notes.dropdownError')
       }
     }
   }

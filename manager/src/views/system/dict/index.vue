@@ -9,17 +9,17 @@
             <div class="panel-header">
               <span class="panel-title">
                 <ArtSvgIcon icon="ri:bookmark-line" class="text-lg" />
-                字典类型
+                {{ $t('system.dict.typeTitle') }}
               </span>
               <ElButton
                 type="primary"
                 size="small"
                 @click="showTypeDialog('add')"
                 v-ripple
-                v-permission="'system:dict:type:add'"
+                v-permission="PERMISSIONS.system.dict.type.add"
               >
                 <template #icon><ArtSvgIcon :icon="'ri-add-line'" /></template>
-                新增类型
+                {{ $t('system.dict.addType') }}
               </ElButton>
             </div>
           </template>
@@ -29,24 +29,24 @@
             <div class="search-inputs">
               <ElInput
                 v-model="typeFormFilters.dictName"
-                placeholder="搜索字典名称"
+                :placeholder="$t('system.dict.searchName')"
                 clearable
                 @clear="handleTypeSearch"
                 @keyup.enter="handleTypeSearch"
               >
                 <template #prefix>
-                  <ArtSvgIcon icon="ri:search-line" class="text-main-color" />
+                  <ArtSvgIcon icon="ri:search-line" class="text-theme" />
                 </template>
               </ElInput>
               <ElInput
                 v-model="typeFormFilters.dictCode"
-                placeholder="搜索字典编码"
+                :placeholder="$t('system.dict.searchCode')"
                 clearable
                 @clear="handleTypeSearch"
                 @keyup.enter="handleTypeSearch"
               >
                 <template #prefix>
-                  <ArtSvgIcon icon="ri:code-line" class="text-main-color" />
+                  <ArtSvgIcon icon="ri:code-line" class="text-theme" />
                 </template>
               </ElInput>
             </div>
@@ -76,7 +76,7 @@
             <div class="panel-header">
               <span class="panel-title">
                 <ArtSvgIcon icon="ri:list-check" class="text-lg" />
-                字典数据
+                {{ $t('system.dict.dataTitle') }}
               </span>
               <ElButton
                 type="primary"
@@ -84,16 +84,16 @@
                 :disabled="!selectedTypeId"
                 @click="showDataDialog('add')"
                 v-ripple
-                v-permission="'system:dict:data:add'"
+                v-permission="PERMISSIONS.system.dict.data.add"
               >
                 <template #icon><ArtSvgIcon :icon="'ri-add-line'" /></template>
-                新增数据
+                {{ $t('system.dict.addData') }}
               </ElButton>
             </div>
           </template>
 
           <div v-if="!selectedTypeId" class="empty-tip">
-            <ElEmpty description="请先选择左侧字典类型" />
+            <ElEmpty :description="$t('system.dict.selectTypeFirst')" />
           </div>
 
           <template v-else>
@@ -101,13 +101,13 @@
             <div class="search-bar">
               <ElInput
                 v-model="dataFormFilters.label"
-                placeholder="搜索字典标签"
+                :placeholder="$t('system.dict.searchLabel')"
                 clearable
                 @clear="handleDataSearch"
                 @keyup.enter="handleDataSearch"
               >
                 <template #prefix>
-                  <ArtSvgIcon icon="ri:search-line" class="text-main-color" />
+                  <ArtSvgIcon icon="ri:search-line" class="text-theme" />
                 </template>
               </ElInput>
             </div>
@@ -150,6 +150,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { useTable } from '@/hooks/core/useTable'
   import {
     fetchGetDictTypePage,
@@ -166,8 +167,13 @@
   import { h } from 'vue'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
+  import type { ActionButtonConfig } from '@/types/component'
+  import type { DialogType } from '@/types'
+  import { PERMISSIONS } from '@/utils/constants'
 
   defineOptions({ name: 'Dict' })
+
+  const { t } = useI18n()
 
   type DictTypeListItem = Api.SystemManage.DictTypeListItem & { _statusLoading?: boolean }
   type DictDataListItem = Api.SystemManage.DictDataListItem & { _statusLoading?: boolean }
@@ -181,6 +187,44 @@
     dictCode: undefined,
     status: undefined
   })
+
+  /**
+   * 获取字典类型操作配置
+   */
+  const getDictTypeActions = (row: DictTypeListItem): ActionButtonConfig[] => [
+    {
+      type: 'edit',
+      label: t('system.common.edit'),
+      onClick: () => showTypeDialog('edit', row),
+      auth: PERMISSIONS.system.dict.type.edit
+    },
+    {
+      type: 'delete',
+      label: t('system.common.delete'),
+      onClick: () => deleteType(row),
+      auth: PERMISSIONS.system.dict.type.delete,
+      danger: true
+    }
+  ]
+
+  /**
+   * 获取字典数据操作配置
+   */
+  const getDictDataActions = (row: DictDataListItem): ActionButtonConfig[] => [
+    {
+      type: 'edit',
+      label: t('system.common.edit'),
+      onClick: () => showDataDialog('edit', row),
+      auth: PERMISSIONS.system.dict.data.edit
+    },
+    {
+      type: 'delete',
+      label: t('system.common.delete'),
+      onClick: () => deleteData(row),
+      auth: PERMISSIONS.system.dict.data.delete,
+      danger: true
+    }
+  ]
 
   const {
     columns: typeColumns,
@@ -208,12 +252,12 @@
       columnsFactory: () => [
         {
           prop: 'dictName',
-          label: '字典名称',
+          label: t('system.dict.dictName'),
           minWidth: 120
         },
         {
           prop: 'dictCode',
-          label: '字典编码',
+          label: t('system.dict.dictCode'),
           minWidth: 150,
           showOverflowTooltip: true,
           formatter: (row: DictTypeListItem) => {
@@ -222,7 +266,7 @@
         },
         {
           prop: 'status',
-          label: '状态',
+          label: t('system.common.status'),
           width: 100,
           formatter: (row: DictTypeListItem) => {
             return h(ArtSwitch, {
@@ -237,32 +281,16 @@
         },
         {
           prop: 'remark',
-          label: '备注',
+          label: t('system.common.remark'),
           minWidth: 150,
           showOverflowTooltip: true
         },
         {
           prop: 'action',
-          label: '操作',
+          label: t('system.common.actions'),
           width: 120,
           fixed: 'right' as const,
-          formatter: (row: DictTypeListItem) => {
-            const buttons = []
-            buttons.push({
-              type: 'edit',
-              label: '编辑',
-              onClick: () => showTypeDialog('edit', row),
-              auth: 'system:dict:type:edit'
-            })
-            buttons.push({
-              type: 'delete',
-              label: '删除',
-              onClick: () => deleteType(row),
-              auth: 'system:dict:type:delete',
-              danger: true
-            })
-            return buttons
-          }
+          formatter: getDictTypeActions
         }
       ]
     },
@@ -308,12 +336,12 @@
       columnsFactory: () => [
         {
           prop: 'label',
-          label: '字典标签',
+          label: t('system.dict.dictLabel'),
           minWidth: 120
         },
         {
           prop: 'value',
-          label: '字典值',
+          label: t('system.dict.dictValue'),
           minWidth: 120,
           formatter: (row: DictDataListItem) => {
             return h('code', { class: 'dict-value' }, row.value)
@@ -321,7 +349,7 @@
         },
         {
           prop: 'listClass',
-          label: '样式',
+          label: t('system.dict.style'),
           width: 100,
           formatter: (row: DictDataListItem) => {
             if (!row.listClass) return '-'
@@ -336,12 +364,12 @@
         },
         {
           prop: 'sort',
-          label: '排序',
+          label: t('system.common.sort'),
           width: 80
         },
         {
           prop: 'status',
-          label: '状态',
+          label: t('system.common.status'),
           width: 100,
           formatter: (row: DictDataListItem) => {
             return h(ArtSwitch, {
@@ -356,32 +384,16 @@
         },
         {
           prop: 'remark',
-          label: '备注',
+          label: t('system.common.remark'),
           minWidth: 150,
           showOverflowTooltip: true
         },
         {
           prop: 'action',
-          label: '操作',
+          label: t('system.common.actions'),
           width: 120,
           fixed: 'right' as const,
-          formatter: (row: DictDataListItem) => {
-            const buttons = []
-            buttons.push({
-              type: 'edit',
-              label: '编辑',
-              onClick: () => showDataDialog('edit', row),
-              auth: 'system:dict:data:edit'
-            })
-            buttons.push({
-              type: 'delete',
-              label: '删除',
-              onClick: () => deleteData(row),
-              auth: 'system:dict:data:delete',
-              danger: true
-            })
-            return buttons
-          }
+          formatter: getDictDataActions
         }
       ]
     },
@@ -395,11 +407,11 @@
 
   // 弹窗相关
   const typeDialogVisible = ref(false)
-  const typeDialogType = ref<'add' | 'edit'>('add')
+  const typeDialogType = ref<DialogType>('add')
   const currentTypeData = ref<DictTypeListItem | undefined>(undefined)
 
   const dataDialogVisible = ref(false)
-  const dataDialogType = ref<'add' | 'edit'>('add')
+  const dataDialogType = ref<DialogType>('add')
   const currentDataData = ref<DictDataListItem | undefined>(undefined)
 
   // 类型相关方法
@@ -428,11 +440,11 @@
   const deleteType = async (row: DictTypeListItem) => {
     try {
       await ElMessageBox.confirm(
-        `确定删除字典类型"${row.dictName}"吗？此操作不可恢复！`,
-        '删除确认',
+        t('system.dict.deleteTypeConfirm', { name: row.dictName }),
+        t('system.common.deleteConfirmTitle'),
         {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
           type: 'warning'
         }
       )
@@ -499,11 +511,15 @@
 
   const deleteData = async (row: DictDataListItem) => {
     try {
-      await ElMessageBox.confirm(`确定删除字典数据"${row.label}"吗？此操作不可恢复！`, '删除确认', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      })
+      await ElMessageBox.confirm(
+        t('system.dict.deleteDataConfirm', { name: row.label }),
+        t('system.common.deleteConfirmTitle'),
+        {
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
+          type: 'warning'
+        }
+      )
 
       await fetchDeleteDictData(row.id)
       await refreshDataRemove()
@@ -594,7 +610,7 @@
   .panel-title {
     font-size: 14px;
     font-weight: 500;
-    color: var(--main-color);
+    color: var(--theme-color);
   }
 
   .search-bar {

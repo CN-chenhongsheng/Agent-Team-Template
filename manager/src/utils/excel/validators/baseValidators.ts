@@ -19,6 +19,11 @@
  * @author 陈鸿昇
  */
 
+import i18n from '@/locales'
+
+const t = (key: string, params?: Record<string, unknown>): string =>
+  (i18n.global.t as any)(key, params)
+
 /**
  * 手机号校验
  * @param value 待校验值
@@ -33,7 +38,7 @@ export const validatePhone = (value: string): string | null => {
   // 11位数字，1开头
   const phoneRegex = /^1[3-9]\d{9}$/
   if (!phoneRegex.test(cleaned)) {
-    return '手机号格式不正确（需11位数字，1开头）'
+    return t('utils.excel.validation.phoneInvalid')
   }
 
   return null
@@ -50,12 +55,12 @@ export const validateEmail = (value: string): string | null => {
   // 基础邮箱格式校验
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!emailRegex.test(value)) {
-    return '邮箱格式不正确'
+    return t('utils.excel.validation.emailInvalid')
   }
 
   // 长度校验
   if (value.length > 100) {
-    return '邮箱长度不能超过100个字符'
+    return t('utils.excel.validation.emailTooLong')
   }
 
   return null
@@ -74,12 +79,12 @@ export const validateIdCard = (value: string): string | null => {
 
   // 18位身份证校验
   if (cleaned.length !== 18) {
-    return '身份证号应为18位'
+    return t('utils.excel.validation.idCardLength')
   }
 
   // 前17位必须是数字
   if (!/^\d{17}[\dXx]$/.test(cleaned)) {
-    return '身份证号格式不正确'
+    return t('utils.excel.validation.idCardFormat')
   }
 
   // 校验码验证
@@ -95,7 +100,7 @@ export const validateIdCard = (value: string): string | null => {
   const lastChar = cleaned[17].toUpperCase()
 
   if (checkCode !== lastChar) {
-    return '身份证号校验码不正确'
+    return t('utils.excel.validation.idCardChecksum')
   }
 
   // 验证出生日期
@@ -104,15 +109,15 @@ export const validateIdCard = (value: string): string | null => {
   const birthDay = parseInt(cleaned.substring(12, 14))
 
   if (birthYear < 1900 || birthYear > new Date().getFullYear()) {
-    return '身份证号出生年份不合理'
+    return t('utils.excel.validation.idCardYear')
   }
 
   if (birthMonth < 1 || birthMonth > 12) {
-    return '身份证号出生月份不合理'
+    return t('utils.excel.validation.idCardMonth')
   }
 
   if (birthDay < 1 || birthDay > 31) {
-    return '身份证号出生日期不合理'
+    return t('utils.excel.validation.idCardDay')
   }
 
   return null
@@ -129,7 +134,7 @@ export const validateDate = (value: string): string | null => {
   // 格式校验
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/
   if (!dateRegex.test(value)) {
-    return '日期格式不正确（应为 YYYY-MM-DD）'
+    return t('utils.excel.validation.dateFormat')
   }
 
   // 解析日期
@@ -137,26 +142,26 @@ export const validateDate = (value: string): string | null => {
 
   // 范围校验
   if (year < 1900 || year > 2100) {
-    return '年份超出有效范围（1900-2100）'
+    return t('utils.excel.validation.yearRange')
   }
 
   if (month < 1 || month > 12) {
-    return '月份超出有效范围（1-12）'
+    return t('utils.excel.validation.monthRange')
   }
 
   if (day < 1 || day > 31) {
-    return '日期超出有效范围（1-31）'
+    return t('utils.excel.validation.dayRange')
   }
 
   // 验证日期有效性（闰年、月份天数等）
   const date = new Date(value)
   if (isNaN(date.getTime())) {
-    return '日期无效'
+    return t('utils.excel.validation.dateInvalid')
   }
 
   // 验证解析后的日期是否与输入一致（避免 2月30日 被自动修正为 3月2日）
   if (date.getFullYear() !== year || date.getMonth() + 1 !== month || date.getDate() !== day) {
-    return '日期无效'
+    return t('utils.excel.validation.dateInvalid')
   }
 
   return null
@@ -173,14 +178,14 @@ export const validateYear = (value: string): string | null => {
   // 格式校验
   const yearRegex = /^\d{4}$/
   if (!yearRegex.test(value)) {
-    return '年份格式不正确（应为 YYYY）'
+    return t('utils.excel.validation.yearFormat')
   }
 
   const year = parseInt(value)
 
   // 范围校验
   if (year < 1900 || year > 2100) {
-    return '年份超出有效范围（1900-2100）'
+    return t('utils.excel.validation.yearRange')
   }
 
   return null
@@ -206,21 +211,21 @@ export const validateNumber = (
 
   // 数字格式校验
   if (isNaN(num)) {
-    return '必须是有效的数字'
+    return t('utils.excel.validation.numberInvalid')
   }
 
   // 整数校验
   if (options?.integer && !Number.isInteger(num)) {
-    return '必须是整数'
+    return t('utils.excel.validation.integerRequired')
   }
 
   // 范围校验
   if (options?.min !== undefined && num < options.min) {
-    return `数字不能小于 ${options.min}`
+    return t('utils.excel.validation.numberMin', { min: options.min })
   }
 
   if (options?.max !== undefined && num > options.max) {
-    return `数字不能大于 ${options.max}`
+    return t('utils.excel.validation.numberMax', { max: options.max })
   }
 
   return null
@@ -246,17 +251,17 @@ export const validateLength = (
 
   // 精确长度校验
   if (options?.exact !== undefined && length !== options.exact) {
-    return `长度必须为 ${options.exact} 个字符`
+    return t('utils.excel.validation.lengthExact', { length: options.exact })
   }
 
   // 最小长度校验
   if (options?.min !== undefined && length < options.min) {
-    return `长度不能少于 ${options.min} 个字符`
+    return t('utils.excel.validation.lengthMin', { length: options.min })
   }
 
   // 最大长度校验
   if (options?.max !== undefined && length > options.max) {
-    return `长度不能超过 ${options.max} 个字符`
+    return t('utils.excel.validation.lengthMax', { length: options.max })
   }
 
   return null
@@ -293,12 +298,15 @@ export const validatePattern = (
 export const validateEnum = (
   value: string,
   allowedValues: string[],
-  fieldName = '该字段'
+  fieldName = t('utils.excel.validation.enumDefaultField')
 ): string | null => {
   if (!value) return null
 
   if (!allowedValues.includes(value)) {
-    return `${fieldName}的值必须是以下之一：${allowedValues.join('、')}`
+    return t('utils.excel.validation.enumInvalid', {
+      field: fieldName,
+      values: allowedValues.join(t('utils.excel.validation.separator'))
+    })
   }
 
   return null
@@ -315,11 +323,11 @@ export const validateUrl = (value: string): string | null => {
   try {
     const url = new URL(value)
     if (!['http:', 'https:'].includes(url.protocol)) {
-      return 'URL 必须以 http:// 或 https:// 开头'
+      return t('utils.excel.validation.urlProtocol')
     }
     return null
   } catch {
-    return 'URL 格式不正确'
+    return t('utils.excel.validation.urlInvalid')
   }
 }
 
@@ -334,7 +342,7 @@ export const validateChineseName = (value: string): string | null => {
   // 2-20个中文字符（支持少数民族姓名中的·）
   const nameRegex = /^[\u4e00-\u9fa5·]{2,20}$/
   if (!nameRegex.test(value)) {
-    return '姓名格式不正确（2-20个中文字符）'
+    return t('utils.excel.validation.chineseNameInvalid')
   }
 
   return null

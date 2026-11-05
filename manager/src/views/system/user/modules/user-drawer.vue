@@ -2,7 +2,7 @@
 <template>
   <ArtDrawer
     v-model="drawerVisible"
-    title="查看用户"
+    :title="$t('system.user.drawer.title')"
     :loading="loading"
     :with-header="true"
     @close="handleClose"
@@ -22,10 +22,12 @@
           <div class="user-meta">
             <span class="user-id">#{{ detailData.id }}</span>
             <ElTag :type="detailData.status === 1 ? 'success' : 'info'" size="small">
-              {{ detailData.status === 1 ? '正常' : '停用' }}
+              {{
+                detailData.status === 1 ? $t('system.common.normal') : $t('system.common.disabled')
+              }}
             </ElTag>
             <ElTag :type="isOnline ? 'success' : 'info'" size="small">
-              {{ isOnline ? '在线' : '离线' }}
+              {{ isOnline ? $t('system.user.online') : $t('system.user.offline') }}
             </ElTag>
           </div>
         </div>
@@ -34,12 +36,12 @@
       <!-- 标签页内容 -->
       <ElTabs v-model="activeTab" class="user-detail-tabs">
         <!-- 基本信息标签页 -->
-        <ElTabPane label="基本信息" name="basic">
+        <ElTabPane :label="$t('system.user.drawer.basicInfo')" name="basic">
           <UserBasicInfo :data="detailData" />
         </ElTabPane>
 
         <!-- 权限信息标签页 -->
-        <ElTabPane label="权限信息" name="permission">
+        <ElTabPane :label="$t('system.user.drawer.permissionInfo')" name="permission">
           <UserPermissionInfo :data="detailData" />
         </ElTabPane>
       </ElTabs>
@@ -61,18 +63,18 @@
   type UserListItem = Api.SystemManage.UserListItem
 
   interface Props {
-    visible: boolean
+    modelValue: boolean
     userId?: number
     userData?: Partial<UserListItem>
   }
 
   interface Emits {
-    (e: 'update:visible', value: boolean): void
+    (e: 'update:modelValue', value: boolean): void
     (e: 'close'): void
   }
 
   const props = withDefaults(defineProps<Props>(), {
-    visible: false,
+    modelValue: false,
     userId: undefined,
     userData: undefined
   })
@@ -80,8 +82,8 @@
   const emit = defineEmits<Emits>()
 
   const drawerVisible = computed({
-    get: () => props.visible,
-    set: (value) => emit('update:visible', value)
+    get: () => props.modelValue,
+    set: (value) => emit('update:modelValue', value)
   })
 
   const { isUserOnline } = useUserOnlineStatus()
@@ -113,13 +115,13 @@
 
   // 关闭抽屉
   const handleClose = () => {
-    emit('update:visible', false)
+    emit('update:modelValue', false)
     emit('close')
   }
 
   // 监听抽屉显示状态
   watch(
-    () => props.visible,
+    () => props.modelValue,
     (newVal) => {
       if (newVal) {
         activeTab.value = 'basic'
@@ -132,7 +134,7 @@
   watch(
     () => props.userId,
     () => {
-      if (props.visible) {
+      if (props.modelValue) {
         loadUserDetail()
       }
     }
@@ -142,7 +144,7 @@
   watch(
     () => props.userData,
     (newVal) => {
-      if (props.visible && newVal && !props.userId) {
+      if (props.modelValue && newVal && !props.userId) {
         detailData.value = { ...newVal }
       }
     }

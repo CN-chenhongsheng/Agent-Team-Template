@@ -2,8 +2,8 @@
   <div class="art-card h-128 p-5 mb-5 max-sm:mb-4">
     <div class="art-card-header">
       <div class="title">
-        <h4>代办事项</h4>
-        <p>待处理<span class="text-danger">3</span></p>
+        <h4>{{ $t('dashboard.todo.title') }}</h4>
+        <p> {{ $t('dashboard.todo.pending') }}<span class="text-danger">3</span> </p>
       </div>
     </div>
 
@@ -15,8 +15,8 @@
           :key="index"
         >
           <div>
-            <p class="text-sm">{{ item.username }}</p>
-            <p class="text-g-500 mt-1">{{ item.date }}</p>
+            <p class="text-sm">{{ $t(`dashboard.todo.tasks.${item.taskIndex}`) }}</p>
+            <p class="text-g-500 mt-1">{{ $t(`dashboard.todo.times.${item.timeIndex}`) }}</p>
           </div>
           <ElCheckbox v-model="item.complate" />
         </div>
@@ -27,8 +27,8 @@
 
 <script setup lang="ts">
   interface TodoItem {
-    username: string
-    date: string
+    taskIndex: number
+    timeIndex: number
     complate: boolean
   }
 
@@ -37,35 +37,11 @@
    * 记录每日工作任务及完成状态
    */
   const list = reactive<TodoItem[]>([
-    {
-      username: '查看今天工作内容',
-      date: '上午 09:30',
-      complate: true
-    },
-    {
-      username: '回复邮件',
-      date: '上午 10:30',
-      complate: true
-    },
-    {
-      username: '工作汇报整理',
-      date: '上午 11:00',
-      complate: true
-    },
-    {
-      username: '产品需求会议',
-      date: '下午 02:00',
-      complate: false
-    },
-    {
-      username: '整理会议内容',
-      date: '下午 03:30',
-      complate: false
-    },
-    {
-      username: '明天工作计划',
-      date: '下午 06:30',
-      complate: false
-    }
+    { taskIndex: 0, timeIndex: 0, complate: true },
+    { taskIndex: 1, timeIndex: 1, complate: true },
+    { taskIndex: 2, timeIndex: 2, complate: true },
+    { taskIndex: 3, timeIndex: 3, complate: false },
+    { taskIndex: 4, timeIndex: 4, complate: false },
+    { taskIndex: 5, timeIndex: 5, complate: false }
   ])
 </script>

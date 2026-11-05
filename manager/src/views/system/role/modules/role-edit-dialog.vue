@@ -1,7 +1,9 @@
 <template>
   <ElDialog
     v-model="visible"
-    :title="dialogType === 'add' ? '新增角色' : '编辑角色'"
+    :title="
+      dialogType === 'add' ? $t('system.role.form.addTitle') : $t('system.role.form.editTitle')
+    "
     width="600px"
     align-center
     @close="handleClose"
@@ -17,25 +19,29 @@
       :showReset="false"
     />
     <template #footer>
-      <ElButton @click="handleClose">取消</ElButton>
+      <ElButton @click="handleClose">{{ $t('common.cancel') }}</ElButton>
       <ElButton type="primary" :loading="submitLoading" @click="handleSubmit">
-        {{ submitLoading ? '提交中...' : '确定' }}
+        {{ submitLoading ? $t('system.common.saving') : $t('common.confirm') }}
       </ElButton>
     </template>
   </ElDialog>
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { fetchAddRole, fetchUpdateRole } from '@/api/system-manage'
   import type { FormRules } from 'element-plus'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
   import type { FormItem } from '@/components/core/forms/art-form/index.vue'
+  import type { DialogType } from '@/types'
+
+  const { t } = useI18n()
 
   type RoleListItem = Api.SystemManage.RoleListItem
 
   interface Props {
     modelValue: boolean
-    dialogType: 'add' | 'edit'
+    dialogType: DialogType
     roleData?: RoleListItem
   }
 
@@ -71,26 +77,26 @@
   const formItems = computed<FormItem[]>(() => [
     {
       key: 'roleCode',
-      label: '角色编码',
+      label: t('system.role.form.roleCode'),
       type: 'input',
       span: 24,
       props: {
-        placeholder: '请输入角色编码',
+        placeholder: t('system.role.form.roleCodePlaceholder'),
         disabled: dialogType.value === 'edit'
       }
     },
     {
       key: 'roleName',
-      label: '角色名称',
+      label: t('system.role.form.roleName'),
       type: 'input',
       span: 24,
       props: {
-        placeholder: '请输入角色名称'
+        placeholder: t('system.role.form.roleNamePlaceholder')
       }
     },
     {
       key: 'sort',
-      label: '排序',
+      label: t('system.role.form.sort'),
       type: 'number',
       span: 24,
       props: {
@@ -101,13 +107,13 @@
     },
     {
       key: 'remark',
-      label: '备注',
+      label: t('system.role.form.remark'),
       type: 'input',
       span: 24,
       props: {
         type: 'textarea',
         rows: 3,
-        placeholder: '请输入角色备注',
+        placeholder: t('system.role.form.remarkPlaceholder'),
         maxlength: 200,
         showWordLimit: true
       }
@@ -117,17 +123,17 @@
   /**
    * 表单验证规则
    */
-  const rules = reactive<FormRules>({
+  const rules = computed<FormRules>(() => ({
     roleName: [
-      { required: true, message: '请输入角色名称', trigger: 'blur' },
-      { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+      { required: true, message: t('system.role.form.roleNameRequired'), trigger: 'blur' },
+      { min: 2, max: 20, message: t('system.role.form.roleNameLength'), trigger: 'blur' }
     ],
     roleCode: [
-      { required: true, message: '请输入角色编码', trigger: 'blur' },
-      { pattern: /^[A-Z_]+$/, message: '角色编码只能包含大写字母和下划线', trigger: 'blur' }
+      { required: true, message: t('system.role.form.roleCodeRequired'), trigger: 'blur' },
+      { pattern: /^[A-Z_]+$/, message: t('system.role.form.roleCodePattern'), trigger: 'blur' }
     ],
-    sort: [{ required: true, message: '请输入排序值', trigger: 'blur' }]
-  })
+    sort: [{ required: true, message: t('system.role.form.sortRequired'), trigger: 'blur' }]
+  }))
 
   /**
    * 表单数据
@@ -212,7 +218,7 @@
 
       // 超级管理员不允许设置为停用
       if (isSuperAdmin.value && form.status === 0) {
-        ElMessage.warning('超级管理员角色不允许停用')
+        ElMessage.warning(t('system.role.superAdminDisableForbidden'))
         return
       }
 

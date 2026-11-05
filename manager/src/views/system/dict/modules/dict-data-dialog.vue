@@ -21,9 +21,9 @@
 
     <template #footer>
       <ElSpace>
-        <ElButton @click="handleClose">取消</ElButton>
+        <ElButton @click="handleClose">{{ $t('common.cancel') }}</ElButton>
         <ElButton type="primary" :loading="submitLoading" @click="handleSubmit">
-          {{ submitLoading ? '提交中...' : '确定' }}
+          {{ submitLoading ? $t('system.common.saving') : $t('common.confirm') }}
         </ElButton>
       </ElSpace>
     </template>
@@ -31,6 +31,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import {
     fetchAddDictData,
     fetchUpdateDictData,
@@ -39,12 +40,15 @@
   import type { FormRules } from 'element-plus'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
   import type { FormItem } from '@/components/core/forms/art-form/index.vue'
+  import type { DialogType } from '@/types'
+
+  const { t } = useI18n()
 
   type DictDataListItem = Api.SystemManage.DictDataListItem
 
   interface Props {
     modelValue: boolean
-    dialogType: 'add' | 'edit'
+    dialogType: DialogType
     dataData?: DictDataListItem
     dictCode: string
   }
@@ -72,7 +76,9 @@
   })
 
   const dialogTitle = computed(() => {
-    return props.dialogType === 'add' ? '新增字典数据' : '编辑字典数据'
+    return props.dialogType === 'add'
+      ? t('system.dict.dataForm.addTitle')
+      : t('system.dict.dataForm.editTitle')
   })
 
   /**
@@ -81,55 +87,55 @@
   const formItems = computed<FormItem[]>(() => [
     {
       key: 'dictCode',
-      label: '字典编码',
+      label: t('system.dict.dataForm.dictCode'),
       type: 'input',
       span: 12,
       props: {
-        placeholder: '请输入字典编码',
+        placeholder: t('system.dict.dataForm.codePlaceholder'),
         disabled: true
       }
     },
     {
       key: 'label',
-      label: '字典标签',
+      label: t('system.dict.dataForm.label'),
       type: 'input',
       span: 12,
       props: {
-        placeholder: '请输入字典标签',
+        placeholder: t('system.dict.dataForm.labelPlaceholder'),
         maxlength: 100,
         showWordLimit: true
       }
     },
     {
       key: 'value',
-      label: '字典值',
+      label: t('system.dict.dataForm.value'),
       type: 'input',
       span: 12,
       props: {
-        placeholder: '请输入字典值',
+        placeholder: t('system.dict.dataForm.valuePlaceholder'),
         maxlength: 100,
         showWordLimit: true
       }
     },
     {
       key: 'sort',
-      label: '排序',
+      label: t('system.dict.dataForm.sort'),
       type: 'number',
       span: 12,
       props: {
         min: 0,
         max: 999,
-        placeholder: '排序',
+        placeholder: t('system.dict.dataForm.sortPlaceholder'),
         style: 'width: 100%'
       }
     },
     {
       key: 'listClass',
-      label: '表格样式',
+      label: t('system.dict.dataForm.style'),
       type: 'select',
       span: 12,
       props: {
-        placeholder: '请选择表格样式',
+        placeholder: t('system.dict.dataForm.stylePlaceholder'),
         clearable: true,
         style: 'width: 100%',
         options: [
@@ -143,35 +149,35 @@
     },
     {
       key: 'cssClass',
-      label: 'CSS类名',
+      label: t('system.dict.dataForm.cssClass'),
       type: 'input',
       span: 12,
       props: {
-        placeholder: '请输入CSS类名',
+        placeholder: t('system.dict.dataForm.cssClassPlaceholder'),
         maxlength: 100
       }
     },
     {
       key: 'isDefault',
-      label: '是否默认',
+      label: t('system.dict.dataForm.isDefault'),
       type: 'radiogroup',
       span: 12,
       props: {
         options: [
-          { label: '是', value: 1 },
-          { label: '否', value: 0 }
+          { label: t('system.dict.dataForm.yes'), value: 1 },
+          { label: t('system.dict.dataForm.no'), value: 0 }
         ]
       }
     },
     {
       key: 'remark',
-      label: '备注',
+      label: t('system.dict.dataForm.remark'),
       type: 'input',
       span: 24,
       props: {
         type: 'textarea',
         rows: 3,
-        placeholder: '请输入备注',
+        placeholder: t('system.dict.dataForm.remarkPlaceholder'),
         maxlength: 500,
         showWordLimit: true
       }
@@ -191,9 +197,9 @@
   })
 
   const rules = computed<FormRules>(() => ({
-    label: [{ required: true, message: '请输入字典标签', trigger: 'blur' }],
-    value: [{ required: true, message: '请输入字典值', trigger: 'blur' }],
-    sort: [{ required: true, message: '请输入排序', trigger: 'blur' }]
+    label: [{ required: true, message: t('system.dict.dataForm.labelRequired'), trigger: 'blur' }],
+    value: [{ required: true, message: t('system.dict.dataForm.valueRequired'), trigger: 'blur' }],
+    sort: [{ required: true, message: t('system.dict.dataForm.sortRequired'), trigger: 'blur' }]
   }))
 
   // 初始化表单数据

@@ -45,12 +45,7 @@ declare namespace Api {
     }
 
     /** 操作日志分页响应 */
-    interface OperLogPageResponse {
-      list: OperLogListItem[]
-      total: number
-      pageNum: number
-      pageSize: number
-    }
+    type OperLogPageResponse = Api.Common.PaginatedResponse<OperLogListItem>
 
     /** ==================== 登入日志管理 ==================== */
     /** 登入日志查询参数 */
@@ -81,9 +76,6 @@ declare namespace Api {
     }
 
     /** 登入日志分页响应 */
-    interface LoginLogPageResponse {
-      list: LoginLogListItem[]
-      total: number
-    }
+    type LoginLogPageResponse = Api.Common.PaginatedResponse<LoginLogListItem>
   }
 }

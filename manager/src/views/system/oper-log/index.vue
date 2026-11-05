@@ -4,7 +4,7 @@
     <!-- 搜索栏 -->
     <OperLogSearch
       v-show="showSearchBar"
-      v-model="searchForm"
+      v-model="formFilters"
       @search="handleSearch"
       @reset="resetSearchParams"
     ></OperLogSearch>
@@ -27,12 +27,13 @@
               :disabled="selectedCount === 0"
               @click="handleBatchDelete"
               v-ripple
-              v-permission="'system:operlog:delete'"
+              v-permission="PERMISSIONS.system.operLog.delete"
             >
-              批量删除{{ selectedCount > 0 ? `(${selectedCount})` : '' }}
+              {{ $t('system.operLog.batchDelete')
+              }}{{ selectedCount > 0 ? `(${selectedCount})` : '' }}
             </ElButton>
-            <ElButton @click="handleClean" v-ripple v-permission="'system:operlog:clean'">
-              清空日志
+            <ElButton @click="handleClean" v-ripple v-permission="PERMISSIONS.system.operLog.clean">
+              {{ $t('system.operLog.clean') }}
             </ElButton>
           </ElSpace>
         </template>
@@ -55,12 +56,13 @@
       </ArtTable>
 
       <!-- 详情弹窗 -->
-      <OperLogDetail v-model:visible="detailDialogVisible" :log-data="currentLogData" />
+      <OperLogDetail v-model="detailDialogVisible" :log-data="currentLogData" />
     </ElCard>
   </div>
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { useTable } from '@/hooks/core/useTable'
   import {
     fetchGetOperLogList,
@@ -69,9 +71,13 @@
   } from '@/api/system-manage'
   import OperLogSearch from './modules/oper-log-search.vue'
   import OperLogDetail from './modules/oper-log-detail.vue'
+  import type { ActionButtonConfig } from '@/types/component'
+  import { PERMISSIONS } from '@/utils/constants'
   import { h } from 'vue'
 
   defineOptions({ name: 'OperLog' })
+
+  const { t } = useI18n()
 
   type OperLogListItem = Api.SystemManage.OperLogListItem
 
@@ -84,7 +90,7 @@
   const selectedCount = computed(() => selectedRows.value.length)
 
   // 搜索表单
-  const searchForm = ref<Api.SystemManage.OperLogSearchParams>({
+  const formFilters = ref<Api.SystemManage.OperLogSearchParams>({
     pageNum: 1,
     title: undefined,
     operName: undefined,
@@ -93,6 +99,25 @@
     operTimeStart: undefined,
     operTimeEnd: undefined
   })
+
+  /**
+   * 获取操作日志操作配置
+   */
+  const getOperLogActions = (row: OperLogListItem): ActionButtonConfig[] => [
+    {
+      type: 'view',
+      label: t('system.common.view'),
+      onClick: () => handleViewDetail(row),
+      auth: PERMISSIONS.system.operLog.detail
+    },
+    {
+      type: 'delete',
+      label: t('system.common.delete'),
+      onClick: () => handleDelete(row),
+      auth: PERMISSIONS.system.operLog.delete,
+      danger: true
+    }
+  ]
 
   const {
     columns,
@@ -116,7 +141,7 @@
       apiParams: computed(() => {
         return {
           pageNum: 1,
-          ...searchForm.value
+          ...formFilters.value
         } as Api.SystemManage.OperLogSearchParams
       }),
       // 自定义分页字段映射
@@ -128,52 +153,52 @@
         { type: 'selection' }, // 勾选列
         {
           prop: 'title',
-          label: '操作模块',
+          label: t('system.operLog.module'),
           minWidth: 150
         },
         {
           prop: 'businessTypeText',
-          label: '业务类型',
+          label: t('system.operLog.businessType'),
           width: 100,
           formatter: (row: OperLogListItem) => {
             return h(
               ElTag,
               { type: getBusinessTypeTag(row.businessType), size: 'small' },
-              () => row.businessTypeText || '其它'
+              () => row.businessTypeText || t('system.operLog.otherType')
             )
           }
         },
         {
           prop: 'operName',
-          label: '操作人员',
+          label: t('system.operLog.operator'),
           width: 120
         },
         {
           prop: 'operIp',
-          label: '操作IP',
+          label: t('system.operLog.ip'),
           width: 130
         },
         {
           prop: 'statusText',
-          label: '操作状态',
+          label: t('system.operLog.status'),
           width: 100,
           formatter: (row: OperLogListItem) => {
             return h(
               ElTag,
               { type: row.status === 0 ? 'success' : 'danger', size: 'small' },
-              () => row.statusText || '正常'
+              () => row.statusText || t('system.operLog.normal')
             )
           }
         },
         {
           prop: 'operTime',
-          label: '操作时间',
+          label: t('system.operLog.time'),
           width: 180,
           sortable: true
         },
         {
           prop: 'costTime',
-          label: '耗时',
+          label: t('system.operLog.cost'),
           width: 100,
           formatter: (row: OperLogListItem) => {
             return row.costTime ? `${row.costTime} ms` : '-'
@@ -181,24 +206,10 @@
         },
         {
           prop: 'action',
-          label: '操作',
+          label: t('system.operLog.action'),
           width: 150,
           fixed: 'right',
-          formatter: (row: OperLogListItem) => [
-            {
-              type: 'view',
-              label: '查看',
-              onClick: () => handleViewDetail(row),
-              auth: 'system:operlog:detail'
-            },
-            {
-              type: 'delete',
-              label: '删除',
-              onClick: () => handleDelete(row),
-              auth: 'system:operlog:delete',
-              danger: true
-            }
-          ]
+          formatter: getOperLogActions
         }
       ]
     },
@@ -224,8 +235,8 @@
    * 处理搜索
    */
   const handleSearch = (params: Record<string, any>) => {
-    searchForm.value = {
-      ...searchForm.value,
+    formFilters.value = {
+      ...formFilters.value,
       ...params,
       pageNum: 1
     }
@@ -251,10 +262,10 @@
    * 删除单条日志
    */
   const handleDelete = (row: OperLogListItem) => {
-    ElMessageBox.confirm('确定要删除这条操作日志吗？', '提示', {
+    ElMessageBox.confirm(t('system.operLog.deleteConfirm'), t('system.common.tip'), {
       type: 'warning',
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel')
     })
       .then(async () => {
         await fetchBatchDeleteOperLog([row.id])
@@ -268,15 +279,19 @@
    */
   const handleBatchDelete = () => {
     if (selectedCount.value === 0) {
-      ElMessage.warning('请选择要删除的日志')
+      ElMessage.warning(t('system.operLog.selectToDelete'))
       return
     }
 
-    ElMessageBox.confirm(`确定要删除选中的 ${selectedCount.value} 条操作日志吗？`, '提示', {
-      type: 'warning',
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
+    ElMessageBox.confirm(
+      t('system.operLog.batchDeleteConfirm', { count: selectedCount.value }),
+      t('system.common.tip'),
+      {
+        type: 'warning',
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel')
+      }
+    )
       .then(async () => {
         const ids = selectedRows.value.map((row) => row.id)
         await fetchBatchDeleteOperLog(ids)
@@ -290,10 +305,10 @@
    * 清空日志
    */
   const handleClean = () => {
-    ElMessageBox.confirm('确定要清空所有操作日志吗？此操作不可恢复！', '危险操作', {
+    ElMessageBox.confirm(t('system.operLog.cleanConfirm'), t('system.common.dangerTitle'), {
       type: 'warning',
-      confirmButtonText: '确定清空',
-      cancelButtonText: '取消',
+      confirmButtonText: t('system.common.confirmClean'),
+      cancelButtonText: t('common.cancel'),
       confirmButtonClass: 'el-button--danger'
     })
       .then(async () => {

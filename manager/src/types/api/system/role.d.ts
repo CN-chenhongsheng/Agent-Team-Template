@@ -29,16 +29,7 @@ declare namespace Api {
     }
 
     /** 角色分页响应 */
-    interface RolePageResponse {
-      list: RoleListItem[]
-      total: number
-      pageNum: number
-      pageSize: number
-      totalPages: number
-    }
-
-    /** 角色列表 */
-    type RoleList = RolePageResponse
+    type RolePageResponse = Api.Common.PaginatedResponse<RoleListItem>
 
     /** 角色权限项（包含菜单ID和状态） */
     interface RolePermissionItem {

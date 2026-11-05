@@ -1,7 +1,9 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    :title="dialogType === 'add' ? '添加用户' : '编辑用户'"
+    :title="
+      dialogType === 'add' ? $t('system.user.form.addTitle') : $t('system.user.form.editTitle')
+    "
     width="600px"
     align-center
     @close="handleClose"
@@ -20,9 +22,9 @@
 
     <template #footer>
       <div class="dialog-footer">
-        <ElButton @click="dialogVisible = false">取消</ElButton>
+        <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
         <ElButton type="primary" :loading="submitLoading" @click="handleSubmit">
-          {{ submitLoading ? '提交中...' : '确定' }}
+          {{ submitLoading ? $t('system.common.saving') : $t('common.confirm') }}
         </ElButton>
       </div>
     </template>
@@ -30,23 +32,31 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { fetchAddUser, fetchUpdateUser, fetchGetRoleList } from '@/api/system-manage'
   import type { FormRules } from 'element-plus'
   import ArtForm from '@/components/core/forms/art-form/index.vue'
   import type { FormItem } from '@/components/core/forms/art-form/index.vue'
+  import type { DialogType } from '@/types'
+
+  const { t } = useI18n()
 
   interface Props {
-    visible: boolean
-    type: string
+    modelValue: boolean
+    dialogType: DialogType
     userData?: Partial<Api.SystemManage.UserListItem>
   }
 
   interface Emits {
-    (e: 'update:visible', value: boolean): void
-    (e: 'submit'): void
+    (e: 'update:modelValue', value: boolean): void
+    (e: 'success'): void
   }
 
-  const props = defineProps<Props>()
+  const props = withDefaults(defineProps<Props>(), {
+    modelValue: false,
+    dialogType: 'add',
+    userData: undefined
+  })
   const emit = defineEmits<Emits>()
 
   // 角色列表数据
@@ -55,17 +65,15 @@
 
   // 对话框显示控制
   const dialogVisible = computed({
-    get: () => props.visible,
-    set: (value) => emit('update:visible', value)
+    get: () => props.modelValue,
+    set: (value) => emit('update:modelValue', value)
   })
-
-  const dialogType = computed(() => props.type)
 
   /**
    * 是否为超级管理员
    */
   const isSuperAdmin = computed(() => {
-    return props.type === 'edit' && props.userData?.username === 'superAdmin'
+    return props.dialogType === 'edit' && props.userData?.username === 'superAdmin'
   })
 
   // 表单实例
@@ -77,50 +85,50 @@
   const formItems = computed<FormItem[]>(() => [
     {
       key: 'username',
-      label: '用户名',
+      label: t('system.user.form.username'),
       type: 'input',
       span: 12,
       props: {
-        placeholder: '请输入用户名',
-        disabled: dialogType.value === 'edit'
+        placeholder: t('system.user.form.usernamePlaceholder'),
+        disabled: props.dialogType === 'edit'
       }
     },
     {
       key: 'nickname',
-      label: '昵称',
+      label: t('system.user.form.nickname'),
       type: 'input',
       span: 12,
       props: {
-        placeholder: '请输入昵称'
+        placeholder: t('system.user.form.nicknamePlaceholder')
       }
     },
     {
       key: 'phone',
-      label: '手机号',
+      label: t('system.user.form.phone'),
       type: 'input',
       span: 12,
       props: {
-        placeholder: '请输入手机号',
+        placeholder: t('system.user.form.phonePlaceholder'),
         maxlength: 11
       }
     },
     {
       key: 'email',
-      label: '邮箱',
+      label: t('system.user.form.email'),
       type: 'input',
       span: 12,
       props: {
-        placeholder: '请输入邮箱'
+        placeholder: t('system.user.form.emailPlaceholder')
       }
     },
     {
       key: 'roleIds',
-      label: '角色',
+      label: t('system.user.form.role'),
       type: 'select',
       span: 24,
       props: {
         multiple: true,
-        placeholder: '请选择角色',
+        placeholder: t('system.user.form.rolePlaceholder'),
         style: 'width: 100%',
         options: roleList.value.map((role) => ({
           value: role.id,
@@ -141,19 +149,23 @@
   })
 
   // 表单验证规则
-  const rules: FormRules = {
+  const rules = computed<FormRules>(() => ({
     username: [
-      { required: true, message: '请输入用户名', trigger: 'blur' },
+      { required: true, message: t('system.user.form.usernameRequired'), trigger: 'blur' },
       {
         pattern: /^[a-zA-Z0-9_]{4,20}$/,
-        message: '用户名只能包含字母、数字、下划线，长度4-20位',
+        message: t('system.user.form.usernamePattern'),
         trigger: 'blur'
       }
     ],
-    nickname: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
-    email: [{ type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }],
-    phone: [{ pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式', trigger: 'blur' }]
-  }
+    nickname: [
+      { required: true, message: t('system.user.form.nicknameRequired'), trigger: 'blur' }
+    ],
+    email: [{ type: 'email', message: t('system.user.form.emailInvalid'), trigger: 'blur' }],
+    phone: [
+      { pattern: /^1[3-9]\d{9}$/, message: t('system.user.form.phoneInvalid'), trigger: 'blur' }
+    ]
+  }))
 
   /**
    * 加载角色列表
@@ -171,7 +183,7 @@
    * 初始化表单数据
    */
   const initFormData = () => {
-    if (props.type === 'edit' && props.userData) {
+    if (props.dialogType === 'edit' && props.userData) {
       const row = props.userData
       Object.assign(formData, {
         id: row.id,
@@ -200,7 +212,7 @@
    * 监听对话框状态变化
    */
   watch(
-    () => [props.visible, props.type, props.userData],
+    () => [props.modelValue, props.dialogType, props.userData],
     ([visible]) => {
       if (visible) {
         initFormData()
@@ -225,7 +237,7 @@
 
       // 超级管理员不允许设置为停用
       if (isSuperAdmin.value && formData.status === 0) {
-        ElMessage.warning('超级管理员不允许停用')
+        ElMessage.warning(t('system.user.superAdminStatusForbidden'))
         return
       }
 
@@ -237,14 +249,14 @@
       }
 
       // 调用API
-      if (props.type === 'add') {
+      if (props.dialogType === 'add') {
         await fetchAddUser(submitData)
       } else {
         await fetchUpdateUser(formData.id!, submitData)
       }
 
       dialogVisible.value = false
-      emit('submit')
+      emit('success')
     } catch (error) {
       console.error('提交失败:', error)
     } finally {

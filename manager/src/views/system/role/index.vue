@@ -21,16 +21,20 @@
       >
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="showDialog('add')" v-ripple v-permission="'system:role:add'">
-              新增角色
+            <ElButton
+              @click="showDialog('add')"
+              v-ripple
+              v-permission="PERMISSIONS.system.role.add"
+            >
+              {{ $t('system.role.add') }}
             </ElButton>
             <ElButton
               :disabled="selectedCount === 0"
               @click="handleBatchDelete"
               v-ripple
-              v-permission="'system:role:delete'"
+              v-permission="PERMISSIONS.system.role.delete"
             >
-              批量删除{{ selectedCount > 0 ? `(${selectedCount})` : '' }}
+              {{ $t('system.role.batchDelete') }}{{ selectedCount > 0 ? `(${selectedCount})` : '' }}
             </ElButton>
           </ElSpace>
         </template>
@@ -71,6 +75,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { useTable } from '@/hooks/core/useTable'
   import {
     fetchGetRoleList,
@@ -82,8 +87,13 @@
   import RoleEditDialog from './modules/role-edit-dialog.vue'
   import RolePermissionDialog from './modules/role-permission-dialog.vue'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
+  import type { ActionButtonConfig } from '@/types/component'
+  import type { DialogType } from '@/types'
+  import { PERMISSIONS } from '@/utils/constants'
 
   defineOptions({ name: 'Role' })
+
+  const { t } = useI18n()
 
   type RoleListItem = Api.SystemManage.RoleListItem & { _statusLoading?: boolean }
 
@@ -101,6 +111,37 @@
   const editData = ref<RoleListItem | undefined>(undefined)
   const selectedRows = ref<RoleListItem[]>([])
   const selectedCount = computed(() => selectedRows.value.length)
+
+  /**
+   * 获取角色操作配置
+   */
+  const getRoleActions = (row: RoleListItem): ActionButtonConfig[] => {
+    const buttons: ActionButtonConfig[] = [
+      {
+        type: 'share',
+        onClick: () => showPermissionDialog(row),
+        auth: PERMISSIONS.system.role.assign,
+        label: t('system.user.assignPermission')
+      },
+      {
+        type: 'edit',
+        onClick: () => showDialog('edit', row),
+        auth: PERMISSIONS.system.role.edit,
+        label: t('system.common.edit')
+      }
+    ]
+    // 超级管理员角色不允许删除
+    if (row.roleCode !== 'SUPER_ADMIN') {
+      buttons.push({
+        type: 'delete',
+        onClick: () => deleteRole(row),
+        auth: PERMISSIONS.system.role.delete,
+        danger: true,
+        label: t('system.common.delete')
+      })
+    }
+    return buttons
+  }
 
   const {
     columns,
@@ -138,7 +179,7 @@
         { type: 'selection' },
         {
           prop: 'roleName',
-          label: '角色名称',
+          label: t('system.role.roleName'),
           minWidth: 150,
           formatter: (row: RoleListItem) => {
             return h('div', { class: 'flex items-center gap-2' }, [
@@ -148,7 +189,7 @@
         },
         {
           prop: 'roleCode',
-          label: '角色编码',
+          label: t('system.role.roleCode'),
           minWidth: 150,
           showOverflowTooltip: true,
           formatter: (row: RoleListItem) => {
@@ -157,13 +198,13 @@
         },
         {
           prop: 'sort',
-          label: '排序',
+          label: t('system.common.sort'),
           width: 80,
           sortable: true
         },
         {
           prop: 'status',
-          label: '状态',
+          label: t('system.common.status'),
           width: 100,
           formatter: (row: RoleListItem) => {
             const isSuperAdmin = row.roleCode === 'SUPER_ADMIN'
@@ -180,48 +221,22 @@
         },
         {
           prop: 'remark',
-          label: '备注',
+          label: t('system.common.remark'),
           minWidth: 200,
           showOverflowTooltip: true
         },
         {
           prop: 'createTime',
-          label: '创建时间',
+          label: t('system.common.createTime'),
           width: 180,
           sortable: true
         },
         {
           prop: 'action',
-          label: '操作',
+          label: t('system.common.actions'),
           width: 180,
           fixed: 'right',
-          formatter: (row: RoleListItem) => {
-            const buttons: any[] = [
-              {
-                type: 'share',
-                onClick: () => showPermissionDialog(row),
-                auth: 'system:role:assign',
-                label: '分配权限'
-              },
-              {
-                type: 'edit',
-                onClick: () => showDialog('edit', row),
-                auth: 'system:role:edit',
-                label: '编辑'
-              }
-            ]
-            // 超级管理员角色不允许删除
-            if (row.roleCode !== 'SUPER_ADMIN') {
-              buttons.push({
-                type: 'delete',
-                onClick: () => deleteRole(row),
-                auth: 'system:role:delete',
-                danger: true,
-                label: '删除'
-              })
-            }
-            return buttons
-          }
+          formatter: getRoleActions
         }
       ]
     },
@@ -233,7 +248,7 @@
     }
   })
 
-  const dialogType = ref<'add' | 'edit'>('add')
+  const dialogType = ref<DialogType>('add')
 
   const showDialog = (type: 'add' | 'edit', row?: RoleListItem) => {
     dialogVisible.value = true
@@ -288,18 +303,18 @@
   const deleteRole = async (row: RoleListItem) => {
     // 防止删除超级管理员角色
     if (row.roleCode === 'SUPER_ADMIN') {
-      ElMessage.warning('超级管理员角色不允许删除')
+      ElMessage.warning(t('system.role.superAdminDeleteForbidden'))
       return
     }
 
     try {
       await ElMessageBox.confirm(
-        `确定要删除角色"${row.roleName}"吗？<br/>提示：删除角色后，该角色下的所有用户关联也会被删除。`,
-        '删除确认',
+        t('system.role.deleteConfirm', { name: row.roleName }),
+        t('system.common.deleteConfirmTitle'),
         {
           type: 'warning',
-          confirmButtonText: '确定删除',
-          cancelButtonText: '取消',
+          confirmButtonText: t('system.common.confirmDelete'),
+          cancelButtonText: t('common.cancel'),
           dangerouslyUseHTMLString: true
         }
       )
@@ -318,25 +333,25 @@
    */
   const handleBatchDelete = async () => {
     if (selectedCount.value === 0) {
-      ElMessage.warning('请先选择要删除的角色')
+      ElMessage.warning(t('system.role.selectToDelete'))
       return
     }
 
     // 检查是否包含超级管理员
     const hasSuperAdmin = selectedRows.value.some((row) => row.roleCode === 'SUPER_ADMIN')
     if (hasSuperAdmin) {
-      ElMessage.warning('选中的角色中包含超级管理员，无法删除')
+      ElMessage.warning(t('system.role.batchContainsSuperAdmin'))
       return
     }
 
     try {
       await ElMessageBox.confirm(
-        `确定要删除选中的 ${selectedCount.value} 个角色吗？<br/>提示：删除角色后，这些角色下的所有用户关联也会被删除。`,
-        '批量删除',
+        t('system.role.batchDeleteConfirm', { count: selectedCount.value }),
+        t('system.role.batchDelete'),
         {
           type: 'warning',
-          confirmButtonText: '确定删除',
-          cancelButtonText: '取消',
+          confirmButtonText: t('system.common.confirmDelete'),
+          cancelButtonText: t('common.cancel'),
           dangerouslyUseHTMLString: true
         }
       )
@@ -367,7 +382,7 @@
   const handleStatusChange = async (row: RoleListItem, value: boolean): Promise<void> => {
     // 超级管理员不允许关闭
     if (row.roleCode === 'SUPER_ADMIN' && !value) {
-      ElMessage.warning('超级管理员角色不允许停用')
+      ElMessage.warning(t('system.role.superAdminDisableForbidden'))
       return
     }
 
@@ -375,12 +390,12 @@
     if (!value && row.status === 1) {
       try {
         await ElMessageBox.confirm(
-          `确定要停用角色"${row.roleName}"吗？<br/>提示：停用角色后，该角色下的所有用户关联也会被删除。`,
-          '确认停用',
+          t('system.role.disableConfirm', { name: row.roleName }),
+          t('system.common.disableConfirmTitle'),
           {
             type: 'warning',
-            confirmButtonText: '确认停用',
-            cancelButtonText: '取消',
+            confirmButtonText: t('system.common.confirmDisable'),
+            cancelButtonText: t('common.cancel'),
             dangerouslyUseHTMLString: true
           }
         )

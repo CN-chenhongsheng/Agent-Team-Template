@@ -23,6 +23,7 @@ import {
 } from './constants'
 import { uploadStorage } from './storage'
 import { UploadState } from './types'
+import { $t } from '@/locales'
 import type {
   UploadProgress,
   UploadResult,
@@ -168,7 +169,7 @@ export class ChunkUploader {
 
       // 检查是否被中止
       if (this.isAborted) {
-        throw new Error('上传已取消')
+        throw new Error($t('utils.uploadCancelled'))
       }
 
       // 7. 合并
@@ -312,7 +313,7 @@ export class ChunkUploader {
           resolve(hash)
         } else if (type === 'error') {
           worker.terminate()
-          reject(new Error(error || '哈希计算失败'))
+          reject(new Error(error || $t('utils.hashFailed')))
         }
       }
 

@@ -11,7 +11,10 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { useDictStore } from '@/store/modules/dict'
+
+  const { t } = useI18n()
 
   interface Props {
     modelValue: Record<string, any>
@@ -52,24 +55,24 @@
    */
   const formItems = computed(() => [
     {
-      label: '角色名称',
+      label: t('system.role.search.roleName'),
       key: 'roleName',
       type: 'input',
-      props: { clearable: true, placeholder: '请输入角色名称' }
+      props: { clearable: true, placeholder: t('system.role.search.roleNamePlaceholder') }
     },
     {
-      label: '角色编码',
+      label: t('system.role.search.roleCode'),
       key: 'roleCode',
       type: 'input',
-      props: { clearable: true, placeholder: '请输入角色编码' }
+      props: { clearable: true, placeholder: t('system.role.search.roleCodePlaceholder') }
     },
     {
-      label: '状态',
+      label: t('system.role.search.status'),
       key: 'status',
       type: 'select',
       props: {
         clearable: true,
-        placeholder: '请选择状态',
+        placeholder: t('system.role.search.statusPlaceholder'),
         options: statusOptions.value
       }
     }

@@ -95,7 +95,7 @@ com.project.backend/  — 管理后台 API 层：面向 manager 前端的接口
 - **组件优先级**：ArtTable > ArtForm > ArtSwitch > Element Plus 原生组件
 - **表格**：统一使用 `useTable` hook + `ArtTable` 组件，禁止直接使用 `el-table`
 - **表单**：使用 `ArtForm` 配置式表单，通过 `FormConfig[]` 定义字段
-- **API 文件**：放在 `src/api/` 下，函数命名 `fetchXxxApi`，类型定义在 `src/types/api/`
+- **API 文件**：放在 `src/api/` 下，函数命名 `fetchXxx`（如 `fetchGetUserPage`），类型定义在 `src/types/api/`
 - **路由**：动态路由，权限守卫在 `router/core/` 中
 - **状态管理**：Pinia + 持久化插件
 - **样式**：Tailwind CSS 4 + SCSS 主题系统

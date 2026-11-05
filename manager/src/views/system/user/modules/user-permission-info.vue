@@ -6,7 +6,7 @@
       <template #header>
         <div class="card-header">
           <ArtSvgIcon icon="ri:shield-user-line" class="header-icon" />
-          <span class="header-title">角色列表</span>
+          <span class="header-title">{{ $t('system.user.drawer.roleList') }}</span>
         </div>
       </template>
       <div class="info-list">
@@ -14,7 +14,9 @@
           <ElTag v-for="role in roleList" :key="role" type="primary" size="small">
             {{ role }}
           </ElTag>
-          <span v-if="roleList.length === 0" class="empty-text">暂无角色</span>
+          <span v-if="roleList.length === 0" class="empty-text">{{
+            $t('system.user.drawer.noRole')
+          }}</span>
         </div>
       </div>
     </ElCard>

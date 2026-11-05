@@ -1,66 +1,70 @@
 <template>
-  <ElDialog v-model="dialogVisible" title="操作日志详情" width="800px">
+  <ElDialog v-model="dialogVisible" :title="$t('system.operLog.detailTitle')" width="800px">
     <div class="oper-log-detail">
       <ElDescriptions :column="2" border>
-        <ElDescriptionsItem label="操作模块" :span="2">
+        <ElDescriptionsItem :label="$t('system.operLog.module')" :span="2">
           {{ logData?.title || '-' }}
         </ElDescriptionsItem>
-        <ElDescriptionsItem label="业务类型">
+        <ElDescriptionsItem :label="$t('system.operLog.businessType')">
           <ElTag :type="getBusinessTypeTag(logData?.businessType)">
             {{ logData?.businessTypeText || '-' }}
           </ElTag>
         </ElDescriptionsItem>
-        <ElDescriptionsItem label="操作状态">
+        <ElDescriptionsItem :label="$t('system.operLog.status')">
           <ElTag :type="logData?.status === 0 ? 'success' : 'danger'">
             {{ logData?.statusText || '-' }}
           </ElTag>
         </ElDescriptionsItem>
-        <ElDescriptionsItem label="操作人员">
+        <ElDescriptionsItem :label="$t('system.operLog.operator')">
           {{ logData?.operName || '-' }}
         </ElDescriptionsItem>
-        <ElDescriptionsItem label="设备类型">
+        <ElDescriptionsItem :label="$t('system.operLog.deviceType')">
           {{ logData?.deviceTypeText || '-' }}
         </ElDescriptionsItem>
-        <ElDescriptionsItem label="操作IP">
+        <ElDescriptionsItem :label="$t('system.operLog.ip')">
           {{ logData?.operIp || '-' }}
         </ElDescriptionsItem>
-        <ElDescriptionsItem label="操作地点">
+        <ElDescriptionsItem :label="$t('system.operLog.location')">
           {{ logData?.operLocation || '-' }}
         </ElDescriptionsItem>
-        <ElDescriptionsItem label="操作时间">
+        <ElDescriptionsItem :label="$t('system.operLog.time')">
           {{ logData?.operTime || '-' }}
         </ElDescriptionsItem>
-        <ElDescriptionsItem label="耗时">
+        <ElDescriptionsItem :label="$t('system.operLog.cost')">
           {{ logData?.costTime ? `${logData.costTime} ms` : '-' }}
         </ElDescriptionsItem>
-        <ElDescriptionsItem label="请求方式">
+        <ElDescriptionsItem :label="$t('system.operLog.requestMethod')">
           {{ logData?.requestMethod || '-' }}
         </ElDescriptionsItem>
-        <ElDescriptionsItem label="请求URL" :span="2">
+        <ElDescriptionsItem :label="$t('system.operLog.requestUrl')" :span="2">
           {{ logData?.operUrl || '-' }}
         </ElDescriptionsItem>
-        <ElDescriptionsItem label="方法名称" :span="2">
+        <ElDescriptionsItem :label="$t('system.operLog.methodName')" :span="2">
           {{ logData?.method || '-' }}
         </ElDescriptionsItem>
-        <ElDescriptionsItem label="请求参数" :span="2">
+        <ElDescriptionsItem :label="$t('system.operLog.requestParams')" :span="2">
           <ElInput
             v-model="operParamFormatted"
             type="textarea"
             :rows="6"
             readonly
-            :placeholder="logData?.operParam || '无'"
+            :placeholder="logData?.operParam || $t('system.common.none')"
           />
         </ElDescriptionsItem>
-        <ElDescriptionsItem label="返回参数" :span="2">
+        <ElDescriptionsItem :label="$t('system.operLog.responseParams')" :span="2">
           <ElInput
             v-model="jsonResultFormatted"
             type="textarea"
             :rows="6"
             readonly
-            :placeholder="logData?.jsonResult || '无'"
+            :placeholder="logData?.jsonResult || $t('system.common.none')"
           />
         </ElDescriptionsItem>
-        <ElDescriptionsItem v-if="logData?.errorMsg" label="错误消息" :span="2">
+        <ElDescriptionsItem
+          v-if="logData?.errorMsg"
+          :label="$t('system.operLog.errorMsg')"
+          :span="2"
+        >
           <ElAlert type="error" :closable="false">
             {{ logData.errorMsg }}
           </ElAlert>
@@ -68,7 +72,7 @@
       </ElDescriptions>
     </div>
     <template #footer>
-      <ElButton @click="dialogVisible = false">关闭</ElButton>
+      <ElButton @click="dialogVisible = false">{{ $t('system.common.close') }}</ElButton>
     </template>
   </ElDialog>
 </template>
@@ -77,20 +81,23 @@
   import { ElDescriptions, ElDescriptionsItem, ElInput, ElAlert } from 'element-plus'
 
   interface Props {
-    visible: boolean
+    modelValue: boolean
     logData?: Api.SystemManage.OperLogListItem | null
   }
 
   interface Emits {
-    (e: 'update:visible', value: boolean): void
+    (e: 'update:modelValue', value: boolean): void
   }
 
-  const props = defineProps<Props>()
+  const props = withDefaults(defineProps<Props>(), {
+    modelValue: false,
+    logData: null
+  })
   const emit = defineEmits<Emits>()
 
   const dialogVisible = computed({
-    get: () => props.visible,
-    set: (val) => emit('update:visible', val)
+    get: () => props.modelValue,
+    set: (val) => emit('update:modelValue', val)
   })
 
   /**

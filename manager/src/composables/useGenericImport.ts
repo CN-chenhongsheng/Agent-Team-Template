@@ -37,12 +37,16 @@
 import { ref, onBeforeUnmount, type Ref } from 'vue'
 import { generateTemplate, type TemplateColumn, type CascadeData } from '@/utils/excel'
 import type { UploadResult } from '@/utils/upload'
+import i18n from '@/locales'
 import { useImportProgress } from '@/hooks/core/useImportProgress'
 import type {
   SSEImportCallbacks,
   ImportResult as BaseImportResult,
   ImportTaskVO
 } from '@/hooks/core/useImportProgress'
+
+const t = (key: string, params?: Record<string, unknown>): string =>
+  (i18n.global.t as any)(key, params)
 
 // ===================== 类型定义 =====================
 
@@ -207,7 +211,7 @@ export function useGenericImport<TResult extends ImportResult = ImportResult, TC
   const {
     templateColumns,
     templateFilename,
-    templateSheetName = '导入数据',
+    templateSheetName = t('system.importDialog.defaultSheetName'),
     fetchContextData,
     uploadApi,
     subscribeApi,
@@ -215,7 +219,7 @@ export function useGenericImport<TResult extends ImportResult = ImportResult, TC
     skipScanThreshold = 50 * 1024 * 1024,
     onImportComplete,
     onViewDetail,
-    progressTitle = '数据导入'
+    progressTitle = t('system.importDialog.defaultProgressTitle')
   } = config
 
   // ==================== 状态 ====================
@@ -280,7 +284,7 @@ export function useGenericImport<TResult extends ImportResult = ImportResult, TC
       })
     } catch (error) {
       console.error('下载模板失败:', error)
-      ElMessage.error('模板下载失败，请稍后重试')
+      ElMessage.error(t('system.importDialog.messages.downloadFailed'))
       throw error
     } finally {
       isDownloading.value = false
@@ -314,7 +318,7 @@ export function useGenericImport<TResult extends ImportResult = ImportResult, TC
       } else {
         // 简单校验：检查文件格式
         if (!file.name.toLowerCase().endsWith('.xlsx')) {
-          throw new Error('仅支持 .xlsx 格式文件')
+          throw new Error(t('system.importDialog.messages.onlyXlsxFile'))
         }
       }
 
@@ -339,7 +343,7 @@ export function useGenericImport<TResult extends ImportResult = ImportResult, TC
   ): Promise<void> => {
     const fileUrl = uploadResult?.url
     if (!fileUrl) {
-      ElMessage.warning('未获取到文件地址')
+      ElMessage.warning(t('system.importDialog.messages.noFileUrl'))
       closeDialog()
       return
     }
@@ -361,7 +365,7 @@ export function useGenericImport<TResult extends ImportResult = ImportResult, TC
         if (importProgressHook) {
           importProgressHook.startImport(response.taskId)
         } else {
-          ElMessage.warning('未配置进度监听，请检查配置')
+          ElMessage.warning(t('system.importDialog.messages.noProgressListener'))
         }
       } else {
         // 同步结果：直接处理
@@ -370,10 +374,17 @@ export function useGenericImport<TResult extends ImportResult = ImportResult, TC
 
         if ((result.failCount ?? 0) > 0) {
           ElMessage.warning(
-            `导入完成：成功 ${result.successCount ?? 0} 条，失败 ${result.failCount ?? 0} 条`
+            t('system.importDialog.messages.importPartial', {
+              success: result.successCount ?? 0,
+              fail: result.failCount ?? 0
+            })
           )
         } else {
-          ElMessage.success(`导入成功：共 ${result.successCount ?? 0} 条`)
+          ElMessage.success(
+            t('system.importDialog.messages.importSuccess', {
+              count: result.successCount ?? 0
+            })
+          )
         }
 
         // 触发完成回调
@@ -388,7 +399,7 @@ export function useGenericImport<TResult extends ImportResult = ImportResult, TC
       }
     } catch (error) {
       console.error('导入失败:', error)
-      ElMessage.error('导入失败，请重试')
+      ElMessage.error(t('system.importDialog.messages.importFailedRetry'))
       closeDialog()
     } finally {
       isUploading.value = false

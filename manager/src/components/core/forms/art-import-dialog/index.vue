@@ -2,7 +2,7 @@
 <template>
   <ElDialog
     v-model="dialogVisible"
-    :title="title"
+    :title="dialogTitle"
     :width="width"
     align-center
     destroy-on-close
@@ -18,7 +18,9 @@
           <div class="import-header-icon flex items-center justify-center">
             <ElIcon class="text-base"><Download /></ElIcon>
           </div>
-          <span class="text-sm font-medium text-[var(--el-text-color-primary)]">下载模板</span>
+          <span class="text-sm font-medium text-[var(--el-text-color-primary)]">{{
+            $t('system.importDialog.downloadTemplate')
+          }}</span>
         </div>
         <div class="ml-9 flex items-center justify-between gap-3">
           <div class="flex items-center gap-3">
@@ -29,10 +31,10 @@
             </div>
             <div class="flex flex-col">
               <span class="text-sm font-medium text-[var(--el-text-color-primary)]">
-                {{ templateName }}
+                {{ templateDisplayName }}
               </span>
               <span class="text-xs text-[var(--el-text-color-secondary)]">
-                Excel 模板文件（点击右侧图标下载）
+                {{ $t('system.importDialog.templateHint') }}
               </span>
             </div>
           </div>
@@ -42,7 +44,11 @@
             class="flex h-9 w-9 items-center justify-center rounded-md !p-0 border border-[var(--el-border-color-lighter)] hover:border-[var(--el-color-primary)] hover:bg-[var(--el-color-primary-light-9)]"
             :loading="downloadLoading"
             @click="handleDownloadTemplate"
-            :aria-label="downloadLoading ? '模板下载中' : '下载模板'"
+            :aria-label="
+              downloadLoading
+                ? $t('system.importDialog.downloadingAria')
+                : $t('system.importDialog.downloadTemplate')
+            "
           >
             <ElIcon v-if="!downloadLoading" class="text-lg text-[var(--el-color-primary)]">
               <Download />
@@ -60,8 +66,12 @@
             <div class="import-header-icon flex items-center justify-center">
               <ElIcon class="text-base"><Upload /></ElIcon>
             </div>
-            <span class="text-sm font-medium text-[var(--el-text-color-primary)]">上传文件</span>
-            <ElTag v-if="uploadDisabled" size="small" type="info" class="ml-2">暂未开放</ElTag>
+            <span class="text-sm font-medium text-[var(--el-text-color-primary)]">{{
+              $t('system.importDialog.uploadFile')
+            }}</span>
+            <ElTag v-if="uploadDisabled" size="small" type="info" class="ml-2">{{
+              $t('system.importDialog.notAvailable')
+            }}</ElTag>
           </div>
 
           <!-- 重新选择：移动到标题行右侧，仅在已选文件时显示 -->
@@ -82,7 +92,7 @@
               link
               :disabled="uploadDisabled || scanState === 'scanning'"
             >
-              重新选择
+              {{ $t('system.importDialog.reselect') }}
             </ElButton>
           </ElUpload>
         </div>
@@ -127,13 +137,19 @@
               </div>
               <div class="text-center">
                 <p v-if="uploadDisabled" class="text-sm text-[var(--el-text-color-placeholder)]">
-                  上传功能暂未开放
+                  {{ $t('system.importDialog.uploadDisabled') }}
                 </p>
                 <p v-else class="text-sm">
-                  <span class="font-medium text-[var(--el-color-primary)]">点击上传</span>
-                  <span class="text-[var(--el-text-color-regular)]"> 或将文件拖拽到此处</span>
+                  <span class="font-medium text-[var(--el-color-primary)]">{{
+                    $t('system.importDialog.clickUpload')
+                  }}</span>
+                  <span class="text-[var(--el-text-color-regular)]">
+                    {{ $t('system.importDialog.dragHint') }}</span
+                  >
                 </p>
-                <p class="mt-1 text-xs text-[var(--el-text-color-secondary)]">仅支持 XLSX 格式</p>
+                <p class="mt-1 text-xs text-[var(--el-text-color-secondary)]">
+                  {{ $t('system.importDialog.onlyXlsx') }}
+                </p>
               </div>
             </div>
           </ElUpload>
@@ -198,7 +214,7 @@
               <div
                 class="mb-2 flex items-center justify-between text-xs text-[var(--el-text-color-secondary)]"
               >
-                <span>扫描中，请稍候...</span>
+                <span>{{ $t('system.importDialog.scanningPleaseWait') }}</span>
                 <span>{{ scanProgress }}%</span>
               </div>
               <ElProgress :percentage="scanProgress" :stroke-width="8" :show-text="false" />
@@ -208,20 +224,20 @@
               v-if="scanState === 'success' && showScanResultText"
               class="mt-3 text-xs text-[var(--el-color-success)]"
             >
-              扫描通过，可以开始上传
+              {{ $t('system.importDialog.scanPassed') }}
             </div>
 
             <div
               v-if="scanState === 'failed' && showScanResultText"
               class="mt-3 flex items-center justify-between text-xs text-[var(--el-color-danger)]"
             >
-              <span>扫描失败：{{ scanErrorCountText }}</span>
+              <span>{{ $t('system.importDialog.scanFailed', { text: scanErrorCountText }) }}</span>
               <span
                 v-if="lastValidationError"
                 class="cursor-pointer text-[var(--el-color-primary)] hover:underline"
                 @click="handleViewScanError"
               >
-                查看详情
+                {{ $t('system.importDialog.viewDetail') }}
               </span>
             </div>
 
@@ -229,7 +245,7 @@
               v-if="scanState === 'skipped' && showScanResultText"
               class="mt-3 text-xs text-[var(--el-color-warning)]"
             >
-              文件较大，已跳过前端扫描，将由服务器进行校验
+              {{ $t('system.importDialog.scanSkipped') }}
             </div>
           </div>
 
@@ -242,14 +258,14 @@
               <span class="text-sm text-[var(--el-text-color-primary)]">
                 {{
                   uploadState === 'hashing'
-                    ? '计算文件哈希中...'
+                    ? $t('system.importDialog.uploadHashing')
                     : uploadState === 'uploading'
-                      ? '上传中...'
+                      ? $t('system.importDialog.uploadUploading')
                       : uploadState === 'merging'
-                        ? '合并文件中...'
+                        ? $t('system.importDialog.uploadMerging')
                         : uploadState === 'paused'
-                          ? '已暂停'
-                          : '准备中...'
+                          ? $t('system.importDialog.uploadPaused')
+                          : $t('system.importDialog.uploadPreparing')
                 }}
               </span>
               <span class="text-sm text-[var(--el-text-color-secondary)]">
@@ -283,12 +299,14 @@
                 size="small"
                 @click="pauseUpload"
               >
-                暂停
+                {{ $t('system.importDialog.pause') }}
               </ElButton>
               <ElButton v-if="uploadState === 'paused'" v-ripple size="small" @click="resumeUpload">
-                恢复
+                {{ $t('system.importDialog.resume') }}
               </ElButton>
-              <ElButton v-ripple size="small" @click="abortUpload"> 取消 </ElButton>
+              <ElButton v-ripple size="small" @click="abortUpload">
+                {{ $t('system.importDialog.cancel') }}
+              </ElButton>
             </div>
           </div>
 
@@ -298,7 +316,9 @@
             class="mt-4 rounded-md bg-[var(--el-fill-color-light)] p-4"
           >
             <div class="mb-2 flex items-center justify-between">
-              <span class="text-sm text-[var(--el-text-color-primary)]">计算文件哈希中...</span>
+              <span class="text-sm text-[var(--el-text-color-primary)]">{{
+                $t('system.importDialog.uploadHashing')
+              }}</span>
               <span class="text-sm text-[var(--el-text-color-secondary)]">{{ hashProgress }}%</span>
             </div>
             <ElProgress :percentage="hashProgress" :stroke-width="8" />
@@ -312,7 +332,9 @@
           <div class="import-warning-card-icon flex items-center justify-center">
             <ElIcon class="text-base"><InfoFilled /></ElIcon>
           </div>
-          <span class="import-warning-card-title text-sm font-medium">导入须知</span>
+          <span class="import-warning-card-title text-sm font-medium">{{
+            $t('system.importDialog.tipsTitle')
+          }}</span>
         </div>
         <ul class="ml-9 list-inside list-disc space-y-1">
           <li
@@ -326,11 +348,7 @@
       </div>
     </div>
 
-    <ScanResultDialog
-      v-if="scanResultMeta"
-      v-model:visible="scanResultVisible"
-      :meta="scanResultMeta"
-    />
+    <ScanResultDialog v-if="scanResultMeta" v-model="scanResultVisible" :meta="scanResultMeta" />
 
     <template #footer>
       <div class="w-full pb-4">
@@ -351,6 +369,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { ref, computed, watch, onUnmounted } from 'vue'
   import {
     ElDialog,
@@ -431,9 +450,7 @@
   }
 
   const props = withDefaults(defineProps<Props>(), {
-    title: '导入数据',
     width: '520px',
-    templateName: '导入模板.xlsx',
     accept: '.xlsx',
     tips: () => [],
     uploadDisabled: false,
@@ -443,6 +460,13 @@
   })
 
   const emit = defineEmits<Emits>()
+
+  const { t } = useI18n()
+
+  const dialogTitle = computed(() => props.title || t('system.importDialog.defaultTitle'))
+  const templateDisplayName = computed(
+    () => props.templateName || t('system.importDialog.defaultTemplateName')
+  )
 
   // 状态
   const downloadLoading = ref(false)
@@ -476,25 +500,28 @@
   })
 
   const scanStatusText = computed(() => {
-    if (scanState.value === 'scanning') return '扫描中'
-    if (scanState.value === 'success') return '已扫描 · 通过'
-    if (scanState.value === 'failed') return '已扫描 · 未通过'
-    if (scanState.value === 'skipped') return '已跳过 · 大文件'
-    return '未扫描'
+    if (scanState.value === 'scanning') return t('system.importDialog.scanStatus.scanning')
+    if (scanState.value === 'success') return t('system.importDialog.scanStatus.passed')
+    if (scanState.value === 'failed') return t('system.importDialog.scanStatus.failed')
+    if (scanState.value === 'skipped') return t('system.importDialog.scanStatus.skipped')
+    return t('system.importDialog.scanStatus.notScanned')
   })
 
   const scanButtonText = computed(() => {
-    if (scanState.value === 'scanning') return '扫描中...'
-    if (scanState.value === 'success') return '重新扫描'
-    if (scanState.value === 'failed') return '重新扫描'
-    if (scanState.value === 'skipped') return '已跳过'
-    return '扫描'
+    if (scanState.value === 'scanning') return t('system.importDialog.scanButton.scanning')
+    if (scanState.value === 'success') return t('system.importDialog.scanButton.rescan')
+    if (scanState.value === 'failed') return t('system.importDialog.scanButton.rescan')
+    if (scanState.value === 'skipped') return t('system.importDialog.scanButton.skipped')
+    return t('system.importDialog.scanButton.scan')
   })
 
   const scanErrorCountText = computed(() => {
     const meta = (lastValidationError.value as any)?.meta as ImportValidationErrorMeta | undefined
-    if (!meta) return '请查看详情'
-    return `共 ${meta.errorCount} 处问题（仅展示前 ${meta.preview?.length || 0} 条）`
+    if (!meta) return t('system.importDialog.scanErrorFallback')
+    return t('system.importDialog.scanErrorCount', {
+      count: meta.errorCount,
+      preview: meta.preview?.length || 0
+    })
   })
 
   const scanResultMeta = computed<ImportValidationErrorMeta | null>(() => {
@@ -508,7 +535,7 @@
         preview: [
           {
             row: 0,
-            column: '系统提示',
+            column: t('system.scanResult.systemTip'),
             message: err.message,
             value: ''
           }
@@ -519,12 +546,12 @@
   })
 
   const submitButtonText = computed(() => {
-    if (submitLoading.value) return '上传中...'
-    if (!selectedFile.value) return '请选择文件'
-    if (scanState.value === 'scanning') return '扫描中...'
-    if (scanState.value === 'skipped') return '开始上传（跳过扫描）'
-    if (scanState.value !== 'success') return '请先扫描'
-    return '开始上传'
+    if (submitLoading.value) return t('system.importDialog.submit.uploading')
+    if (!selectedFile.value) return t('system.importDialog.submit.selectFile')
+    if (scanState.value === 'scanning') return t('system.importDialog.submit.scanning')
+    if (scanState.value === 'skipped') return t('system.importDialog.submit.skippedUpload')
+    if (scanState.value !== 'success') return t('system.importDialog.submit.scanFirst')
+    return t('system.importDialog.submit.startUpload')
   })
 
   /**
@@ -555,21 +582,21 @@
         // 使用 URL 方式下载
         const link = document.createElement('a')
         link.href = props.templateUrl
-        link.download = props.templateName || '导入模板.xlsx'
+        link.download = props.templateName || t('system.importDialog.defaultTemplateName')
         link.style.display = 'none'
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
       } else {
-        ElMessage.warning('未配置模板下载地址')
+        ElMessage.warning(t('system.importDialog.messages.templateNotConfigured'))
         return
       }
 
       emit('download-template')
-      ElMessage.success('模板下载成功')
+      ElMessage.success(t('system.importDialog.messages.downloadSuccess'))
     } catch (error) {
       console.error('下载模板失败:', error)
-      ElMessage.error('模板下载失败，请稍后重试')
+      ElMessage.error(t('system.importDialog.messages.downloadFailed'))
     } finally {
       downloadLoading.value = false
     }
@@ -582,7 +609,7 @@
     if (uploadFile.raw) {
       const name = uploadFile.raw.name || ''
       if (!name.toLowerCase().endsWith('.xlsx')) {
-        ElMessage.error('仅支持上传 .xlsx 文件')
+        ElMessage.error(t('system.importDialog.messages.onlyXlsxFile'))
         uploadRef.value?.clearFiles()
         selectedFile.value = null
         return
@@ -616,7 +643,7 @@
    * 超出文件数量限制
    */
   const handleExceed = () => {
-    ElMessage.warning('只能上传一个文件，请先移除已选文件')
+    ElMessage.warning(t('system.importDialog.messages.oneFileOnly'))
   }
 
   const stopScanProgress = () => {
@@ -657,7 +684,7 @@
 
   const handleViewScanError = async () => {
     if (!scanResultMeta.value) {
-      ElMessage.warning('暂无可查看的错误详情')
+      ElMessage.warning(t('system.importDialog.messages.noErrorDetail'))
       return
     }
     scanResultVisible.value = true
@@ -665,7 +692,7 @@
 
   const handleScan = async () => {
     if (!selectedFile.value) {
-      ElMessage.warning('请先选择要扫描的文件')
+      ElMessage.warning(t('system.importDialog.messages.selectFileToScan'))
       return
     }
     if (props.uploadDisabled) return
@@ -678,7 +705,10 @@
       scanState.value = 'skipped'
       showScanResultText.value = true
       ElMessage.warning({
-        message: `文件较大（${sizeMB}MB），已跳过前端扫描。超过 ${thresholdMB}MB 的文件将由服务器进行校验。`,
+        message: t('system.importDialog.messages.largeFileSkipped', {
+          size: sizeMB,
+          threshold: thresholdMB
+        }),
         duration: 5000
       })
       return
@@ -727,18 +757,18 @@
           // 兼容旧用法：把 beforeUpload 当作扫描逻辑
           await props.beforeUpload(selectedFile.value)
         } else {
-          ElMessage.warning('未配置扫描函数')
+          ElMessage.warning(t('system.importDialog.messages.noScanFn'))
           scanState.value = 'failed'
           return
         }
       }
 
       scanState.value = 'success'
-      ElMessage.success('扫描通过')
+      ElMessage.success(t('system.importDialog.messages.scanSuccess'))
     } catch (error) {
       scanState.value = 'failed'
       lastValidationError.value = error
-      ElMessage.error('扫描未通过，请点击“查看详情”查看错误列表')
+      ElMessage.error(t('system.importDialog.messages.scanFailed'))
     } finally {
       // 确保进度条至少展示一小段时间，再收尾到 100%，然后缓慢淡出
       const elapsed = Date.now() - scanStartTime.value
@@ -798,12 +828,12 @@
    */
   const handleSubmit = async () => {
     if (!selectedFile.value) {
-      ElMessage.warning('请先选择要导入的文件')
+      ElMessage.warning(t('system.importDialog.messages.selectFileToImport'))
       return
     }
     // 允许 success（扫描通过）或 skipped（大文件跳过扫描）状态上传
     if (scanState.value !== 'success' && scanState.value !== 'skipped') {
-      ElMessage.warning('请先扫描并通过校验后再上传')
+      ElMessage.warning(t('system.importDialog.messages.scanBeforeUpload'))
       return
     }
 
@@ -826,7 +856,7 @@
       // 2) 上传失败
       console.error('导入失败:', error)
       emit('upload-error', error instanceof Error ? error : new Error(String(error)))
-      ElMessage.error('导入失败，请稍后重试')
+      ElMessage.error(t('system.importDialog.messages.importFailed'))
     } finally {
       submitLoading.value = false
       uploadProgress.value = null

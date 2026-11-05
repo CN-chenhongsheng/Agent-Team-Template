@@ -11,6 +11,9 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+
+  const { t } = useI18n()
   defineOptions({ name: 'LoginLogSearch' })
 
   interface Props {
@@ -44,17 +47,17 @@
   /**
    * 登录类型选项
    */
-  const loginTypeOptions = ref([
-    { label: '登录', value: 'login' },
-    { label: '登出', value: 'logout' }
+  const loginTypeOptions = computed(() => [
+    { label: t('system.loginLog.login'), value: 'login' },
+    { label: t('system.loginLog.logout'), value: 'logout' }
   ])
 
   /**
    * 登录状态选项
    */
-  const loginStatusOptions = ref([
-    { label: '成功', value: 0 },
-    { label: '失败', value: 1 }
+  const loginStatusOptions = computed(() => [
+    { label: t('system.loginLog.success'), value: 0 },
+    { label: t('system.loginLog.fail'), value: 1 }
   ])
 
   /**
@@ -62,39 +65,39 @@
    */
   const formItems = computed(() => [
     {
-      label: '用户账号',
+      label: t('system.loginLog.search.userAccount'),
       key: 'username',
       type: 'input',
-      placeholder: '请输入用户账号',
+      placeholder: t('system.loginLog.search.userAccountPlaceholder'),
       clearable: true
     },
     {
-      label: '登录类型',
+      label: t('system.loginLog.search.loginType'),
       key: 'loginType',
       type: 'select',
       props: {
-        placeholder: '请选择登录类型',
+        placeholder: t('system.loginLog.search.loginTypePlaceholder'),
         options: loginTypeOptions.value,
         clearable: true
       }
     },
     {
-      label: '登录状态',
+      label: t('system.loginLog.search.loginStatus'),
       key: 'loginStatus',
       type: 'select',
       props: {
-        placeholder: '请选择登录状态',
+        placeholder: t('system.loginLog.search.loginStatusPlaceholder'),
         options: loginStatusOptions.value,
         clearable: true
       }
     },
     {
-      label: '登录时间',
+      label: t('system.loginLog.search.loginTime'),
       key: 'loginTime',
       type: 'daterange',
       props: {
-        startPlaceholder: '开始日期',
-        endPlaceholder: '结束日期',
+        startPlaceholder: t('system.loginLog.search.startDate'),
+        endPlaceholder: t('system.loginLog.search.endDate'),
         valueFormat: 'YYYY-MM-DD'
       }
     }

@@ -112,7 +112,7 @@ export function fetchUpdateUserStatus(id: number, status: number) {
  * @param params 查询参数
  */
 export function fetchGetRoleList(params: Api.SystemManage.RoleSearchParams) {
-  return request.get<Api.SystemManage.RoleList>({
+  return request.get<Api.SystemManage.RolePageResponse>({
     url: '/api/v1/system/role/page',
     params: {
       pageNum: params.pageNum || 1,

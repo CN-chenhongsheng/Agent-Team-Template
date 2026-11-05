@@ -11,7 +11,10 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { useDictStore } from '@/store/modules/dict'
+
+  const { t } = useI18n()
 
   interface Props {
     modelValue: Record<string, any>
@@ -61,9 +64,9 @@
   /**
    * 状态选项
    */
-  const statusOptions = ref([
-    { label: '正常', value: 0 },
-    { label: '异常', value: 1 }
+  const statusOptions = computed(() => [
+    { label: t('system.operLog.normal'), value: 0 },
+    { label: t('system.operLog.abnormal'), value: 1 }
   ])
 
   /**
@@ -71,46 +74,46 @@
    */
   const formItems = computed(() => [
     {
-      label: '操作模块',
+      label: t('system.operLog.search.module'),
       key: 'title',
       type: 'input',
-      placeholder: '请输入操作模块',
+      placeholder: t('system.operLog.search.modulePlaceholder'),
       clearable: true
     },
     {
-      label: '操作人员',
+      label: t('system.operLog.search.operator'),
       key: 'operName',
       type: 'input',
-      placeholder: '请输入操作人员',
+      placeholder: t('system.operLog.search.operatorPlaceholder'),
       clearable: true
     },
     {
-      label: '业务类型',
+      label: t('system.operLog.search.businessType'),
       key: 'businessType',
       type: 'select',
       props: {
-        placeholder: '请选择业务类型',
+        placeholder: t('system.operLog.search.businessTypePlaceholder'),
         options: businessTypeOptions.value,
         clearable: true
       }
     },
     {
-      label: '操作状态',
+      label: t('system.operLog.search.status'),
       key: 'status',
       type: 'select',
       props: {
-        placeholder: '请选择操作状态',
+        placeholder: t('system.operLog.search.statusPlaceholder'),
         options: statusOptions.value,
         clearable: true
       }
     },
     {
-      label: '操作时间',
+      label: t('system.operLog.search.time'),
       key: 'operTime',
       type: 'daterange',
       props: {
-        startPlaceholder: '开始日期',
-        endPlaceholder: '结束日期',
+        startPlaceholder: t('system.operLog.search.startDate'),
+        endPlaceholder: t('system.operLog.search.endDate'),
         valueFormat: 'YYYY-MM-DD'
       }
     }

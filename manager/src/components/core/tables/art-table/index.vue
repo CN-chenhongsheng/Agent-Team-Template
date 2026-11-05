@@ -7,7 +7,7 @@
     <ElTable
       ref="elTableRef"
       v-loading="!!loading || initializing"
-      :element-loading-text="initializing ? '系统初始化中...' : undefined"
+      :element-loading-text="initializing ? $t('system.common.tableInitializing') : undefined"
       v-bind="{ ...$attrs, ...props, height, stripe, border, size, headerCellStyle }"
       @row-contextmenu="handleRowContextmenu"
     >
@@ -68,7 +68,11 @@
 
       <template #empty>
         <div v-if="loading"></div>
-        <ElEmpty v-else :description="emptyText" :image-size="120" />
+        <ElEmpty
+          v-else
+          :description="emptyText || $t('system.common.tableNoData')"
+          :image-size="120"
+        />
       </template>
     </ElTable>
 
@@ -189,7 +193,7 @@
     border: undefined,
     size: undefined,
     emptyHeight: '100%',
-    emptyText: '暂无数据',
+    emptyText: undefined,
     showTableHeader: true
   })
 

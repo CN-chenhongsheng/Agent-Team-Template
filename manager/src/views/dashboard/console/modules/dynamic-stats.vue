@@ -2,8 +2,8 @@
   <div class="art-card h-128 p-5 mb-5 max-sm:mb-4">
     <div class="art-card-header">
       <div class="title">
-        <h4>动态</h4>
-        <p>新增<span class="text-success">+6</span></p>
+        <h4>{{ $t('dashboard.dynamic.title') }}</h4>
+        <p> {{ $t('dashboard.dynamic.added') }}<span class="text-success">+6</span> </p>
       </div>
     </div>
 
@@ -24,6 +24,10 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+
+  const { t } = useI18n()
+
   interface DynamicItem {
     username: string
     type: string
@@ -34,45 +38,45 @@
    * 用户动态列表
    * 记录用户的关注、发文、提问、兑换等各类活动
    */
-  const list = reactive<DynamicItem[]>([
+  const list = computed<DynamicItem[]>(() => [
     {
       username: '中小鱼',
-      type: '关注了',
+      type: t('dashboard.dynamic.follow'),
       target: '誶誶淰'
     },
     {
       username: '何小荷',
-      type: '发表文章',
+      type: t('dashboard.dynamic.article'),
       target: 'Vue3 + Typescript + Vite 项目实战笔记'
     },
     {
       username: '中小鱼',
-      type: '关注了',
+      type: t('dashboard.dynamic.follow'),
       target: '誶誶淰'
     },
     {
       username: '何小荷',
-      type: '发表文章',
+      type: t('dashboard.dynamic.article'),
       target: 'Vue3 + Typescript + Vite 项目实战笔记'
     },
     {
       username: '誶誶淰',
-      type: '提出问题',
+      type: t('dashboard.dynamic.question'),
       target: '主题可以配置吗'
     },
     {
       username: '发呆草',
-      type: '兑换了物品',
+      type: t('dashboard.dynamic.redeem'),
       target: '《奇特的一生》'
     },
     {
       username: '甜筒',
-      type: '关闭了问题',
+      type: t('dashboard.dynamic.close'),
       target: '发呆草'
     },
     {
       username: '冷月呆呆',
-      type: '兑换了物品',
+      type: t('dashboard.dynamic.redeem'),
       target: '《高效人士的七个习惯》'
     }
   ])

@@ -36,10 +36,12 @@ export function getPageAgent() {
  */
 const chatDrawerBlacklist = {
   *[Symbol.iterator](): IterableIterator<Element> {
-    const roots = document.querySelectorAll('.page-agent-chat-drawer, .page-agent-stop-fab')
+    const roots = Array.from(
+      document.querySelectorAll('.page-agent-chat-drawer, .page-agent-stop-fab')
+    )
     for (const root of roots) {
       yield root
-      yield* root.querySelectorAll('*')
+      yield* Array.from(root.querySelectorAll('*'))
     }
   }
 }

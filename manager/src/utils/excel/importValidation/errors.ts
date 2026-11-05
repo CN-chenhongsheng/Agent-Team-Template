@@ -5,6 +5,11 @@
  * @author 陈鸿昇
  */
 
+import i18n from '@/locales'
+
+const t = (key: string, params?: Record<string, unknown>): string =>
+  (i18n.global.t as any)(key, params)
+
 export interface ImportValidationErrorItem {
   /** Excel 行号（从 1 开始） */
   row: number
@@ -57,15 +62,21 @@ export function formatImportValidationErrorHtml(error: ImportValidationError): s
       const col = escapeHtml(it.column)
       const msg = escapeHtml(it.message)
       const val = it.value ? escapeHtml(it.value) : ''
-      const valPart = it.value ? `，原值：<code>${val}</code>` : ''
-      return `<li>第 <b>${row}</b> 行，<b>${col}</b>：${msg}${valPart}</li>`
+      const valPart = it.value ? t('utils.excel.errors.valuePart', { value: val }) : ''
+      return `<li>${t('utils.excel.errors.rowLine', {
+        row,
+        column: col,
+        message: msg,
+        valuePart: valPart
+      })}</li>`
     })
     .join('')
 
   const tail = truncated
-    ? `<div class="mt-2 text-xs" style="color: var(--el-text-color-secondary);">错误过多，已提前终止扫描（当前错误数：≥${escapeHtml(
-        String(errorCount)
-      )}）。</div>`
+    ? `<div class="mt-2 text-xs" style="color: var(--el-text-color-secondary);">${t(
+        'utils.excel.errors.truncated',
+        { count: escapeHtml(String(errorCount)) }
+      )}</div>`
     : ''
 
   const previewCount = escapeHtml(String(preview.length))
@@ -74,7 +85,10 @@ export function formatImportValidationErrorHtml(error: ImportValidationError): s
 <div style="line-height: 1.6;">
   <div style="font-weight: 600; color: var(--el-text-color-primary); margin-bottom: 8px;">${title}</div>
   <div style="color: var(--el-text-color-secondary); margin-bottom: 8px;">
-    共发现 <b>${escapeHtml(String(errorCount))}</b> 处问题，仅展示前 <b>${previewCount}</b> 条：
+    ${t('utils.excel.errors.summary', {
+      count: escapeHtml(String(errorCount)),
+      preview: previewCount
+    })}
   </div>
   <ol style="padding-left: 18px; margin: 0; color: var(--el-text-color-regular);">
     ${items}

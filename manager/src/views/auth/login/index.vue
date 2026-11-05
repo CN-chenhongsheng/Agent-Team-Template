@@ -48,7 +48,7 @@
                   :text="$t('login.sliderText')"
                   textColor="var(--art-gray-700)"
                   :successText="$t('login.sliderSuccessText')"
-                  progressBarBg="var(--main-color)"
+                  progressBarBg="var(--theme-color)"
                   :background="isDark ? '#26272F' : '#F1F1F4'"
                   handlerBg="var(--default-box-color)"
                 />

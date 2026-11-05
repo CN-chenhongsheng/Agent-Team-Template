@@ -1,9 +1,11 @@
 <template>
   <div class="art-card p-5 flex-b mb-5 max-sm:mb-4">
     <div>
-      <h2 class="text-2xl font-medium">关于项目</h2>
-      <p class="text-g-700 mt-1">{{ systemName }} 是一款兼具设计美学与高效开发的后台系统</p>
-      <p class="text-g-700 mt-1">使用了 Vue3、TypeScript、Vite、Element Plus 等前沿技术</p>
+      <h2 class="text-2xl font-medium">{{ $t('dashboard.about.title') }}</h2>
+      <p class="text-g-700 mt-1">
+        {{ $t('dashboard.about.description', { name: systemName }) }}
+      </p>
+      <p class="text-g-700 mt-1">{{ $t('dashboard.about.tech') }}</p>
 
       <div class="flex flex-wrap gap-3.5 max-w-150 mt-9">
         <div
@@ -22,17 +24,19 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import AppConfig from '@/config'
   import { WEB_LINKS } from '@/utils/constants'
 
+  const { t } = useI18n()
   const systemName = AppConfig.systemInfo.name
 
-  const linkList = [
-    { label: '项目官网', url: WEB_LINKS.DOCS },
-    { label: '文档', url: WEB_LINKS.INTRODUCE },
+  const linkList = computed(() => [
+    { label: t('dashboard.about.official'), url: WEB_LINKS.DOCS },
+    { label: t('dashboard.about.docs'), url: WEB_LINKS.INTRODUCE },
     { label: 'Github', url: WEB_LINKS.GITHUB_HOME },
-    { label: '哔哩哔哩', url: WEB_LINKS.BILIBILI }
-  ]
+    { label: t('dashboard.about.bilibili'), url: WEB_LINKS.BILIBILI }
+  ])
 
   /**
    * 在新标签页中打开指定 URL

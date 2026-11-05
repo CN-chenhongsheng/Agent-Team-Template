@@ -24,11 +24,11 @@
       >
         <template #left>
           <ElSpace wrap>
-            <ElButton @click="handleAddMenu" v-ripple v-permission="'system:menu:add'">
-              添加菜单
+            <ElButton @click="handleAddMenu" v-ripple v-permission="PERMISSIONS.system.menu.add">
+              {{ $t('system.menu.add') }}
             </ElButton>
             <ElButton @click="toggleExpand" v-ripple>
-              {{ isExpanded ? '收起全部' : '展开全部' }}
+              {{ isExpanded ? $t('system.menu.collapseAll') : $t('system.menu.expandAll') }}
             </ElButton>
           </ElSpace>
         </template>
@@ -51,24 +51,30 @@
 
       <!-- 菜单弹窗 -->
       <MenuDialog
-        v-model:visible="dialogVisible"
-        :type="dialogType"
+        v-model="dialogVisible"
+        :dialog-type="dialogType"
         :edit-data="editData"
-        @submit="handleSubmit"
+        @success="handleDialogSubmit"
       />
     </ElCard>
   </div>
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { useTable } from '@/hooks/core/useTable'
   import MenuDialog from './modules/menu-dialog.vue'
   import MenuSearch from './modules/menu-search.vue'
   import { fetchGetMenuList, fetchDeleteMenu, fetchUpdateMenuStatus } from '@/api/system-manage'
   import ArtSwitch from '@/components/core/forms/art-switch/index.vue'
+  import type { ActionButtonConfig } from '@/types/component'
+  import type { DialogType } from '@/types'
+  import { PERMISSIONS } from '@/utils/constants'
   import { h, nextTick } from 'vue'
 
   defineOptions({ name: 'Menus' })
+
+  const { t } = useI18n()
 
   type MenuListItem = Api.SystemManage.MenuListItem & { _statusLoading?: boolean }
 
@@ -79,7 +85,7 @@
 
   // 弹窗相关
   const dialogVisible = ref(false)
-  const dialogType = ref<'add' | 'edit'>('add')
+  const dialogType = ref<DialogType>('add')
   const editData = ref<MenuListItem | null>(null)
 
   // 搜索相关
@@ -105,11 +111,11 @@
    */
   const getMenuTypeText = (type: string): string => {
     const typeMap: Record<string, string> = {
-      M: '目录',
-      C: '菜单',
-      F: '按钮'
+      M: t('system.menu.typeDirectory'),
+      C: t('system.menu.typeMenu'),
+      F: t('system.menu.typeButton')
     }
-    return typeMap[type] || '未知'
+    return typeMap[type] || t('system.menu.unknownType')
   }
 
   /**
@@ -117,6 +123,36 @@
    */
   const getMenuIcon = (icon?: string) => {
     return icon || 'i-carbon-document'
+  }
+
+  /**
+   * 获取菜单操作配置
+   */
+  const getMenuActions = (row: MenuListItem): ActionButtonConfig[] => {
+    const buttons: ActionButtonConfig[] = []
+    // 只有目录和菜单可以添加子菜单/按钮
+    if (row.menuType === 'M' || row.menuType === 'C') {
+      buttons.push({
+        type: 'add',
+        label: t('system.common.add'),
+        onClick: () => handleAddSubMenu(row),
+        auth: PERMISSIONS.system.menu.add
+      })
+    }
+    buttons.push({
+      type: 'edit',
+      label: t('system.common.edit'),
+      onClick: () => handleEditMenu(row),
+      auth: PERMISSIONS.system.menu.edit
+    })
+    buttons.push({
+      type: 'delete',
+      label: t('system.common.delete'),
+      onClick: () => handleDeleteMenu(row),
+      auth: PERMISSIONS.system.menu.delete,
+      danger: true
+    })
+    return buttons
   }
 
   // 使用 useTable 管理表格数据
@@ -146,7 +182,7 @@
       columnsFactory: () => [
         {
           prop: 'menuName',
-          label: '菜单名称',
+          label: t('system.menu.menuName'),
           minWidth: 200,
           formatter: (row: MenuListItem) => {
             return h('div', { class: 'flex items-center gap-2' }, [
@@ -157,7 +193,7 @@
         },
         {
           prop: 'menuType',
-          label: '类型',
+          label: t('system.menu.type'),
           width: 80,
           formatter: (row: MenuListItem) => {
             return h(ElTag, { type: getMenuTypeTag(row.menuType), size: 'small' }, () =>
@@ -167,7 +203,7 @@
         },
         {
           prop: 'path',
-          label: '路由路径',
+          label: t('system.menu.routePath'),
           minWidth: 150,
           formatter: (row: MenuListItem) => {
             return row.path || '-'
@@ -175,7 +211,7 @@
         },
         {
           prop: 'component',
-          label: '组件路径',
+          label: t('system.menu.componentPath'),
           minWidth: 180,
           showOverflowTooltip: true,
           formatter: (row: MenuListItem) => {
@@ -184,22 +220,24 @@
         },
         {
           prop: 'permission',
-          label: '权限标识',
+          label: t('system.menu.permission'),
           minWidth: 150,
           formatter: (row: MenuListItem) => {
             if (!row.permission) return '-'
-            return `${row.permission.split(',').length} 个权限标识`
+            return t('system.menu.permissionCount', {
+              count: row.permission.split(',').length
+            })
           }
         },
         {
           prop: 'sort',
-          label: '排序',
+          label: t('system.common.sort'),
           width: 85,
           sortable: true
         },
         {
           prop: 'visible',
-          label: '可见',
+          label: t('system.menu.visible'),
           width: 80,
           formatter: (row: MenuListItem) => {
             return h(
@@ -208,13 +246,13 @@
                 type: row.visible === 1 ? 'success' : 'info',
                 size: 'small'
               },
-              () => (row.visible === 1 ? '是' : '否')
+              () => (row.visible === 1 ? t('system.common.yes') : t('system.common.no'))
             )
           }
         },
         {
           prop: 'status',
-          label: '状态',
+          label: t('system.common.status'),
           width: 100,
           formatter: (row: MenuListItem) => {
             return h(ArtSwitch, {
@@ -229,41 +267,16 @@
         },
         {
           prop: 'createTime',
-          label: '创建时间',
+          label: t('system.common.createTime'),
           width: 180,
           sortable: true
         },
         {
           prop: 'action',
-          label: '操作',
+          label: t('system.common.actions'),
           width: 180,
           fixed: 'right' as const,
-          formatter: (row: MenuListItem) => {
-            const buttons = []
-            // 只有目录和菜单可以添加子菜单/按钮
-            if (row.menuType === 'M' || row.menuType === 'C') {
-              buttons.push({
-                type: 'add',
-                label: '新增',
-                onClick: () => handleAddSubMenu(row),
-                auth: 'system:menu:add'
-              })
-            }
-            buttons.push({
-              type: 'edit',
-              label: '编辑',
-              onClick: () => handleEditMenu(row),
-              auth: 'system:menu:edit'
-            })
-            buttons.push({
-              type: 'delete',
-              label: '删除',
-              onClick: () => handleDeleteMenu(row),
-              auth: 'system:menu:delete',
-              danger: true
-            })
-            return buttons
-          }
+          formatter: getMenuActions
         }
       ],
       immediate: true
@@ -331,7 +344,7 @@
   /**
    * 提交表单数据
    */
-  const handleSubmit = async (): Promise<void> => {
+  const handleDialogSubmit = async (): Promise<void> => {
     dialogVisible.value = false
     // 根据 dialogType 判断是新增还是编辑
     if (dialogType.value === 'add') {
@@ -364,16 +377,16 @@
     const childrenCount = hasChildren ? getChildrenCount(row) : 0
 
     try {
-      let message = `确定要删除菜单"${row.menuName}"吗？`
+      let message = t('system.menu.deleteConfirm', { name: row.menuName })
       if (hasChildren) {
-        message += `<br/>提示：删除菜单后，该菜单下的所有 ${childrenCount} 个子菜单也会被删除，此操作不可恢复！`
+        message += t('system.menu.deleteChildrenTip', { count: childrenCount })
       } else {
-        message += '此操作不可恢复！'
+        message += t('system.menu.deleteNoChildrenTip')
       }
 
-      await ElMessageBox.confirm(message, '删除确认', {
-        confirmButtonText: '确定删除',
-        cancelButtonText: '取消',
+      await ElMessageBox.confirm(message, t('system.common.deleteConfirmTitle'), {
+        confirmButtonText: t('system.common.confirmDelete'),
+        cancelButtonText: t('common.cancel'),
         type: 'warning',
         dangerouslyUseHTMLString: true
       })
@@ -423,16 +436,16 @@
     // 如果是关闭操作（从启用变为停用），需要提示用户级联影响
     if (!value && row.status === 1) {
       try {
-        let message = `确定要停用菜单"${row.menuName}"吗？`
+        let message = t('system.menu.disableConfirm', { name: row.menuName })
         if (hasChildren) {
-          message += `<br/>提示：停用菜单后，该菜单下的所有子菜单也会被停用，且关联的角色也将失去对此菜单及其子菜单的权限。`
+          message += t('system.menu.disableChildrenTip')
         } else {
-          message += `<br/>提示：关联的角色将失去对此菜单的权限。`
+          message += t('system.menu.disableNoChildrenTip')
         }
-        await ElMessageBox.confirm(message, '确认停用', {
+        await ElMessageBox.confirm(message, t('system.common.disableConfirmTitle'), {
           type: 'warning',
-          confirmButtonText: '确认停用',
-          cancelButtonText: '取消',
+          confirmButtonText: t('system.common.confirmDisable'),
+          cancelButtonText: t('common.cancel'),
           dangerouslyUseHTMLString: true
         })
       } catch {
