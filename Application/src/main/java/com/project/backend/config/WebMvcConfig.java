@@ -47,9 +47,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 配置文件访问静态资源映射（使用绝对路径）
+        // 只暴露 public 目录下的图片等公开文件，导入文件等私有文件不提供静态访问
         String absoluteUploadDir = FileUtils.resolveUploadDir(uploadDir).toString().replace("\\", "/");
-        registry.addResourceHandler(publicPath + "/**")
-                .addResourceLocations("file:" + absoluteUploadDir + "/");
+        registry.addResourceHandler(publicPath + "/uploads/public/**")
+                .addResourceLocations("file:" + absoluteUploadDir + "/uploads/public/");
     }
 }

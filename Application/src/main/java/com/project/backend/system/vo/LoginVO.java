@@ -33,7 +33,4 @@ public class LoginVO {
 
     @Schema(description = "头像")
     private String avatar;
-
-    @Schema(description = "用户角色：admin-管理员")
-    private String role;
 }

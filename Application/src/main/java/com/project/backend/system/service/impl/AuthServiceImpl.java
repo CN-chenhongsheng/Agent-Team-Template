@@ -13,6 +13,7 @@ import com.project.backend.system.service.AuthService;
 import com.project.backend.system.service.LoginLogService;
 import com.project.backend.system.service.UserOnlineService;
 import com.project.core.util.RefreshTokenUtil;
+import com.project.core.util.RequestUtils;
 import com.project.backend.system.vo.LoginVO;
 import com.project.backend.system.vo.UserInfoVO;
 import jakarta.servlet.http.Cookie;
@@ -81,13 +82,15 @@ public class AuthServiceImpl implements AuthService {
             updateLastLoginTime(user);
 
             // 5. 记录登录成功日志
-            loginLogService.recordLoginLog(loginDTO.getUsername(), "password", 1, "登录成功", request);
+            loginLogService.recordLoginLog(loginDTO.getUsername(), "password", 1, "登录成功",
+                    RequestUtils.getClientIp(request), request.getHeader("User-Agent"));
 
             // 6. 构建返回数据
             return buildLoginResponse(user, accessToken);
         } catch (Exception e) {
             // 记录登录失败日志
-            loginLogService.recordLoginLog(loginDTO.getUsername(), "password", 0, e.getMessage(), request);
+            loginLogService.recordLoginLog(loginDTO.getUsername(), "password", 0, e.getMessage(),
+                    RequestUtils.getClientIp(request), request.getHeader("User-Agent"));
             throw e;
         }
     }
@@ -126,7 +129,7 @@ public class AuthServiceImpl implements AuthService {
             return StpUtil.getTokenValue();
         } catch (Exception e) {
             log.error("登录失败", e);
-            throw new BusinessException("登录失败: " + e.getMessage());
+            throw new BusinessException("登录失败，请稍后重试");
         }
     }
 
@@ -169,7 +172,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String refreshToken(HttpServletRequest request, HttpServletResponse response) {
-        log.info("开始刷�?Access Token");
+        log.info("开始刷新 Access Token");
 
         // 1. 获取并验证Refresh Token
         String refreshToken = getRefreshTokenFromCookie(request);
@@ -214,11 +217,11 @@ public class AuthServiceImpl implements AuthService {
      */
     private String generateNewAccessToken(Long userId) {
         try {
-            // 先登出旧Access Token（如果存在）
+            // 只注销当前请求携带的 Access Token，保留其他设备/标签页的会话
             try {
-                StpUtil.logout(userId);
+                StpUtil.logout();
             } catch (Exception ignored) {
-                // 忽略异常，可能没有旧token
+                // 当前请求可能没有携带 Access Token，忽略即可
             }
 
             StpUtil.login(userId);
@@ -226,7 +229,7 @@ public class AuthServiceImpl implements AuthService {
             return StpUtil.getTokenValue();
         } catch (Exception e) {
             log.error("生成Access Token 失败", e);
-            throw new BusinessException("生成�?Access Token 失败: " + e.getMessage());
+            throw new BusinessException("生成新的 Access Token 失败，请重新登录");
         }
     }
 
@@ -255,6 +258,16 @@ public class AuthServiceImpl implements AuthService {
             log.warn("清除 Access Token 失败: {}", e.getMessage());
         }
 
+        // 仅当用户没有其他在线会话时才标记离线
+        boolean hasOtherSession = false;
+        if (userId != null) {
+            try {
+                hasOtherSession = !StpUtil.getTokenValueListByLoginId(userId).isEmpty();
+            } catch (Exception e) {
+                log.debug("查询用户剩余会话失败: {}", e.getMessage());
+            }
+        }
+
         // 清除 Refresh Token
         String refreshToken = getRefreshTokenFromCookie(request);
         if (refreshToken != null) {
@@ -265,13 +278,14 @@ public class AuthServiceImpl implements AuthService {
         clearRefreshTokenCookie(response);
 
         // 更新用户在线状态
-        if (userId != null) {
+        if (userId != null && !hasOtherSession) {
             userOnlineService.userOffline(userId);
         }
 
         // 记录登出日志
         if (username != null) {
-            loginLogService.recordLoginLog(username, "password", 2, "登出成功", request);
+            loginLogService.recordLoginLog(username, "password", 2, "登出成功",
+                    RequestUtils.getClientIp(request), request.getHeader("User-Agent"));
         }
 
         log.info("用户登出成功，用户ID: {}", userId);

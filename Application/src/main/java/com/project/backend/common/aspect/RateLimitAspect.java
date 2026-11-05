@@ -87,21 +87,20 @@ public class RateLimitAspect {
 
     /**
      * 获取限流key
+     * 无论是否指定业务 key，都按客户端 IP 隔离，避免全站共享同一个额度
      */
     private String getRateLimitKey(RateLimit rateLimit, ProceedingJoinPoint point) {
         String key = rateLimit.key();
+        String ip = RequestUtils.getClientIp();
 
         if (key.isEmpty()) {
             // 如果没有指定key，使用类名:方法:IP 作为key
             String className = point.getTarget().getClass().getName();
             String methodName = point.getSignature().getName();
-            String ip = RequestUtils.getClientIp();
-            key = String.format("rate:limit:%s:%s:%s", className, methodName, ip);
-        } else {
-            // 如果指定了key，添加前缀
-            key = "rate:limit:" + key;
+            return String.format("rate:limit:%s:%s:%s", className, methodName, ip);
         }
 
-        return key;
+        // 指定 key 时作为命名空间，仍按 IP 隔离
+        return String.format("rate:limit:%s:%s", key, ip);
     }
 }

@@ -1,0 +1,21 @@
+# 生产环境配置
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  devtools:
+    restart:
+      enabled: false
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+
+# 生产环境默认关闭接口文档，需要时通过 KNIFE4J_ENABLE=true 临时开启
+knife4j:
+  enable: ${KNIFE4J_ENABLE:false}
+
+logging:
+  level:
+    root: warn
+    com.project: info

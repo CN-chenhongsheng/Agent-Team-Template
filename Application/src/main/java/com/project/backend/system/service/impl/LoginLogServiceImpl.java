@@ -11,9 +11,11 @@ import com.project.backend.system.entity.LoginLog;
 import com.project.backend.system.mapper.LoginLogMapper;
 import com.project.backend.system.service.LoginLogService;
 import com.project.backend.system.vo.LoginLogVO;
+import com.project.backend.util.DictUtils;
 import com.project.core.exception.BusinessException;
 import com.project.core.result.PageResult;
-import jakarta.servlet.http.HttpServletRequest;
+import com.project.core.util.DateTimeUtils;
+import com.project.core.util.RequestUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -47,12 +49,10 @@ public class LoginLogServiceImpl extends ServiceImpl<LoginLogMapper, LoginLog> i
                .eq(queryDTO.getLoginStatus() != null, LoginLog::getLoginStatus, queryDTO.getLoginStatus());
 
         if (StrUtil.isNotBlank(queryDTO.getStartTime())) {
-            LocalDateTime startTime = LocalDateTime.parse(queryDTO.getStartTime() + " 00:00:00", DATE_TIME_FORMATTER);
-            wrapper.ge(LoginLog::getLoginTime, startTime);
+            wrapper.ge(LoginLog::getLoginTime, DateTimeUtils.parseDayStart(queryDTO.getStartTime()));
         }
         if (StrUtil.isNotBlank(queryDTO.getEndTime())) {
-            LocalDateTime endTime = LocalDateTime.parse(queryDTO.getEndTime() + " 23:59:59", DATE_TIME_FORMATTER);
-            wrapper.le(LoginLog::getLoginTime, endTime);
+            wrapper.le(LoginLog::getLoginTime, DateTimeUtils.parseDayEnd(queryDTO.getEndTime()));
         }
 
         wrapper.orderByDesc(LoginLog::getLoginTime);
@@ -93,10 +93,11 @@ public class LoginLogServiceImpl extends ServiceImpl<LoginLogMapper, LoginLog> i
 
     @Override
     @Async
-    public void recordLoginLog(String username, String loginType, Integer status, String message, HttpServletRequest request) {
+    public void recordLoginLog(String username, String loginType, Integer status, String message,
+                               String ip, String userAgent) {
         try {
             log.info("开始记录登入日志 - 用户: {}, 类型: {}, 状态: {}", username, loginType, status);
-            
+
             LoginLog loginLog = new LoginLog();
             loginLog.setUsername(username);
             loginLog.setLoginType(loginType);
@@ -104,19 +105,17 @@ public class LoginLogServiceImpl extends ServiceImpl<LoginLogMapper, LoginLog> i
             loginLog.setMessage(message);
             loginLog.setLoginTime(LocalDateTime.now());
 
-            String ipAddress = getClientIp(request);
-            loginLog.setIpAddress(ipAddress);
-            loginLog.setLoginLocation(getLocationByIp(ipAddress));
+            loginLog.setIpAddress(ip);
+            loginLog.setLoginLocation(RequestUtils.getIpLocation(ip));
 
-            String userAgentStr = request.getHeader("User-Agent");
-            if (StrUtil.isNotBlank(userAgentStr)) {
-                UserAgent userAgent = UserAgentUtil.parse(userAgentStr);
-                loginLog.setBrowser(userAgent.getBrowser().getName() + " " + userAgent.getVersion());
-                loginLog.setOs(userAgent.getOs().getName());
+            if (StrUtil.isNotBlank(userAgent)) {
+                UserAgent parsedUserAgent = UserAgentUtil.parse(userAgent);
+                loginLog.setBrowser(parsedUserAgent.getBrowser().getName() + " " + parsedUserAgent.getVersion());
+                loginLog.setOs(parsedUserAgent.getOs().getName());
             }
 
             save(loginLog);
-            log.info("登入日志记录成功 - 用户: {}, IP: {}, 地点: {}", username, ipAddress, loginLog.getLoginLocation());
+            log.info("登入日志记录成功 - 用户: {}, IP: {}, 地点: {}", username, ip, loginLog.getLoginLocation());
         } catch (Exception e) {
             log.error("记录登入日志失败", e);
         }
@@ -141,56 +140,19 @@ public class LoginLogServiceImpl extends ServiceImpl<LoginLogMapper, LoginLog> i
 
     private String getLoginTypeText(String loginType) {
         if (loginType == null) return "-";
-        return switch (loginType) {
-            case "password" -> "密码登录";
-            default -> loginType;
-        };
+        return "password".equals(loginType)
+                ? DictUtils.getLabel("sys_login_type", loginType, "密码登录")
+                : loginType;
     }
 
     private String getLoginStatusText(Integer status) {
         if (status == null) return "-";
-        return switch (status) {
+        String fallback = switch (status) {
             case 0 -> "失败";
             case 1 -> "成功";
             case 2 -> "登出";
             default -> "未知";
         };
-    }
-
-    private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (StrUtil.isBlank(ip) || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("X-Real-IP");
-        }
-        if (StrUtil.isBlank(ip) || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        if (StrUtil.isNotBlank(ip) && ip.contains(",")) {
-            ip = ip.split(",")[0].trim();
-        }
-        return ip;
-    }
-
-    /**
-     * 根据IP地址获取地理位置
-     * 简单实现：判断内网/外网
-     */
-    private String getLocationByIp(String ip) {
-        if (StrUtil.isBlank(ip)) {
-            return "未知";
-        }
-
-        // 本地回环地址
-        if ("127.0.0.1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip) || "localhost".equals(ip)) {
-            return "本地";
-        }
-
-        // 内网IP
-        if (ip.startsWith("192.168.") || ip.startsWith("10.") || ip.startsWith("172.")) {
-            return "内网";
-        }
-
-        // 外网IP - 可以集成IP2Region等库进行精确定位
-        return "外网";
+        return DictUtils.getLabel("sys_login_status", status, fallback);
     }
 }

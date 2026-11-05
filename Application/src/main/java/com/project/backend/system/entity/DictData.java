@@ -27,7 +27,7 @@ public class DictData extends BaseEntity {
     @TableField("label")
     private String label;
 
-    @Schema(description = "字典说明")
+    @Schema(description = "字典值")
     @TableField("value")
     private String value;
 

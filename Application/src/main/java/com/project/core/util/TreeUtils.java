@@ -1,7 +1,9 @@
 package com.project.core.util;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -44,12 +46,17 @@ public class TreeUtils {
         }
 
         List<T> roots = new ArrayList<>();
+        Set<Long> visitedIds = new HashSet<>();
         for (T node : list) {
             Long parentId = parentIdGetter.apply(node);
             if ((rootParentId == null && parentId == null) ||
                 (rootParentId != null && rootParentId.equals(parentId))) {
+                Long nodeId = idGetter.apply(node);
+                if (nodeId != null && visitedIds.contains(nodeId)) {
+                    continue;
+                }
                 // 找到根节点，递归构建子树
-                buildChildren(node, list, parentIdGetter, idGetter, childrenSetter);
+                buildChildren(node, list, parentIdGetter, idGetter, childrenSetter, visitedIds);
                 roots.add(node);
             }
         }
@@ -64,6 +71,7 @@ public class TreeUtils {
      * @param parentIdGetter  获取 parentId 的函数
      * @param idGetter        获取 id 的函数
      * @param childrenSetter  设置 children 的函数
+     * @param visitedIds      已访问节点ID集合，用于阻断循环引用
      * @param <T>             节点类型
      */
     private static <T> void buildChildren(
@@ -71,16 +79,25 @@ public class TreeUtils {
             List<T> allNodes,
             Function<T, Long> parentIdGetter,
             Function<T, Long> idGetter,
-            BiConsumer<T, List<T>> childrenSetter) {
+            BiConsumer<T, List<T>> childrenSetter,
+            Set<Long> visitedIds) {
         Long parentId = idGetter.apply(parent);
+        if (parentId != null && !visitedIds.add(parentId)) {
+            return;
+        }
+
         List<T> children = new ArrayList<>();
 
         for (T node : allNodes) {
             Long nodeParentId = parentIdGetter.apply(node);
             if ((parentId == null && nodeParentId == null) ||
                 (parentId != null && parentId.equals(nodeParentId))) {
+                Long childId = idGetter.apply(node);
+                if (childId != null && visitedIds.contains(childId)) {
+                    continue;
+                }
                 // 找到子节点，递归构建其子树
-                buildChildren(node, allNodes, parentIdGetter, idGetter, childrenSetter);
+                buildChildren(node, allNodes, parentIdGetter, idGetter, childrenSetter, visitedIds);
                 children.add(node);
             }
         }

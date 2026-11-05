@@ -59,7 +59,7 @@ const buildTemplateColumns = (): TemplateColumn[] => [
     width: 10,
     required: false,
     example: t('system.user.importConfig.examples.status'),
-    dropdown: { dictCode: 'sys_user_status' }
+    dropdown: { dictCode: 'sys_common_status' }
   }
 ]
 
@@ -90,9 +90,9 @@ export const userImportConfig: GenericImportConfig<Api.SystemManage.UserImportRe
   subscribeApi: undefined,
   pollApi: undefined,
 
-  // 分片上传配置
+  // 分片上传配置：用户导入统一走分片上传，确保最后触发后端导入接口
   enableChunkUpload: true,
-  chunkSizeThreshold: 10 * 1024 * 1024, // 10MB
+  chunkSizeThreshold: 0,
   skipScanThreshold: 50 * 1024 * 1024, // 50MB
 
   // 进度标题

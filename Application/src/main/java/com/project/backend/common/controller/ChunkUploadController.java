@@ -1,5 +1,6 @@
 package com.project.backend.common.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.project.backend.common.dto.chunk.MergeRequest;
 import com.project.backend.common.dto.chunk.MergeResponse;
 import com.project.backend.common.dto.chunk.PrecheckRequest;
@@ -29,7 +30,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 分片上传控制器
@@ -54,6 +55,14 @@ public class ChunkUploadController {
     @Value("${chunk-upload.temp-dir:./uploads/temp}")
     private String tempDir;
 
+    @Value("${chunk-upload.max-chunk-size:10485760}")
+    private long maxChunkSize;
+
+    /**
+     * 单个文件允许的最大分片数，防止恶意请求耗尽磁盘
+     */
+    private static final int MAX_CHUNKS = 10_000;
+
     /**
      * 获取临时目录的绝对路径
      */
@@ -72,16 +81,21 @@ public class ChunkUploadController {
      * 预检：秒传或返回已上传分片列表
      */
     @PostMapping("/precheck")
+    @SaCheckPermission(value = "system:user:import", orRole = "SUPER_ADMIN")
     @Operation(summary = "预检", description = "检查是否可秒传或返回已上传分片列表")
     public R<PrecheckResponse> precheck(@RequestBody PrecheckRequest request) {
-        String fileHash = request.getFileHash();
+        String fileHash = FileUtils.validateFileHash(request.getFileHash());
         String fileName = request.getFileName();
-        if (fileHash == null || fileHash.isEmpty() || fileName == null || fileName.isEmpty()) {
-            throw new BusinessException("fileHash 和 fileName 不能为空");
+        if (fileName == null || fileName.isEmpty()) {
+            throw new BusinessException("fileName 不能为空");
         }
         FileUtils.sanitizeFileName(fileName);
+        if (request.getTotalChunks() != null
+                && (request.getTotalChunks() <= 0 || request.getTotalChunks() > MAX_CHUNKS)) {
+            throw new BusinessException("totalChunks 不合法");
+        }
 
-        Path tempPath = getTempDirPath().resolve(fileHash);
+        Path tempPath = FileUtils.resolveWithin(getTempDirPath(), fileHash);
         if (!Files.exists(tempPath) || !Files.isDirectory(tempPath)) {
             return R.ok(PrecheckResponse.builder()
                     .canSkip(false)
@@ -116,6 +130,7 @@ public class ChunkUploadController {
      * 上传单个分片
      */
     @PostMapping("/chunk")
+    @SaCheckPermission(value = "system:user:import", orRole = "SUPER_ADMIN")
     @Operation(summary = "上传分片", description = "上传单个分片")
     public R<Void> uploadChunk(
             @RequestParam("file") MultipartFile file,
@@ -126,16 +141,24 @@ public class ChunkUploadController {
             throw new BusinessException("分片文件不能为空");
         }
         int chunkIndex;
+        int totalChunks;
         try {
-            chunkIndex = Integer.parseInt(chunkIndexStr);
+            chunkIndex = Integer.parseInt(chunkIndexStr.trim());
+            totalChunks = Integer.parseInt(totalChunksStr.trim());
         } catch (NumberFormatException e) {
-            throw new BusinessException("chunkIndex 必须为数字");
+            throw new BusinessException("chunkIndex 和 totalChunks 必须为数字");
         }
-        if (chunkIndex < 0) {
-            throw new BusinessException("chunkIndex 不能为负");
+        if (totalChunks <= 0 || totalChunks > MAX_CHUNKS) {
+            throw new BusinessException("totalChunks 不合法");
+        }
+        if (chunkIndex < 0 || chunkIndex >= totalChunks) {
+            throw new BusinessException("chunkIndex 不合法");
+        }
+        if (file.getSize() > maxChunkSize) {
+            throw new BusinessException("分片大小超出限制");
         }
 
-        Path dir = getTempDirPath().resolve(fileHash);
+        Path dir = FileUtils.resolveWithin(getTempDirPath(), FileUtils.validateFileHash(fileHash));
         try {
             Files.createDirectories(dir);
         } catch (IOException e) {
@@ -155,19 +178,23 @@ public class ChunkUploadController {
      * 合并分片，保存到最终目录，仅返回文件 URL，不触发导入
      */
     @PostMapping("/merge")
+    @SaCheckPermission(value = "system:user:import", orRole = "SUPER_ADMIN")
     @Operation(summary = "合并分片", description = "合并分片并返回文件 URL，不触发导入")
     public R<MergeResponse> merge(
             @RequestBody MergeRequest request,
             HttpServletRequest httpRequest) {
-        String fileHash = request.getFileHash();
+        String fileHash = FileUtils.validateFileHash(request.getFileHash());
         String fileName = request.getFileName();
         Integer totalChunks = request.getTotalChunks();
-        if (fileHash == null || fileHash.isEmpty() || fileName == null || fileName.isEmpty() || totalChunks == null || totalChunks <= 0) {
-            throw new BusinessException("fileHash、fileName、totalChunks 不能为空且 totalChunks 必须大于 0");
+        if (fileName == null || fileName.isEmpty()) {
+            throw new BusinessException("fileName 不能为空");
+        }
+        if (totalChunks == null || totalChunks <= 0 || totalChunks > MAX_CHUNKS) {
+            throw new BusinessException("totalChunks 不合法");
         }
         String safeName = FileUtils.sanitizeFileName(fileName);
 
-        Path tempPath = getTempDirPath().resolve(fileHash);
+        Path tempPath = FileUtils.resolveWithin(getTempDirPath(), fileHash);
         if (!Files.exists(tempPath) || !Files.isDirectory(tempPath)) {
             throw new BusinessException("未找到分片目录，请先上传全部分片");
         }
@@ -180,9 +207,11 @@ public class ChunkUploadController {
         } catch (IOException e) {
             throw new BusinessException("创建目标目录失败: " + e.getMessage());
         }
-        Path targetFile = finalDir.resolve(safeName);
+        Path targetFile = FileUtils.resolveWithin(finalDir, safeName);
 
         try (RandomAccessFile out = new RandomAccessFile(targetFile.toFile(), "rw")) {
+            // 同名文件重复上传时先清空旧内容，避免残留旧文件尾部
+            out.setLength(0);
             for (int i = 0; i < totalChunks; i++) {
                 Path chunkFile = tempPath.resolve(String.valueOf(i));
                 if (!Files.exists(chunkFile)) {
@@ -227,13 +256,11 @@ public class ChunkUploadController {
      * 校验已上传分片
      */
     @PostMapping("/verify")
+    @SaCheckPermission(value = "system:user:import", orRole = "SUPER_ADMIN")
     @Operation(summary = "校验分片", description = "返回服务端实际存在的分片索引列表")
     public R<List<Integer>> verify(@RequestBody PrecheckRequest request) {
-        String fileHash = request.getFileHash();
-        if (fileHash == null || fileHash.isEmpty()) {
-            throw new BusinessException("fileHash 不能为空");
-        }
-        Path tempPath = getTempDirPath().resolve(fileHash);
+        String fileHash = FileUtils.validateFileHash(request.getFileHash());
+        Path tempPath = FileUtils.resolveWithin(getTempDirPath(), fileHash);
         List<Integer> list = new ArrayList<>();
         if (Files.exists(tempPath) && Files.isDirectory(tempPath)) {
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(tempPath)) {
@@ -257,16 +284,14 @@ public class ChunkUploadController {
      * 取消上传，清理临时分片
      */
     @PostMapping("/abort")
+    @SaCheckPermission(value = "system:user:import", orRole = "SUPER_ADMIN")
     @Operation(summary = "取消上传", description = "清理该文件的临时分片")
     public R<Void> abort(@RequestBody PrecheckRequest request) {
-        String fileHash = request.getFileHash();
-        if (fileHash == null || fileHash.isEmpty()) {
-            throw new BusinessException("fileHash 不能为空");
-        }
-        Path tempPath = getTempDirPath().resolve(fileHash);
+        String fileHash = FileUtils.validateFileHash(request.getFileHash());
+        Path tempPath = FileUtils.resolveWithin(getTempDirPath(), fileHash);
         if (Files.exists(tempPath) && Files.isDirectory(tempPath)) {
-            try {
-                for (Path p : Files.list(tempPath).collect(Collectors.toList())) {
+            try (Stream<Path> paths = Files.list(tempPath)) {
+                for (Path p : paths.toList()) {
                     Files.deleteIfExists(p);
                 }
                 Files.deleteIfExists(tempPath);

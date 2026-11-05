@@ -30,6 +30,11 @@ public class FileUtils {
     private static final Pattern SAFE_FILENAME_PATTERN = Pattern.compile(RegexConstants.SAFE_FILENAME);
 
     /**
+     * 分片文件哈希正则表达式（MD5/SHA-1/SHA-256 的十六进制形式）
+     */
+    private static final Pattern FILE_HASH_PATTERN = Pattern.compile("^[a-fA-F0-9]{32,64}$");
+
+    /**
      * 检查文件名是否安全
      *
      * @param fileName 文件名
@@ -76,6 +81,41 @@ public class FileUtils {
         }
 
         return name;
+    }
+
+    /**
+     * 校验并规范化分片文件哈希
+     *
+     * @param fileHash 原始文件哈希
+     * @return 小写形式的文件哈希
+     * @throws BusinessException 格式非法
+     */
+    public static String validateFileHash(String fileHash) {
+        if (StrUtil.isBlank(fileHash) || !FILE_HASH_PATTERN.matcher(fileHash).matches()) {
+            throw new BusinessException("非法文件哈希");
+        }
+        return fileHash.toLowerCase();
+    }
+
+    /**
+     * 在指定根目录内解析子路径，阻止路径穿越
+     *
+     * @param root  根目录
+     * @param child 子路径
+     * @return 规范化后的安全路径
+     * @throws BusinessException 子路径为空或越出根目录
+     */
+    public static Path resolveWithin(Path root, String child) {
+        if (root == null || StrUtil.isBlank(child)) {
+            throw new BusinessException("路径不能为空");
+        }
+
+        Path normalizedRoot = root.toAbsolutePath().normalize();
+        Path resolved = normalizedRoot.resolve(child).normalize();
+        if (!resolved.startsWith(normalizedRoot) || resolved.equals(normalizedRoot)) {
+            throw new BusinessException("非法路径");
+        }
+        return resolved;
     }
 
     /**

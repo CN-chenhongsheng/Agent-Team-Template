@@ -47,6 +47,40 @@ public class RequestUtils {
     }
 
     /**
+     * 根据 IP 地址判断网络区域
+     * 仅区分本地、内网、外网，精确定位可接入 IP2Region 等离线库
+     *
+     * @param ip IP地址
+     * @return 网络区域描述
+     */
+    public static String getIpLocation(String ip) {
+        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
+            return "未知";
+        }
+        if ("127.0.0.1".equals(ip) || "::1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip)
+                || "localhost".equalsIgnoreCase(ip)) {
+            return "本地";
+        }
+        if (ip.startsWith("192.168.") || ip.startsWith("10.")) {
+            return "内网";
+        }
+        if (ip.startsWith("172.")) {
+            String[] parts = ip.split("\\.");
+            if (parts.length > 1) {
+                try {
+                    int second = Integer.parseInt(parts[1]);
+                    if (second >= 16 && second <= 31) {
+                        return "内网";
+                    }
+                } catch (NumberFormatException ignored) {
+                    // 非法 IP 按外网处理
+                }
+            }
+        }
+        return "外网";
+    }
+
+    /**
      * 从当前请求上下文获取客户端IP地址
      *
      * @return IP地址，如果无法获取则返回 "unknown"

@@ -1,6 +1,7 @@
 package com.project.backend.system.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.annotation.SaMode;
 import com.project.core.annotation.Log;
 import com.project.core.annotation.PermissionAction;
 import com.project.core.annotation.PermissionModule;
@@ -73,7 +74,8 @@ public class MenuController {
     }
 
     @GetMapping("/tree-permission")
-    @SaCheckPermission(value = "system:role:assign", orRole = "SUPER_ADMIN")
+    @SaCheckPermission(value = {"system:role:assign", "system:user:assign-permission"},
+            mode = SaMode.OR, orRole = "SUPER_ADMIN")
     @Operation(summary = "获取菜单树用于权限分配", description = "包含所有类型（目录、菜单、按钮），不包含顶级菜单")
     public R<List<MenuVO>> getTreeForPermission() {
         log.info("获取菜单树用于权限分配");

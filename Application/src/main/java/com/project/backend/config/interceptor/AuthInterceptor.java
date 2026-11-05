@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
@@ -109,8 +110,8 @@ public class AuthInterceptor implements HandlerInterceptor {
             }
         }
 
-        // 2. 如果请求头中没有 token，从 URL 参数读取（用于 SSE）
-        if (token == null) {
+        // 2. 如果请求头中没有 token，从 URL 参数读取（仅限 SSE 流式接口）
+        if (token == null && isSseRequest(request)) {
             String tokenParam = request.getParameter("token");
             if (tokenParam != null && !tokenParam.isEmpty()) {
                 token = tokenParam;
@@ -118,6 +119,15 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
 
         return token;
+    }
+
+    /**
+     * 判断是否为 SSE 流式请求
+     * URL 参数携带 Token 仅用于无法设置请求头的 EventSource
+     */
+    private boolean isSseRequest(HttpServletRequest request) {
+        String accept = request.getHeader("Accept");
+        return accept != null && accept.contains(MediaType.TEXT_EVENT_STREAM_VALUE);
     }
 
     /**

@@ -2,7 +2,9 @@ package com.project.backend.system.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.project.core.result.PageResult;
+import com.project.backend.system.dto.ChangePasswordDTO;
 import com.project.backend.system.dto.RoleUserQueryDTO;
+import com.project.backend.system.dto.UserProfileDTO;
 import com.project.backend.system.dto.UserQueryDTO;
 import com.project.backend.system.dto.UserResetPasswordDTO;
 import com.project.backend.system.dto.UserSaveDTO;
@@ -92,7 +94,7 @@ public interface UserService extends IService<User> {
      * @param profileDTO 个人信息DTO
      * @return 是否成功
      */
-    boolean updateCurrentUserProfile(com.project.backend.system.dto.UserProfileDTO profileDTO);
+    boolean updateCurrentUserProfile(UserProfileDTO profileDTO);
 
     /**
      * 修改当前用户密码
@@ -100,7 +102,7 @@ public interface UserService extends IService<User> {
      * @param changePasswordDTO 修改密码DTO
      * @return 是否成功
      */
-    boolean changeCurrentUserPassword(com.project.backend.system.dto.ChangePasswordDTO changePasswordDTO);
+    boolean changeCurrentUserPassword(ChangePasswordDTO changePasswordDTO);
 
     /**
      * 根据角色代码列表查询用户列表

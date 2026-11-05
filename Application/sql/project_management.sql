@@ -43,7 +43,7 @@ CREATE TABLE `sys_dict_data`  (
   INDEX `idx_sort`(`sort` ASC) USING BTREE,
   INDEX `idx_type_sort`(`dict_code` ASC, `sort` ASC) USING BTREE,
   INDEX `idx_dict_value`(`value` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 328 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 342 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '字典数据表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_dict_data
@@ -70,6 +70,17 @@ INSERT INTO `sys_dict_data` VALUES (30, 'sys_device_type', '移动设备', '2', 
 INSERT INTO `sys_dict_data` VALUES (31, 'sys_device_type', '爬虫/Bot', '3', '', 'info', 3, 0, 1, '爬虫/Bot（搜索引擎、API调用等）', '2026-01-01 20:40:14', NULL, '2026-01-01 20:40:14', NULL, 0);
 INSERT INTO `sys_dict_data` VALUES (32, 'sys_user_online_status', '在线', '1', NULL, 'success', 1, 0, 1, NULL, '2026-01-02 07:38:42', NULL, '2026-01-02 07:38:42', NULL, 0);
 INSERT INTO `sys_dict_data` VALUES (33, 'sys_user_online_status', '离线', '0', NULL, 'info', 2, 0, 1, NULL, '2026-01-02 07:38:42', NULL, '2026-01-02 07:38:42', NULL, 0);
+INSERT INTO `sys_dict_data` VALUES (331, 'sys_login_type', '密码登录', 'password', '', 'primary', 1, 0, 1, '密码登录', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_data` VALUES (332, 'sys_login_status', '失败', '0', '', 'danger', 1, 0, 1, '登录失败', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_data` VALUES (333, 'sys_login_status', '成功', '1', '', 'success', 2, 0, 1, '登录成功', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_data` VALUES (334, 'sys_login_status', '登出', '2', '', 'info', 3, 0, 1, '主动登出', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_data` VALUES (335, 'sys_oper_status', '正常', '0', '', 'success', 1, 0, 1, '操作正常', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_data` VALUES (336, 'sys_oper_status', '异常', '1', '', 'danger', 2, 0, 1, '操作异常', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_data` VALUES (337, 'sys_menu_type', '目录', 'M', '', 'info', 1, 0, 1, '目录类型菜单', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_data` VALUES (338, 'sys_menu_type', '菜单', 'C', '', 'primary', 2, 0, 1, '菜单类型菜单', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_data` VALUES (339, 'sys_menu_type', '按钮', 'F', '', 'warning', 3, 0, 1, '按钮类型权限', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_data` VALUES (340, 'sys_show_hide', '显示', '1', '', 'success', 1, 0, 1, '显示', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_data` VALUES (341, 'sys_show_hide', '隐藏', '0', '', 'info', 2, 0, 1, '隐藏', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
 INSERT INTO `sys_dict_data` VALUES (211, 'table_button_config', '绑定', 'link', 'bg-info/12 text-info', '', 8, 0, 1, 'ri:link', '2026-01-21 19:25:35', 1, '2026-01-21 20:10:31', 1, 0);
 INSERT INTO `sys_dict_data` VALUES (319, 'table_button_config', '复制', 'copy', 'bg-theme/12 text-theme', '', 9, 0, 1, 'ri:file-copy-2-line', '2026-02-03 11:08:29', 1, '2026-02-03 11:08:46', 1, 0);
 INSERT INTO `sys_dict_data` VALUES (321, 'sys_common_status', '正常', '1', NULL, 'success', 1, 1, 1, '正常/启用状态', '2026-02-03 20:00:00', NULL, '2026-02-03 20:00:00', NULL, 0);
@@ -96,7 +107,7 @@ CREATE TABLE `sys_dict_type`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_dict_code`(`dict_code` ASC, `deleted` ASC) USING BTREE,
   INDEX `idx_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 74 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '字典类型表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 78 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '字典类型表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_dict_type
@@ -109,6 +120,11 @@ INSERT INTO `sys_dict_type` VALUES (8, '操作日志业务类型', 'sys_oper_bus
 INSERT INTO `sys_dict_type` VALUES (9, '设备类型', 'sys_device_type', 1, '设备类型：1桌面设备 2移动设备 3爬虫/Bot', '2026-01-01 20:40:14', NULL, '2026-01-01 20:40:14', NULL, 0);
 INSERT INTO `sys_dict_type` VALUES (10, '用户在线状态', 'sys_user_online_status', 1, '用户在线状态字典', '2026-01-02 07:38:41', NULL, '2026-01-02 07:38:41', NULL, 0);
 INSERT INTO `sys_dict_type` VALUES (72, '系统状态', 'sys_common_status', 1, '通用的启用/停用状态，用于系统各模块', '2026-02-03 20:00:00', NULL, '2026-02-03 20:00:00', NULL, 0);
+INSERT INTO `sys_dict_type` VALUES (73, '登录类型', 'sys_login_type', 1, '登录类型字典', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_type` VALUES (74, '登录状态', 'sys_login_status', 1, '登录状态：0-失败 1-成功 2-登出', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_type` VALUES (75, '操作状态', 'sys_oper_status', 1, '操作日志状态：0-正常 1-异常', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_type` VALUES (76, '菜单类型', 'sys_menu_type', 1, '菜单类型：M-目录 C-菜单 F-按钮', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
+INSERT INTO `sys_dict_type` VALUES (77, '显示隐藏', 'sys_show_hide', 1, '通用显示/隐藏状态：1-显示 0-隐藏', '2026-11-05 00:00:00', NULL, '2026-11-05 00:00:00', NULL, 0);
 
 -- ----------------------------
 -- Table structure for sys_login_log
@@ -153,14 +169,14 @@ CREATE TABLE `sys_menu`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `parent_id` bigint NULL DEFAULT 0 COMMENT '父菜单ID',
   `menu_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '菜单名称',
-  `menu_type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '菜单类型：M-目录 C-菜单 B-按钮',
+  `menu_type` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '菜单类型：M-目录 C-菜单 F-按钮',
   `path` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '路由路径',
   `component` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '组件路径',
   `permission` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '权限标识',
   `icon` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '图标',
   `sort` int NULL DEFAULT 0 COMMENT '排序',
   `visible` tinyint NULL DEFAULT 1 COMMENT '是否可见：0-隐藏 1-显示',
-  `status` tinyint NULL DEFAULT 1 COMMENT '状态：0-停用 1-显示',
+  `status` tinyint NULL DEFAULT 1 COMMENT '状态：0-停用 1-正常',
   `keep_alive` tinyint NULL DEFAULT 1 COMMENT '是否缓存：0-否 1-是',
   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `create_by` bigint NULL DEFAULT NULL COMMENT '创建人ID',
@@ -224,12 +240,12 @@ DROP TABLE IF EXISTS `sys_oper_log`;
 CREATE TABLE `sys_oper_log`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '日志主键',
   `title` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '操作模块',
-  `business_type` int NULL DEFAULT 0 COMMENT '业务类型：1-新增 2-修改 3-删除 4-查询 5-导出 6-导入 7-其他',
+  `business_type` int NULL DEFAULT 0 COMMENT '业务类型：0-其它 1-新增 2-修改 3-删除',
   `method` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '方法名称',
   `request_method` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '请求方式',
   `operator_type` int NULL DEFAULT 0 COMMENT '操作类别：1-后台用户',
   `oper_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '操作人员',
-  `device_type` int NULL DEFAULT NULL COMMENT '设备类型：1-PC 2-手机 3-平板',
+  `device_type` int NULL DEFAULT NULL COMMENT '设备类型：1-桌面设备 2-移动设备 3-爬虫/Bot',
   `oper_url` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '请求URL',
   `oper_ip` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '主机地址',
   `oper_location` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '' COMMENT '操作地点',
@@ -478,6 +494,7 @@ CREATE TABLE `sys_user`  (
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
+-- 初始账号仅用于本地体验，生产环境请登录后立即修改密码或删除测试账号
 INSERT INTO `sys_user` VALUES (1, 'superAdmin', '$2a$10$LGpvVk9hFrfIIVRnWHoRVe.FkSVbqJ0CtyrY/WPLUva9e6xU7b/Ta', '超级管理员', NULL, 'superAdmin@example.com', '17876648229', 1, '2025-12-30 17:19:05', NULL, '2026-02-24 00:22:08', 1, NULL, NULL, NULL, NULL, 0);
 INSERT INTO `sys_user` VALUES (2, 'testuser', '$2a$10$LGpvVk9hFrfIIVRnWHoRVe.FkSVbqJ0CtyrY/WPLUva9e6xU7b/Ta', '测试用户', NULL, 'test@example.com', '13800138000', 1, '2025-12-31 11:41:22', NULL, '2026-01-03 16:43:14', 1, NULL, NULL, NULL, NULL, 0);
 INSERT INTO `sys_user` VALUES (3, 'testminuser', '$2a$10$UbN1rmnnbg/b5tybLDza0.8i0PGS4xNcVKEBHk7Fjp3USv88RdcFK', '测试小用户', NULL, '', '17877778888', 1, '2026-01-30 17:58:06', 1, '2026-01-30 17:58:15', 1, NULL, NULL, NULL, NULL, 1);

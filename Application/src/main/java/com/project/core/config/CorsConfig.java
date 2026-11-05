@@ -21,10 +21,10 @@ import java.util.List;
 public class CorsConfig {
 
     /**
-     * 允许的跨域源列表，默认 * 允许所有（开发环境）
+     * 允许的跨域源列表，默认仅允许本机开发端口
      * 生产环境应配置为具体域名，如：http://admin.example.com,http://m.example.com
      */
-    @Value("${cors.allowed-origins:*}")
+    @Value("${cors.allowed-origins:http://localhost:*,http://127.0.0.1:*}")
     private String allowedOrigins;
 
     @Bean
@@ -32,12 +32,8 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // 允许的源（支持通配符和多域名配置）
-        if ("*".equals(allowedOrigins)) {
-            config.addAllowedOriginPattern("*");
-        } else {
-            List<String> origins = Arrays.asList(allowedOrigins.split(","));
-            origins.forEach(origin -> config.addAllowedOriginPattern(origin.trim()));
-        }
+        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        origins.forEach(origin -> config.addAllowedOriginPattern(origin.trim()));
 
         // 允许的请求头
         config.addAllowedHeader("*");

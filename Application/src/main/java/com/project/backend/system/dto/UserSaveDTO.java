@@ -3,8 +3,11 @@ package com.project.backend.system.dto;
 import com.project.core.constant.RegexConstants;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
@@ -26,6 +29,7 @@ public class UserSaveDTO {
     private String username;
 
     @Schema(description = "密码（新增时必传，编辑时不传则不修改）")
+    @Size(min = 6, max = 20, message = "密码长度应在6-20个字符之间")
     private String password;
 
     @Schema(description = "昵称", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -44,9 +48,13 @@ public class UserSaveDTO {
     private String phone;
 
     @Schema(description = "状态：1正常 0停用")
+    @Min(value = 0, message = "状态值只能为0或1")
+    @Max(value = 1, message = "状态值只能为0或1")
     private Integer status;
 
     @Schema(description = "性别（字典sys_user_sex）：0未知 1男 2女")
+    @Min(value = 0, message = "性别值只能为0、1或2")
+    @Max(value = 2, message = "性别值只能为0、1或2")
     private Integer gender;
 
     @Schema(description = "地址")

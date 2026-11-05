@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.project.core.context.UserContext;
+import com.project.core.constant.CacheConstant;
 import com.project.core.exception.BusinessException;
 import com.project.core.result.PageResult;
 import com.project.backend.system.dto.ChangePasswordDTO;
@@ -18,6 +19,7 @@ import com.project.backend.system.dto.UserResetPasswordDTO;
 import com.project.backend.system.dto.UserSaveDTO;
 import com.project.backend.system.dto.UserWithRoleCodeDTO;
 import com.project.backend.system.entity.Menu;
+import com.project.backend.system.entity.Role;
 import com.project.backend.system.entity.User;
 import com.project.backend.system.entity.UserMenu;
 import com.project.backend.system.entity.UserRole;
@@ -39,13 +41,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -57,6 +64,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     private final UserRoleMapper userRoleMapper;
@@ -65,6 +73,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final RoleMenuMapper roleMenuMapper;
     private final MenuMapper menuMapper;
     private final UserOnlineService userOnlineService;
+    private final StringRedisTemplate stringRedisTemplate;
 
     /**
      * 系统默认密码（从配置文件读取）
@@ -96,9 +105,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         page(page, wrapper);
 
         // 转换为VO
-        List<UserVO> voList = page.getRecords().stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
+        List<UserVO> voList = convertToVOList(page.getRecords());
 
         return PageResult.build(voList, page.getTotal(), page.getCurrent(), page.getSize());
     }
@@ -112,7 +119,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
-        return convertToVO(user);
+        return convertToVOList(List.of(user)).get(0);
     }
 
     /**
@@ -120,10 +127,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = {"userRoles", "userPermissions"}, key = "#saveDTO.id", condition = "#saveDTO.id != null")
+    @CacheEvict(value = {"userRoles", "userPermissions", "userInfo", "userMenuTree"},
+            key = "#saveDTO.id", condition = "#saveDTO.id != null")
     public boolean saveUser(UserSaveDTO saveDTO) {
         validateUsername(saveDTO);
-        validateSuperAdminStatus(saveDTO);
+        User existingUser = validateSuperAdminStatus(saveDTO);
 
         User user = new User();
         BeanUtil.copyProperties(saveDTO, user);
@@ -145,6 +153,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             saveUserRoles(userId, saveDTO.getRoleIds());
         }
 
+        if (success && !isNewUser) {
+            boolean disabledNow = existingUser != null
+                    && Objects.equals(saveDTO.getStatus(), STATUS_DISABLED)
+                    && !Objects.equals(existingUser.getStatus(), STATUS_DISABLED);
+            invalidateUserSession(userId, disabledNow);
+        }
+
         return success;
     }
 
@@ -164,15 +179,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     /**
-     * 验证超级管理员状态
+     * 验证超级管理员状态，并返回编辑前的用户快照
      */
-    private void validateSuperAdminStatus(UserSaveDTO saveDTO) {
+    private User validateSuperAdminStatus(UserSaveDTO saveDTO) {
         if (saveDTO.getId() != null) {
             User existingUser = getById(saveDTO.getId());
             if (existingUser != null) {
                 BusinessRuleUtils.validateSuperAdminUserStatus(existingUser.getUsername(), saveDTO.getStatus());
             }
+            return existingUser;
         }
+        return null;
     }
 
     /**
@@ -184,7 +201,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String finalPassword = StrUtil.isBlank(password) ? defaultPassword : password;
 
         user.setPassword(BCrypt.hashpw(finalPassword));
-        user.setStatus(STATUS_ENABLED);
+        if (user.getStatus() == null) {
+            user.setStatus(STATUS_ENABLED);
+        } else if (user.getStatus() != STATUS_ENABLED && user.getStatus() != STATUS_DISABLED) {
+            throw new BusinessException("用户状态不合法");
+        }
         save(user);
 
         // 如果使用了默认密码，记录日志
@@ -330,6 +351,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"userRoles", "userPermissions", "userInfo", "userMenuTree"}, key = "#id")
     public boolean deleteUser(Long id) {
         if (id == null) {
             throw new BusinessException("用户ID不能为空");
@@ -349,7 +371,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userMenuMapper.delete(userMenuWrapper);
 
         // 删除用户
-        return removeById(id);
+        boolean success = removeById(id);
+        if (success) {
+            invalidateUserSession(id, true);
+        }
+        return success;
     }
 
     /**
@@ -357,6 +383,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"userRoles", "userPermissions", "userInfo", "userMenuTree"}, allEntries = true)
     public boolean batchDelete(Long[] ids) {
         if (ids == null || ids.length == 0) {
             throw new BusinessException("用户ID不能为空");
@@ -378,7 +405,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userMenuMapper.delete(userMenuWrapper);
 
         // 批量删除用户
-        return removeByIds(Arrays.asList(ids));
+        boolean success = removeByIds(Arrays.asList(ids));
+        if (success) {
+            for (Long id : ids) {
+                invalidateUserSession(id, true);
+            }
+        }
+        return success;
     }
 
     /**
@@ -387,7 +420,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * @param userId 用户ID
      */
     private void validateUserDeletion(Long userId) {
-        // 1. 检查用户是否存�?
+        // 1. 检查用户是否存在
         User user = getById(userId);
         if (user == null) {
             throw new BusinessException("用户不存在");
@@ -406,6 +439,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "userInfo", key = "#resetDTO.userId")
     public boolean resetPassword(UserResetPasswordDTO resetDTO) {
         User user = getById(resetDTO.getUserId());
         if (user == null) {
@@ -414,7 +448,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // 加密新密码
         user.setPassword(BCrypt.hashpw(resetDTO.getNewPassword()));
-        return updateById(user);
+        boolean success = updateById(user);
+        if (success) {
+            invalidateUserSession(user.getId(), true);
+        }
+        return success;
     }
 
     /**
@@ -422,6 +460,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"userRoles", "userPermissions", "userInfo", "userMenuTree"}, key = "#id")
     public boolean updateStatus(Long id, Integer status) {
         User user = getById(id);
         if (user == null) {
@@ -432,28 +471,85 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         BusinessRuleUtils.validateSuperAdminUserStatus(user.getUsername(), status);
 
         user.setStatus(status);
-        return updateById(user);
+        boolean success = updateById(user);
+        if (success) {
+            invalidateUserSession(id, Objects.equals(status, STATUS_DISABLED));
+        }
+        return success;
     }
 
     /**
-     * 实体转VO
+     * 批量将实体转换为VO，避免在循环中逐条查询角色与在线状态
      */
-    private UserVO convertToVO(User user) {
+    private List<UserVO> convertToVOList(List<User> users) {
+        if (users == null || users.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Long> userIds = users.stream()
+                .map(User::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        if (userIds.isEmpty()) {
+            return users.stream().map(this::convertToVOWithoutRelations).collect(Collectors.toList());
+        }
+
+        // 一次查询所有用户的角色关联
+        List<UserRole> userRoles = userRoleMapper.selectList(
+                new LambdaQueryWrapper<UserRole>().in(UserRole::getUserId, userIds));
+        Map<Long, List<Long>> roleIdsByUser = userRoles.stream()
+                .collect(Collectors.groupingBy(UserRole::getUserId,
+                        Collectors.mapping(UserRole::getRoleId, Collectors.toList())));
+
+        // 一次查询所有角色
+        Set<Long> allRoleIds = userRoles.stream()
+                .map(UserRole::getRoleId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, Role> roleMap = allRoleIds.isEmpty()
+                ? Map.of()
+                : roleMapper.selectBatchIds(allRoleIds).stream()
+                        .collect(Collectors.toMap(Role::getId, role -> role, (a, b) -> a));
+
+        Map<Long, List<String>> roleNamesByUser = new HashMap<>();
+        roleIdsByUser.forEach((userId, roleIds) -> roleNamesByUser.put(userId,
+                roleIds.stream()
+                        .map(roleMap::get)
+                        .filter(Objects::nonNull)
+                        .filter(role -> Objects.equals(role.getStatus(), 1))
+                        .map(Role::getRoleName)
+                        .collect(Collectors.toList())));
+
+        // 一次获取在线用户集合
+        Set<Long> onlineUserIds = new HashSet<>(userOnlineService.getOnlineUserIds());
+
+        return users.stream()
+                .map(user -> convertToVO(user, roleIdsByUser, roleNamesByUser, onlineUserIds))
+                .collect(Collectors.toList());
+    }
+
+    private UserVO convertToVOWithoutRelations(User user) {
+        return convertToVO(user, Map.of(), Map.of(), Set.of());
+    }
+
+    private UserVO convertToVO(User user,
+                               Map<Long, List<Long>> roleIdsByUser,
+                               Map<Long, List<String>> roleNamesByUser,
+                               Set<Long> onlineUserIds) {
         UserVO vo = new UserVO();
         BeanUtil.copyProperties(user, vo);
 
         // 状态文本（使用字典数据）
-        vo.setStatusText(DictUtils.getLabel("sys_user_status", user.getStatus(), "未知"));
+        vo.setStatusText(DictUtils.getLabel("sys_common_status", user.getStatus(), "未知"));
 
         // 性别文本（使用字典）
         vo.setGenderText(DictUtils.getLabel("sys_user_sex", user.getGender(), "未知"));
 
-        // 查询用户角色信息
-        vo.setRoleIds(roleMapper.selectRoleIdsByUserId(user.getId()));
-        vo.setRoleNames(roleMapper.selectRoleNamesByUserId(user.getId()));
+        vo.setRoleIds(roleIdsByUser.getOrDefault(user.getId(), List.of()));
+        vo.setRoleNames(roleNamesByUser.getOrDefault(user.getId(), List.of()));
 
         // 在线状态
-        vo.setIsOnline(userOnlineService.isUserOnline(user.getId()));
+        vo.setIsOnline(onlineUserIds.contains(user.getId()));
 
         return vo;
     }
@@ -490,7 +586,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 更新允许用户自己修改的字段
         updateUserProfileFields(user, profileDTO);
 
-        return updateById(user);
+        boolean success = updateById(user);
+        if (success) {
+            invalidateUserSession(userId, false);
+        }
+        return success;
     }
 
     /**
@@ -597,7 +697,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = {"userInfo", "userMenuTree"}, allEntries = true)
+    @CacheEvict(value = {"userInfo", "userMenuTree", "userPermissions", "userRoles"}, allEntries = true)
     public boolean assignMenus(Long userId, Long[] menuIds) {
         log.info("分配用户菜单权限，用户ID：{}，菜单IDs：{}", userId, Arrays.toString(menuIds));
 
@@ -617,9 +717,40 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         // 权限变更后踢出在线会话，避免 Sa-Token 复用旧权限缓存
-        StpUtil.logout(userId);
+        invalidateUserSession(userId, true);
 
         return true;
+    }
+
+    /**
+     * 清理用户登录缓存，必要时强制下线
+     *
+     * @param userId      用户ID
+     * @param forceLogout 是否踢出该用户的所有会话
+     */
+    private void invalidateUserSession(Long userId, boolean forceLogout) {
+        if (userId == null) {
+            return;
+        }
+
+        try {
+            stringRedisTemplate.delete(CacheConstant.LOGIN_USER_KEY + userId);
+        } catch (Exception e) {
+            log.warn("清理用户登录缓存失败，用户ID：{}", userId, e);
+        }
+
+        if (forceLogout) {
+            try {
+                StpUtil.logout(userId);
+            } catch (Exception e) {
+                log.warn("踢出用户会话失败，用户ID：{}", userId, e);
+            }
+            try {
+                userOnlineService.userOffline(userId);
+            } catch (Exception e) {
+                log.warn("更新用户离线状态失败，用户ID：{}", userId, e);
+            }
+        }
     }
 
     /**
@@ -733,18 +864,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return List.of();
         }
 
-        // 1. 获取用户的所有角色ID
-        LambdaQueryWrapper<UserRole> userRoleWrapper = new LambdaQueryWrapper<>();
-        userRoleWrapper.eq(UserRole::getUserId, userId);
-        List<UserRole> userRoles = userRoleMapper.selectList(userRoleWrapper);
-
-        if (userRoles.isEmpty()) {
+        // 1. 获取用户当前生效的角色ID
+        List<Long> roleIds = roleMapper.selectRoleIdsByUserId(userId);
+        if (roleIds.isEmpty()) {
             return List.of();
         }
-
-        List<Long> roleIds = userRoles.stream()
-                .map(UserRole::getRoleId)
-                .collect(Collectors.toList());
 
         // 2. 获取这些角色的权限并集
         return getRoleMenuIdsUnion(roleIds);

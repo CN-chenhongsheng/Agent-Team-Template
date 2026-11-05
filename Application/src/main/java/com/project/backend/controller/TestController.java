@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
  * @since 2025-12-30
  */
 @Slf4j
+@Profile("dev")
 @Tag(name = "测试工具", description = "开发测试用接口")
 @RestController
 @RequestMapping("/v1/test")
@@ -31,18 +33,9 @@ public class TestController {
     @Operation(summary = "生成BCrypt密码hash")
     @PostMapping("/generate-password")
     public R<String> generatePassword(@RequestParam String password) {
-        log.info("========== 生成密码Hash ==========");
-        log.info("原始密码: {}", password);
-
         try {
             String hash = passwordEncoder.encode(password);
-            log.info("生成的Hash: {}", hash);
-
-            // 验证
-            boolean matches = passwordEncoder.matches(password, hash);
-            log.info("验证结果: {}", matches);
-            log.info("================================");
-
+            log.info("密码Hash生成完成");
             return R.ok(hash);
         } catch (Exception e) {
             log.error("生成密码Hash异常", e);
@@ -59,15 +52,9 @@ public class TestController {
             @RequestParam String password,
             @RequestParam String hash
     ) {
-        log.info("========== 验证密码 ==========");
-        log.info("原始密码: {}", password);
-        log.info("Hash: {}", hash);
-
         try {
             boolean matches = passwordEncoder.matches(password, hash);
-            log.info("验证结果: {}", matches);
-            log.info("============================");
-
+            log.info("密码验证完成，结果：{}", matches);
             return R.ok(matches);
         } catch (Exception e) {
             log.error("验证密码异常", e);

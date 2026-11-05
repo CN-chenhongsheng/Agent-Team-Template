@@ -1,6 +1,10 @@
 package com.project.backend.common.aspect;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.project.core.annotation.Log;
 import com.project.core.context.UserContext;
 import com.project.core.util.RequestUtils;
@@ -23,6 +27,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * 操作日志切面
@@ -38,12 +46,22 @@ public class LogAspect {
     @Autowired
     private OperLogService operLogService;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     /**
      * 最大参数响应长度
      */
     private static final int MAX_CONTENT_LENGTH = 2000;
+
+    /**
+     * 需要脱敏的字段名（统一小写比较）
+     */
+    private static final Set<String> SENSITIVE_FIELDS = Set.of(
+            "password", "oldpassword", "newpassword", "confirmpassword",
+            "token", "accesstoken", "refreshtoken", "secret", "apikey"
+    );
 
     /**
      * 设备类型常量
@@ -136,8 +154,8 @@ public class LogAspect {
                 Integer deviceType = getDeviceType(request);
                 operLog.setDeviceType(deviceType);
 
-                // 设置操作地点（可以调用IP地址库获取地理位置，这里简化处理）
-                operLog.setOperLocation("");
+                // 设置操作地点
+                operLog.setOperLocation(RequestUtils.getIpLocation(ip));
 
                 // 设置请求参数
                 if (logAnnotation != null && logAnnotation.saveRequestData()) {
@@ -147,12 +165,7 @@ public class LogAspect {
 
                 // 设置响应参数
                 if (logAnnotation != null && logAnnotation.saveResponseData() && result != null) {
-                    try {
-                        String jsonResult = objectMapper.writeValueAsString(result);
-                        operLog.setJsonResult(truncateString(jsonResult));
-                    } catch (Exception e) {
-                        log.warn("序列化响应参数失败", e);
-                    }
+                    operLog.setJsonResult(truncateString(toSafeJson(result)));
                 }
             }
 
@@ -200,13 +213,7 @@ public class LogAspect {
                 if (isServletObject(arg)) {
                     continue;
                 }
-
-                try {
-                    String jsonStr = objectMapper.writeValueAsString(arg);
-                    params.append(jsonStr).append(" ");
-                } catch (Exception e) {
-                    params.append(arg != null ? arg.toString() : "null").append(" ");
-                }
+                params.append(toSafeJson(arg)).append(" ");
             }
 
             return truncateString(params.toString().trim());
@@ -234,6 +241,46 @@ public class LogAspect {
         return str.length() > MAX_CONTENT_LENGTH
                 ? str.substring(0, MAX_CONTENT_LENGTH) + "..."
                 : str;
+    }
+
+    /**
+     * 序列化日志内容，并对敏感字段统一脱敏
+     */
+    private String toSafeJson(Object value) {
+        if (value == null) {
+            return "null";
+        }
+        try {
+            JsonNode node = objectMapper.valueToTree(value);
+            maskSensitiveFields(node);
+            return objectMapper.writeValueAsString(node);
+        } catch (Exception e) {
+            log.warn("序列化日志内容失败，类型：{}", value.getClass().getName());
+            return "<unserializable>";
+        }
+    }
+
+    /**
+     * 递归脱敏敏感字段
+     */
+    private void maskSensitiveFields(JsonNode node) {
+        if (node == null) {
+            return;
+        }
+        if (node.isObject()) {
+            ObjectNode objectNode = (ObjectNode) node;
+            List<String> fieldNames = new ArrayList<>();
+            objectNode.fieldNames().forEachRemaining(fieldNames::add);
+            for (String fieldName : fieldNames) {
+                if (SENSITIVE_FIELDS.contains(fieldName.toLowerCase(Locale.ROOT))) {
+                    objectNode.put(fieldName, "******");
+                } else {
+                    maskSensitiveFields(objectNode.get(fieldName));
+                }
+            }
+        } else if (node.isArray()) {
+            node.forEach(this::maskSensitiveFields);
+        }
     }
 
     /**

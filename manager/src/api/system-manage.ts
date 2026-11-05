@@ -595,16 +595,6 @@ export function fetchDeleteDictData(id: number) {
 }
 
 /**
- * 下载用户导入模板
- */
-export function fetchDownloadUserTemplate() {
-  return request.get({
-    url: '/api/v1/system/user/import/template',
-    responseType: 'blob'
-  })
-}
-
-/**
  * 导入用户数据
  * @param fileUrl 文件URL
  * @param totalRows 总行数

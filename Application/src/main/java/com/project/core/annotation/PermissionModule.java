@@ -8,6 +8,10 @@ import java.lang.annotation.Target;
 
 /**
  * 标注 CRUD 控制器对应的权限模块前缀
+ * <p>
+ * 标准增删改查使用 {@link PermissionAction} 声明权限动作；
+ * 重置密码、导入、分配权限等特殊动作使用 Sa-Token 的 {@code @SaCheckPermission}。
+ * </p>
  *
  * @author 陈鸿昇
  * @since 2026-07-10

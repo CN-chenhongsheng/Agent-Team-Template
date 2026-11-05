@@ -21,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
@@ -64,6 +65,9 @@ class UserServiceTest {
     @Mock
     private UserOnlineService userOnlineService;
 
+    @Mock
+    private StringRedisTemplate stringRedisTemplate;
+
     @InjectMocks
     private UserServiceImpl userService;
 
@@ -85,7 +89,7 @@ class UserServiceTest {
         testUser.setStatus(1);
         testUser.setCreateTime(LocalDateTime.now());
         testUser.setUpdateTime(LocalDateTime.now());
-        testUser.setDeleted(0);
+        testUser.setDeleted(0L);
 
         userSaveDTO = new UserSaveDTO();
         userSaveDTO.setUsername("newuser");
@@ -142,9 +146,8 @@ class UserServiceTest {
     @DisplayName("根据ID获取用户-成功")
     void testGetDetailById_Success() {
         when(userMapper.selectById(2L)).thenReturn(testUser);
-        when(roleMapper.selectRoleIdsByUserId(2L)).thenReturn(Collections.emptyList());
-        when(roleMapper.selectRoleNamesByUserId(2L)).thenReturn(Collections.emptyList());
-        when(userOnlineService.isUserOnline(2L)).thenReturn(false);
+        when(userRoleMapper.selectList(any())).thenReturn(Collections.emptyList());
+        when(userOnlineService.getOnlineUserIds()).thenReturn(Collections.emptyList());
 
         UserVO userVO = userService.getDetailById(2L);
 

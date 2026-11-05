@@ -53,7 +53,7 @@ public class UserProfileController {
      * 修改当前用户密码
      */
     @Operation(summary = "修改密码")
-    @Log(title = "修改密码", businessType = 2)
+    @Log(title = "修改密码", businessType = 2, saveRequestData = false)
     @PutMapping("/password")
     public R<Void> changePassword(@Valid @RequestBody ChangePasswordDTO changePasswordDTO) {
         boolean success = userService.changeCurrentUserPassword(changePasswordDTO);

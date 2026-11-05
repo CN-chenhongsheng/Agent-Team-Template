@@ -1,6 +1,7 @@
 package com.project.backend.system.service.impl;
 
 import com.project.backend.system.service.UserOnlineService;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -15,6 +17,14 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
+/**
+ * 用户在线状态服务实现
+ * 在线用户以 Redis ZSet 存储，score 为最后活跃时间，超过有效期自动清理；
+ * SSE 连接保存在当前实例内存中
+ *
+ * @author 陈鸿昇
+ * @since 2026-01-02
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -22,7 +32,17 @@ public class UserOnlineServiceImpl implements UserOnlineService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private static final String ONLINE_USERS_KEY = "sys:user:online";
+    private static final Duration ONLINE_TTL = Duration.ofHours(2);
+    private static final Duration KEY_TTL = Duration.ofDays(1);
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
+
+    /**
+     * 应用启动时清理上次运行残留的在线状态
+     */
+    @PostConstruct
+    public void clearStaleOnlineUsers() {
+        redisTemplate.delete(ONLINE_USERS_KEY);
+    }
 
     @Override
     public SseEmitter subscribe() {
@@ -57,24 +77,22 @@ public class UserOnlineServiceImpl implements UserOnlineService {
 
     @Override
     public void userOnline(Long userId) {
-        redisTemplate.opsForSet().add(ONLINE_USERS_KEY, userId.toString());
+        redisTemplate.opsForZSet().add(ONLINE_USERS_KEY, userId.toString(), System.currentTimeMillis());
+        redisTemplate.expire(ONLINE_USERS_KEY, KEY_TTL);
         broadcastStatusChange(userId, true);
     }
 
     @Override
     public void userOffline(Long userId) {
-        redisTemplate.opsForSet().remove(ONLINE_USERS_KEY, userId.toString());
+        redisTemplate.opsForZSet().remove(ONLINE_USERS_KEY, userId.toString());
         broadcastStatusChange(userId, false);
     }
 
     @Override
-    public boolean isUserOnline(Long userId) {
-        return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(ONLINE_USERS_KEY, userId.toString()));
-    }
-
-    @Override
     public List<Long> getOnlineUserIds() {
-        Set<Object> members = redisTemplate.opsForSet().members(ONLINE_USERS_KEY);
+        long threshold = System.currentTimeMillis() - ONLINE_TTL.toMillis();
+        redisTemplate.opsForZSet().removeRangeByScore(ONLINE_USERS_KEY, 0, threshold);
+        Set<Object> members = redisTemplate.opsForZSet().range(ONLINE_USERS_KEY, 0, -1);
         if (members == null || members.isEmpty()) {
             return Collections.emptyList();
         }

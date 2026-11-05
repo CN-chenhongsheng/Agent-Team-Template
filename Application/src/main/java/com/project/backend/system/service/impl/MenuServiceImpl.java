@@ -26,7 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +40,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements MenuService {
 
     private final RoleMenuMapper roleMenuMapper;
@@ -89,10 +92,11 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = {"userMenuTree", "userPermissions"}, allEntries = true)
+    @CacheEvict(value = {"userMenuTree", "userPermissions", "userInfo"}, allEntries = true)
     public boolean saveMenu(MenuSaveDTO saveDTO) {
         Menu menu = new Menu();
         BeanUtil.copyProperties(saveDTO, menu);
+        validateParentMenu(menu.getId(), menu.getParentId());
 
         if (saveDTO.getId() == null) {
             // 新增
@@ -101,10 +105,6 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
             return save(menu);
         } else {
             // 编辑
-            // 不能将父菜单设置为自己或自己的子菜单
-            if (menu.getId().equals(menu.getParentId())) {
-                throw new BusinessException("不能将父菜单设置为自身");
-            }
             boolean result = updateById(menu);
             // 当显示状态、菜单状态或页面缓存为关闭时，级联更新所有子菜单
             if (result && (Integer.valueOf(0).equals(saveDTO.getVisible())
@@ -121,12 +121,43 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
     }
 
     /**
+     * 校验父菜单是否存在且不会形成循环引用
+     *
+     * @param menuId   当前菜单ID（新增时为 null）
+     * @param parentId 目标父菜单ID
+     */
+    private void validateParentMenu(Long menuId, Long parentId) {
+        if (parentId == null || parentId == 0) {
+            return;
+        }
+        if (parentId.equals(menuId)) {
+            throw new BusinessException("不能将父菜单设置为自身");
+        }
+
+        Set<Long> visited = new HashSet<>();
+        Long cursor = parentId;
+        while (cursor != null && cursor != 0) {
+            if (!visited.add(cursor)) {
+                throw new BusinessException("菜单层级存在循环引用");
+            }
+            if (cursor.equals(menuId)) {
+                throw new BusinessException("不能将父菜单设置为自己或自己的子菜单");
+            }
+            Menu ancestor = getById(cursor);
+            if (ancestor == null) {
+                throw new BusinessException("上级菜单不存在");
+            }
+            cursor = ancestor.getParentId();
+        }
+    }
+
+    /**
      * 删除菜单
      * 级联删除所有子菜单及相关的角色菜单关系
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = {"userMenuTree", "userPermissions"}, allEntries = true)
+    @CacheEvict(value = {"userMenuTree", "userPermissions", "userInfo"}, allEntries = true)
     public boolean deleteMenu(Long id) {
         if (id == null) {
             throw new BusinessException("菜单ID不能为空");
@@ -278,22 +309,24 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
         MenuVO vo = new MenuVO();
         BeanUtil.copyProperties(menu, vo);
 
-        // 菜单类型文本（保持硬编码，因为这是系统固定的枚举值，不需要字典）
-        String menuType = menu.getMenuType();
-        if (menuType != null) {
-            switch (menuType) {
-                case "M" -> vo.setMenuTypeText("目录");
-                case "C" -> vo.setMenuTypeText("菜单");
-                case "F" -> vo.setMenuTypeText("按钮");
-                default -> vo.setMenuTypeText("未知");
-            }
+        // 菜单类型文本（字典 sys_menu_type，未配置时回退到系统默认值）
+        String menuTypeText = "未知";
+        if (menu.getMenuType() != null) {
+            menuTypeText = switch (menu.getMenuType()) {
+                case "M" -> "目录";
+                case "C" -> "菜单";
+                case "F" -> "按钮";
+                default -> "未知";
+            };
         }
+        vo.setMenuTypeText(DictUtils.getLabel("sys_menu_type", menu.getMenuType(), menuTypeText));
 
-        // 可见文本（保持硬编码，因为这是系统固定的显示/隐藏状态）
-        vo.setVisibleText(menu.getVisible() == 1 ? "显示" : "隐藏");
+        // 可见文本（字典 sys_show_hide）
+        String visibleText = Integer.valueOf(1).equals(menu.getVisible()) ? "显示" : "隐藏";
+        vo.setVisibleText(DictUtils.getLabel("sys_show_hide", menu.getVisible(), visibleText));
 
         // 状态文本（使用字典数据）
-        vo.setStatusText(DictUtils.getLabel("sys_user_status", menu.getStatus(), "未知"));
+        vo.setStatusText(DictUtils.getLabel("sys_common_status", menu.getStatus(), "未知"));
 
         return vo;
     }
@@ -304,7 +337,7 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = {"userMenuTree", "userPermissions"}, allEntries = true)
+    @CacheEvict(value = {"userMenuTree", "userPermissions", "userInfo"}, allEntries = true)
     public boolean updateStatus(Long id, Integer status) {
         Menu menu = getById(id);
         if (menu == null) {

@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements RoleService {
 
     private final RoleMenuMapper roleMenuMapper;
@@ -109,7 +110,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = {"userRoles", "userPermissions"}, allEntries = true, condition = "#saveDTO.menuIds != null")
+    @CacheEvict(value = {"userRoles", "userPermissions", "userMenuTree", "userInfo"}, allEntries = true)
     public boolean saveRole(RoleSaveDTO saveDTO) {
         // 检查角色编码是否重复
         LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
@@ -154,7 +155,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = {"userRoles", "userPermissions"}, allEntries = true)
+    @CacheEvict(value = {"userRoles", "userPermissions", "userMenuTree", "userInfo"}, allEntries = true)
     public boolean deleteRole(Long id) {
         if (id == null) {
             throw new BusinessException("角色ID不能为空");
@@ -187,6 +188,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {"userRoles", "userPermissions", "userMenuTree", "userInfo"}, allEntries = true)
     public boolean batchDelete(Long[] ids) {
         if (ids == null || ids.length == 0) {
             throw new BusinessException("角色ID不能为空");
@@ -219,7 +221,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = {"userRoles", "userPermissions"}, allEntries = true)
+    @CacheEvict(value = {"userRoles", "userPermissions", "userMenuTree", "userInfo"}, allEntries = true)
     public boolean assignMenus(Long roleId, Long[] menuIds) {
         log.info("分配角色菜单权限，角色ID：{}，菜单IDs：{}", roleId, Arrays.toString(menuIds));
 
@@ -271,6 +273,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     /**
      * 获取角色的菜单权限列表（包含菜单状态）
      */
+    @Override
     public List<RolePermissionVO> getRolePermissions(Long roleId) {
         if (roleId == null) {
             return List.of();
@@ -315,7 +318,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = {"userRoles", "userPermissions"}, allEntries = true)
+    @CacheEvict(value = {"userRoles", "userPermissions", "userMenuTree", "userInfo"}, allEntries = true)
     public boolean updateStatus(Long id, Integer status) {
         Role role = getById(id);
         if (role == null) {
@@ -325,14 +328,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         // 使用通用工具类验证超级管理员角色状态
         BusinessRuleUtils.validateSuperAdminRoleStatus(role.getRoleCode(), status);
 
-        // 如果是停用角色，删除所有用户与该角色的关联
-        if (status != null && status == 0) {
-            LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(UserRole::getRoleId, id);
-            int deletedCount = userRoleMapper.delete(wrapper);
-            log.info("角色停用，已清理 {} 条用户角色关联", deletedCount);
-        }
-
+        // 角色状态由权限查询时的 r.status = 1 条件生效，保留用户角色关联以便恢复
         role.setStatus(status);
         return updateById(role);
     }
@@ -345,7 +341,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         BeanUtil.copyProperties(role, vo);
 
         // 状态文本（使用字典数据）
-        vo.setStatusText(DictUtils.getLabel("sys_user_status", role.getStatus(), "未知"));
+        vo.setStatusText(DictUtils.getLabel("sys_common_status", role.getStatus(), "未知"));
 
         return vo;
     }

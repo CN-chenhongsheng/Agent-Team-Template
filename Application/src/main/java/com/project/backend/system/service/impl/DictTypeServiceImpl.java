@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> implements DictTypeService {
 
     private final DictDataMapper dictDataMapper;
@@ -90,6 +91,14 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
             throw new BusinessException("字典编码已存在");
         }
 
+        // 字典编码是字典数据的关联键，创建后不允许修改，避免数据悬挂
+        if (saveDTO.getId() != null) {
+            DictType existing = getById(saveDTO.getId());
+            if (existing != null && !existing.getDictCode().equals(saveDTO.getDictCode())) {
+                throw new BusinessException("字典编码创建后不允许修改");
+            }
+        }
+
         DictType dictType = new DictType();
         BeanUtil.copyProperties(saveDTO, dictType);
 
@@ -135,7 +144,7 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
         BeanUtil.copyProperties(dictType, vo);
 
         // 状态文本（使用字典类型）
-        vo.setStatusText(DictUtils.getLabel("sys_user_status", dictType.getStatus(), "未知"));
+        vo.setStatusText(DictUtils.getLabel("sys_common_status", dictType.getStatus(), "未知"));
 
         return vo;
     }

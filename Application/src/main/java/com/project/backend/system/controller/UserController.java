@@ -7,10 +7,13 @@ import com.project.core.annotation.PermissionModule;
 import com.project.core.result.PageResult;
 import com.project.core.result.R;
 import com.project.backend.system.dto.RoleUserQueryDTO;
+import com.project.backend.system.dto.UserImportDTO;
 import com.project.backend.system.dto.UserQueryDTO;
 import com.project.backend.system.dto.UserResetPasswordDTO;
 import com.project.backend.system.dto.UserSaveDTO;
+import com.project.backend.system.service.UserImportService;
 import com.project.backend.system.service.UserService;
+import com.project.backend.system.vo.UserImportResultVO;
 import com.project.backend.system.vo.UserPermissionVO;
 import com.project.backend.system.vo.UserSimpleVO;
 import com.project.backend.system.vo.UserVO;
@@ -40,6 +43,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final UserImportService userImportService;
 
     @GetMapping("/page")
     @PermissionAction("view")
@@ -100,7 +104,7 @@ public class UserController {
     @SaCheckPermission(value = "system:user:reset-pwd", orRole = "SUPER_ADMIN")
     @Operation(summary = "重置用户密码")
     @Parameter(name = "id", description = "用户ID", required = true)
-    @Log(title = "重置用户密码", businessType = 0)
+    @Log(title = "重置用户密码", businessType = 0, saveRequestData = false)
     public R<Void> resetPassword(@PathVariable Long id, @Valid @RequestBody UserResetPasswordDTO resetDTO) {
         resetDTO.setUserId(id);
         boolean success = userService.resetPassword(resetDTO);
@@ -117,6 +121,14 @@ public class UserController {
         boolean success = userService.updateStatus(id, status);
         return success ? R.ok(status == 1 ? "用户已启用" : "用户已停用", null)
                 : R.fail(status == 1 ? "用户启用失败" : "用户停用失败");
+    }
+
+    @PostMapping("/import")
+    @SaCheckPermission(value = "system:user:import", orRole = "SUPER_ADMIN")
+    @Operation(summary = "导入用户", description = "解析上传的 Excel 文件并批量创建用户")
+    @Log(title = "导入用户", businessType = 1)
+    public R<UserImportResultVO> importUsers(@Valid @RequestBody UserImportDTO importDTO) {
+        return R.ok(userImportService.importUsers(importDTO));
     }
 
     @PostMapping("/by-roles")

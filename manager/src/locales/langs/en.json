@@ -427,7 +427,7 @@
         "examples": {
           "nickname": "John Doe",
           "gender": "Male",
-          "role": "General User",
+          "role": "COMMON_USER",
           "status": "Enabled"
         },
         "filename": "User Import Template",

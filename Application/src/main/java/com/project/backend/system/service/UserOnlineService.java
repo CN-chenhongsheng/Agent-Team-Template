@@ -30,13 +30,6 @@ public interface UserOnlineService {
     void userOffline(Long userId);
 
     /**
-     * 检查用户是否在线
-     * @param userId 用户ID
-     * @return 是否在线
-     */
-    boolean isUserOnline(Long userId);
-
-    /**
      * 当前在线用户 ID 列表（供 SSE 订阅时下发快照）
      */
     List<Long> getOnlineUserIds();

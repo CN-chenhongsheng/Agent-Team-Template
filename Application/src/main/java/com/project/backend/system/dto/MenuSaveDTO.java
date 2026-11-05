@@ -1,8 +1,11 @@
 package com.project.backend.system.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 /**
@@ -28,6 +31,7 @@ public class MenuSaveDTO {
 
     @Schema(description = "菜单类型：M目录 C菜单 F按钮", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "菜单类型不能为空")
+    @Pattern(regexp = "^[MCF]$", message = "菜单类型只能为 M、C 或 F")
     private String menuType;
 
     @Schema(description = "路由路径")
@@ -46,11 +50,17 @@ public class MenuSaveDTO {
     private Integer sort;
 
     @Schema(description = "是否可见：1显示 0隐藏")
+    @Min(value = 0, message = "是否可见只能为0或1")
+    @Max(value = 1, message = "是否可见只能为0或1")
     private Integer visible;
 
     @Schema(description = "状态：1正常 0停用")
+    @Min(value = 0, message = "状态值只能为0或1")
+    @Max(value = 1, message = "状态值只能为0或1")
     private Integer status;
 
     @Schema(description = "页面缓存：1开启 0关闭")
+    @Min(value = 0, message = "页面缓存只能为0或1")
+    @Max(value = 1, message = "页面缓存只能为0或1")
     private Integer keepAlive;
 }

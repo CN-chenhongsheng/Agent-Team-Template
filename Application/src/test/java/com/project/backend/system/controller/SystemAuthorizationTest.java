@@ -3,15 +3,19 @@ package com.project.backend.system.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.backend.system.dto.LoginDTO;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -36,6 +40,17 @@ class SystemAuthorizationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    @BeforeEach
+    void clearRateLimitKeys() {
+        Set<String> keys = stringRedisTemplate.keys("rate:limit:*");
+        if (keys != null && !keys.isEmpty()) {
+            stringRedisTemplate.delete(keys);
+        }
+    }
 
     private String loginAndGetToken(String username, String password) throws Exception {
         LoginDTO loginDTO = new LoginDTO();
@@ -114,5 +129,25 @@ class SystemAuthorizationTest {
         JsonNode permissions = objectMapper.readTree(response).path("data").path("permissions");
         assertThat(permissions.isArray()).isTrue();
         assertThat(permissions.size()).isGreaterThan(0);
+    }
+
+    @Test
+    @DisplayName("拥有用户授权权限时可以获取权限菜单树")
+    void userPermissionAdminCanLoadPermissionTree() throws Exception {
+        String adminToken = loginAndGetToken("superAdmin", "admin123");
+
+        mockMvc.perform(put("/v1/system/user/2/permissions")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("[1,2,3,4,87]"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
+
+        String viewerToken = loginAndGetToken("testuser", "admin123");
+
+        mockMvc.perform(get("/v1/system/menu/tree-permission")
+                        .header("Authorization", "Bearer " + viewerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200));
     }
 }

@@ -33,7 +33,7 @@ public class OperLog implements Serializable {
     @TableField("title")
     private String title;
 
-    @Schema(description = "业务类型：其它 1新增 2修改 3删除")
+    @Schema(description = "业务类型：0其它 1新增 2修改 3删除")
     @TableField("business_type")
     private Integer businessType;
 
@@ -45,7 +45,7 @@ public class OperLog implements Serializable {
     @TableField("request_method")
     private String requestMethod;
 
-    @Schema(description = "操作类别：后台用户）")
+    @Schema(description = "操作类别：1后台用户")
     @TableField("operator_type")
     private Integer operatorType;
 
@@ -53,7 +53,7 @@ public class OperLog implements Serializable {
     @TableField("oper_name")
     private String operName;
 
-    @Schema(description = "设备类型（字典sys_device_type：桌面设备 2移动设备 3爬虫/Bot）")
+    @Schema(description = "设备类型（字典sys_device_type）：1桌面设备 2移动设备 3爬虫/Bot")
     @TableField("device_type")
     private Integer deviceType;
 

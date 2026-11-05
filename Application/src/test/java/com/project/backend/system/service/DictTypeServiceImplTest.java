@@ -41,7 +41,7 @@ class DictTypeServiceImplTest {
     void deleteDictTypeWithChildrenShouldFail() {
         DictType dictType = new DictType();
         dictType.setId(1L);
-        dictType.setDictCode("sys_user_status");
+        dictType.setDictCode("sys_common_status");
 
         doReturn(dictType).when(dictTypeService).getById(1L);
         when(dictDataMapper.selectCount(any(LambdaQueryWrapper.class))).thenReturn(2L);

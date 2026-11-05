@@ -197,6 +197,12 @@ export interface GenericImportReturn {
 
   /** 是否正在上传 */
   isUploading: Ref<boolean>
+
+  /** 是否启用分片上传 */
+  enableChunkUpload: boolean
+
+  /** 分片上传阈值（字节） */
+  chunkUploadThreshold: number
 }
 
 // ===================== Hook 实现 =====================
@@ -216,6 +222,8 @@ export function useGenericImport<TResult extends ImportResult = ImportResult, TC
     uploadApi,
     subscribeApi,
     pollApi,
+    enableChunkUpload = false,
+    chunkSizeThreshold = 10 * 1024 * 1024,
     skipScanThreshold = 50 * 1024 * 1024,
     onImportComplete,
     onViewDetail,
@@ -436,6 +444,8 @@ export function useGenericImport<TResult extends ImportResult = ImportResult, TC
     handleUploadSuccess,
     isDownloading,
     isScanning,
-    isUploading
+    isUploading,
+    enableChunkUpload,
+    chunkUploadThreshold: chunkSizeThreshold
   }
 }

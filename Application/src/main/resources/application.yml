@@ -12,7 +12,7 @@ spring:
     name: project-backend
 
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
 
   # 文件上传大小限制配置
   servlet:
@@ -37,10 +37,10 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
-      password:
-      database: 0
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
       timeout: 3000ms
       lettuce:
         pool:
@@ -66,8 +66,6 @@ mybatis-plus:
     db-config:
       id-type: auto
       logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
       update-strategy: not_null
       insert-strategy: not_null
 
@@ -78,13 +76,13 @@ sa-token:
   timeout: 7200  # Access Token有效期，单位秒，2小时（依赖 Refresh Token 续期）
   active-timeout: -1  # token临时有效期 (指定时间内无操作就视为token过期) 单位: 秒
   is-concurrent: true  # 是否允许同一账号并发登录 (为true时允许一起登录, 为false时新登录挤掉旧登录)
-  is-share: true  # 在多人登录同一账号时，是否共用一个token (为true时所有登录共用一个token, 为false时每次登录新建一个token)
+  is-share: false  # 同一账号的多次登录使用各自独立的 Token，避免刷新 Token 时踢掉其他设备
   token-style: uuid  # token风格
   is-log: true  # 是否输出操作日志
 
-# Knife4j配置
+# Knife4j配置（生产环境通过 KNIFE4J_ENABLE=false 关闭）
 knife4j:
-  enable: true
+  enable: ${KNIFE4J_ENABLE:true}
   setting:
     language: zh_cn
     enable-version: true
@@ -98,17 +96,19 @@ file:
   upload-dir: ./uploads  # 本地上传目录
   public-path: /v1/common/files  # 公开访问路径前缀
 
+# 跨域配置（生产环境通过 CORS_ALLOWED_ORIGINS 配置具体域名，逗号分隔）
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:*,http://127.0.0.1:*}
+
 # 分片上传配置
 chunk-upload:
   temp-dir: ./uploads/temp  # 临时分片存储目录
-  final-dir: ./uploads/files  # 最终文件存储目录
   max-chunk-size: 10485760  # 最大分片大小（10MB）
   expired-days: 7  # 过期天数
-  public-path: /v1/common/files  # 文件公开访问路径前缀
   cleanup-enabled: true  # 是否启用定时清理
   cleanup-cron: 0 0 3 * * ?  # 定时清理 cron 表达式（每天凌晨 3 点）
 
 # 系统默认配置
 system:
-  default-password: 123456  # 新建用户默认密码
+  default-password: ${SYSTEM_DEFAULT_PASSWORD:123456}  # 新建用户默认密码，生产环境请覆盖
 

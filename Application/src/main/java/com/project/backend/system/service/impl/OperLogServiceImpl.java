@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.project.core.exception.BusinessException;
 import com.project.core.result.PageResult;
+import com.project.core.util.DateTimeUtils;
 import com.project.backend.system.dto.OperLogQueryDTO;
 import com.project.backend.system.entity.OperLog;
 import com.project.backend.system.mapper.OperLogMapper;
@@ -17,8 +18,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,15 +30,15 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 public class OperLogServiceImpl extends ServiceImpl<OperLogMapper, OperLog> implements OperLogService {
-
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     /**
      * 异步保存操作日志
      */
     @Override
     @Async
+    @Transactional(rollbackFor = Exception.class)
     public void saveOperLog(OperLog operLog) {
         try {
             save(operLog);
@@ -60,12 +59,10 @@ public class OperLogServiceImpl extends ServiceImpl<OperLogMapper, OperLog> impl
 
         // 时间范围查询
         if (StrUtil.isNotBlank(queryDTO.getOperTimeStart())) {
-            LocalDateTime startTime = LocalDateTime.parse(queryDTO.getOperTimeStart() + " 00:00:00", DATE_TIME_FORMATTER);
-            wrapper.ge(OperLog::getOperTime, startTime);
+            wrapper.ge(OperLog::getOperTime, DateTimeUtils.parseDayStart(queryDTO.getOperTimeStart()));
         }
         if (StrUtil.isNotBlank(queryDTO.getOperTimeEnd())) {
-            LocalDateTime endTime = LocalDateTime.parse(queryDTO.getOperTimeEnd() + " 23:59:59", DATE_TIME_FORMATTER);
-            wrapper.le(OperLog::getOperTime, endTime);
+            wrapper.le(OperLog::getOperTime, DateTimeUtils.parseDayEnd(queryDTO.getOperTimeEnd()));
         }
 
         wrapper.orderByDesc(OperLog::getOperTime);
@@ -127,7 +124,9 @@ public class OperLogServiceImpl extends ServiceImpl<OperLogMapper, OperLog> impl
         vo.setOperParam(operLog.getOperParam());
         vo.setJsonResult(operLog.getJsonResult());
         vo.setStatus(operLog.getStatus());
-        vo.setStatusText(operLog.getStatus() == 0 ? "正常" : "异常");
+        String statusFallback = operLog.getStatus() == null ? "未知"
+                : (operLog.getStatus() == 0 ? "正常" : "异常");
+        vo.setStatusText(DictUtils.getLabel("sys_oper_status", operLog.getStatus(), statusFallback));
         vo.setErrorMsg(operLog.getErrorMsg());
         vo.setOperTime(operLog.getOperTime());
         vo.setCostTime(operLog.getCostTime());

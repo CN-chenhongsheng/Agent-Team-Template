@@ -3,8 +3,7 @@ package com.project;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * 系统后端启动类
@@ -13,15 +12,8 @@ import org.springframework.context.annotation.FilterType;
  * @since 2025-12-30
  */
 @SpringBootApplication
-@ComponentScan(
-        basePackages = {"com.project.backend", "com.project.core"},
-        excludeFilters = @ComponentScan.Filter(
-                type = FilterType.REGEX,
-                pattern = "com\\.project\\.core\\.upload\\..*"))
-@MapperScan({
-        "com.project.backend.mapper",
-        "com.project.backend.system.mapper"
-})
+@EnableScheduling
+@MapperScan("com.project.backend.system.mapper")
 public class Application {
 
     public static void main(String[] args) {

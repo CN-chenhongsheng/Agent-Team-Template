@@ -89,8 +89,9 @@
         :title="$t('system.user.importTitle')"
         :template-download-fn="handleDownloadTemplate"
         :scan-with-progress-fn="handleScanFile"
+        :enable-chunk-upload="enableChunkUpload"
+        :chunk-upload-threshold="chunkUploadThreshold"
         @upload-success="handleUploadSuccess"
-        @upload="handleImportSuccess"
       />
     </ElCard>
   </div>
@@ -141,8 +142,13 @@
 
   // 导入功能
   const importDialogVisible = ref(false)
-  const { handleDownloadTemplate, handleScanFile, handleUploadSuccess } =
-    useGenericImport(userImportConfig)
+  const {
+    handleDownloadTemplate,
+    handleScanFile,
+    handleUploadSuccess,
+    enableChunkUpload,
+    chunkUploadThreshold
+  } = useGenericImport(userImportConfig)
 
   // 选中行
   const selectedRows = ref<UserListItem[]>([])
@@ -601,11 +607,6 @@
    */
   const showImportDialog = (): void => {
     importDialogVisible.value = true
-  }
-
-  const handleImportSuccess = (): void => {
-    importDialogVisible.value = false
-    refreshData()
   }
 
   /**

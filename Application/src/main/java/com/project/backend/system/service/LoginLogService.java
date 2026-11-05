@@ -5,11 +5,10 @@ import com.project.backend.system.dto.LoginLogQueryDTO;
 import com.project.backend.system.entity.LoginLog;
 import com.project.backend.system.vo.LoginLogVO;
 import com.project.core.result.PageResult;
-import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 登入日志Service
- * 
+ *
  * @author 陈鸿昇
  * @since 2026-03-08
  */
@@ -37,6 +36,14 @@ public interface LoginLogService extends IService<LoginLog> {
 
     /**
      * 记录登入日志
+     *
+     * @param username  用户名
+     * @param loginType 登录类型
+     * @param status    登录状态
+     * @param message   提示消息
+     * @param ip        客户端IP（需在请求线程中提取）
+     * @param userAgent User-Agent（需在请求线程中提取）
      */
-    void recordLoginLog(String username, String loginType, Integer status, String message, HttpServletRequest request);
+    void recordLoginLog(String username, String loginType, Integer status, String message,
+                        String ip, String userAgent);
 }

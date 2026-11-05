@@ -20,7 +20,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,6 +35,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> implements DictDataService {
 
     /**
@@ -87,13 +90,26 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
             return new HashMap<>();
         }
 
-        Map<String, List<DictDataVO>> result = new HashMap<>();
-
-        // 批量查询每个字典编码的数据
-        for (String dictCode : dictCodes) {
-            List<DictDataVO> dictDataList = listByDictCode(dictCode);
-            result.put(dictCode, dictDataList);
+        List<String> codes = dictCodes.stream()
+                .filter(StrUtil::isNotBlank)
+                .distinct()
+                .collect(Collectors.toList());
+        if (codes.isEmpty()) {
+            return new HashMap<>();
         }
+
+        // 一次查询所有字典编码，避免在循环中逐条查库
+        LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(DictData::getDictCode, codes)
+               .eq(DictData::getStatus, 1)
+               .orderByAsc(DictData::getSort)
+               .orderByAsc(DictData::getId);
+
+        Map<String, List<DictDataVO>> result = new LinkedHashMap<>();
+        codes.forEach(code -> result.put(code, new ArrayList<>()));
+        list(wrapper).forEach(item -> result
+                .computeIfAbsent(item.getDictCode(), key -> new ArrayList<>())
+                .add(convertToVO(item)));
 
         return result;
     }
@@ -115,7 +131,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @CacheEvict(value = "dict:data", key = "#saveDTO.dictCode")
+    @CacheEvict(value = "dict:data", allEntries = true)
     public boolean saveDictData(DictDataSaveDTO saveDTO) {
         // 检查同一字典编码下，字典值是否重复
         LambdaQueryWrapper<DictData> wrapper = new LambdaQueryWrapper<>();
@@ -127,6 +143,15 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
         }
         if (count(wrapper) > 0) {
             throw new BusinessException("该字典编码下字典值已存在");
+        }
+
+        // 记录修改前的字典编码，避免修改编码后旧缓存残留
+        String oldDictCode = null;
+        if (saveDTO.getId() != null) {
+            DictData existing = getById(saveDTO.getId());
+            if (existing != null) {
+                oldDictCode = existing.getDictCode();
+            }
         }
 
         DictData dictData = new DictData();
@@ -146,6 +171,9 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
         // 刷新字典缓存
         if (success) {
             DictUtils.refreshCache(saveDTO.getDictCode());
+            if (oldDictCode != null && !oldDictCode.equals(saveDTO.getDictCode())) {
+                DictUtils.refreshCache(oldDictCode);
+            }
         }
 
         return success;
@@ -156,6 +184,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "dict:data", allEntries = true)
     public boolean deleteDictData(Long id) {
         if (id == null) {
             throw new BusinessException("字典数据ID不能为空");
@@ -184,7 +213,7 @@ public class DictDataServiceImpl extends ServiceImpl<DictDataMapper, DictData> i
         BeanUtil.copyProperties(dictData, vo);
 
         // 状态文本（使用字典数据）
-        vo.setStatusText(DictUtils.getLabel("sys_user_status", dictData.getStatus(), "未知"));
+        vo.setStatusText(DictUtils.getLabel("sys_common_status", dictData.getStatus(), "未知"));
 
         return vo;
     }

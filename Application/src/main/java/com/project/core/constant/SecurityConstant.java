@@ -16,6 +16,7 @@ public class SecurityConstant {
             "/v1/auth/login",
             "/v1/auth/refresh",
             "/v1/auth/logout",
+            "/v1/common/files/uploads/**",
             "/doc.html",
             "/webjars/**",
             "/swagger-resources/**",
