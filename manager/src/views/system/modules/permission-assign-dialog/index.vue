@@ -503,7 +503,7 @@
 
     &__banner-icon {
       flex-shrink: 0;
-      margin-top: 2px;
+      margin-top: 0.3em;
       color: var(--el-color-primary);
     }
 

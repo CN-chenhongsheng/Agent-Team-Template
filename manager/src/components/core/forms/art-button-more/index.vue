@@ -1,7 +1,7 @@
 <!-- 更多按钮 -->
 <template>
   <div>
-    <ElDropdown v-if="hasAnyAuthItem" :trigger="['click', 'hover']">
+    <ElDropdown v-if="hasAnyAuthItem" :trigger="['click', 'hover']" :hide-timeout="300">
       <button
         type="button"
         :aria-label="$t('system.common.more')"
