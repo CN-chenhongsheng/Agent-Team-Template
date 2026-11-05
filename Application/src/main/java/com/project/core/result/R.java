@@ -1,5 +1,6 @@
 package com.project.core.result;
 
+import com.project.core.i18n.I18nUtils;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -35,7 +36,7 @@ public class R<T> implements Serializable {
 
     public R(Integer code, String message, T data) {
         this.code = code;
-        this.message = message;
+        this.message = I18nUtils.translate(message);
         this.data = data;
         this.timestamp = System.currentTimeMillis();
     }

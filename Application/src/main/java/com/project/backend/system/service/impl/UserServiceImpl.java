@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.project.core.context.UserContext;
 import com.project.core.constant.CacheConstant;
 import com.project.core.exception.BusinessException;
+import com.project.core.i18n.I18nUtils;
 import com.project.core.result.PageResult;
 import com.project.backend.system.dto.ChangePasswordDTO;
 import com.project.backend.system.dto.RoleUserQueryDTO;
@@ -764,7 +765,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         List<Long> availableMenuIds = getUserAvailableMenuIds(userId);
         for (Long menuId : menuIds) {
             if (!availableMenuIds.contains(menuId)) {
-                throw new BusinessException("菜单ID " + menuId + " 不在用户可选权限范围内");
+                throw new BusinessException(I18nUtils.format("菜单ID {0} 不在用户可选权限范围内", menuId));
             }
         }
     }

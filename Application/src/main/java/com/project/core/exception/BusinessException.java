@@ -1,5 +1,6 @@
 package com.project.core.exception;
 
+import com.project.core.i18n.I18nUtils;
 import com.project.core.result.ResultCode;
 import lombok.Getter;
 
@@ -25,21 +26,17 @@ public class BusinessException extends RuntimeException {
     private String message;
 
     public BusinessException(String message) {
-        super(message);
-        this.code = ResultCode.BUSINESS_ERROR.getCode();
-        this.message = message;
+        this(ResultCode.BUSINESS_ERROR.getCode(), message);
     }
 
     public BusinessException(Integer code, String message) {
-        super(message);
+        super(I18nUtils.translate(message));
         this.code = code;
-        this.message = message;
+        this.message = I18nUtils.translate(message);
     }
 
     public BusinessException(ResultCode resultCode) {
-        super(resultCode.getMessage());
-        this.code = resultCode.getCode();
-        this.message = resultCode.getMessage();
+        this(resultCode.getCode(), resultCode.getMessage());
     }
 
     @Override

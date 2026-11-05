@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.project.core.exception.BusinessException;
+import com.project.core.i18n.I18nUtils;
 import com.project.core.result.PageResult;
 import com.project.core.util.DateTimeUtils;
 import com.project.backend.system.dto.OperLogQueryDTO;
@@ -120,7 +121,7 @@ public class OperLogServiceImpl extends ServiceImpl<OperLogMapper, OperLog> impl
         vo.setDeviceTypeText(getDeviceTypeText(operLog.getDeviceType()));
         vo.setOperUrl(operLog.getOperUrl());
         vo.setOperIp(operLog.getOperIp());
-        vo.setOperLocation(operLog.getOperLocation());
+        vo.setOperLocation(I18nUtils.translate(operLog.getOperLocation()));
         vo.setOperParam(operLog.getOperParam());
         vo.setJsonResult(operLog.getJsonResult());
         vo.setStatus(operLog.getStatus());

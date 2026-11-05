@@ -3,6 +3,7 @@ package com.project.core.exception;
 import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.exception.NotPermissionException;
 import cn.dev33.satoken.exception.NotRoleException;
+import com.project.core.i18n.I18nUtils;
 import com.project.core.result.R;
 import com.project.core.result.ResultCode;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +65,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public R<Void> handleMissingServletRequestParameterException(MissingServletRequestParameterException e) {
         log.warn("缺少请求参数: {}", e.getMessage());
-        return R.fail(ResultCode.PARAM_ERROR.getCode(), "缺少必要参数: " + e.getParameterName());
+        return R.fail(ResultCode.PARAM_ERROR.getCode(),
+                I18nUtils.format("缺少必要参数: {0}", e.getParameterName()));
     }
 
     /**
@@ -73,7 +75,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TypeMismatchException.class)
     public R<Void> handleTypeMismatchException(TypeMismatchException e) {
         log.warn("参数类型不匹配: {}", e.getMessage());
-        return R.fail(ResultCode.PARAM_ERROR.getCode(), "参数类型不匹配: " + e.getPropertyName());
+        return R.fail(ResultCode.PARAM_ERROR.getCode(),
+                I18nUtils.format("参数类型不匹配: {0}", e.getPropertyName()));
     }
 
     /**
@@ -82,7 +85,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public R<Void> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
         log.warn("请求方法不支持: {}", e.getMethod());
-        return R.fail(ResultCode.METHOD_NOT_ALLOWED.getCode(), "不支持的请求方法: " + e.getMethod());
+        return R.fail(ResultCode.METHOD_NOT_ALLOWED.getCode(),
+                I18nUtils.format("不支持的请求方法: {0}", e.getMethod()));
     }
 
     /**
@@ -108,7 +112,7 @@ public class GlobalExceptionHandler {
      */
     private String buildValidationErrorMessage(java.util.List<FieldError> fieldErrors) {
         return fieldErrors.stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .map(error -> error.getField() + ": " + I18nUtils.translate(error.getDefaultMessage()))
                 .collect(Collectors.joining(", "));
     }
 
@@ -127,7 +131,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotPermissionException.class)
     public R<Void> handleNotPermissionException(NotPermissionException e) {
         log.warn("无权限异常: {}", e.getMessage());
-        return R.fail(ResultCode.FORBIDDEN.getCode(), "无权限访问: " + e.getPermission());
+        return R.fail(ResultCode.FORBIDDEN.getCode(),
+                I18nUtils.format("无权限访问: {0}", e.getPermission()));
     }
 
     /**
@@ -136,7 +141,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotRoleException.class)
     public R<Void> handleNotRoleException(NotRoleException e) {
         log.warn("无角色异常: {}", e.getMessage());
-        return R.fail(ResultCode.FORBIDDEN.getCode(), "缺少角色: " + e.getRole());
+        return R.fail(ResultCode.FORBIDDEN.getCode(),
+                I18nUtils.format("缺少角色: {0}", e.getRole()));
     }
 
     /**

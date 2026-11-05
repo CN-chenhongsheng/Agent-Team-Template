@@ -3,6 +3,7 @@ package com.project.backend.common.controller;
 import com.project.backend.common.vo.UploadFileVO;
 import com.project.core.annotation.RateLimit;
 import com.project.core.exception.BusinessException;
+import com.project.core.i18n.I18nUtils;
 import com.project.core.result.R;
 import com.project.core.util.FileUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -137,10 +138,10 @@ public class CommonFileController {
 
             } catch (IOException e) {
                 log.error("图片上传失败", e);
-                return R.fail("文件上传失败：" + e.getMessage());
+                return R.fail(I18nUtils.format("文件上传失败：{0}", e.getMessage()));
             } catch (Exception e) {
                 log.error("图片上传失败", e);
-                return R.fail("文件上传失败：" + e.getMessage());
+                return R.fail(I18nUtils.format("文件上传失败：{0}", e.getMessage()));
             }
         }
 

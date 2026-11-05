@@ -13,6 +13,7 @@ import com.project.backend.system.service.LoginLogService;
 import com.project.backend.system.vo.LoginLogVO;
 import com.project.backend.util.DictUtils;
 import com.project.core.exception.BusinessException;
+import com.project.core.i18n.I18nUtils;
 import com.project.core.result.PageResult;
 import com.project.core.util.DateTimeUtils;
 import com.project.core.util.RequestUtils;
@@ -130,10 +131,10 @@ public class LoginLogServiceImpl extends ServiceImpl<LoginLogMapper, LoginLog> i
         vo.setLoginStatus(loginLog.getLoginStatus());
         vo.setLoginStatusText(getLoginStatusText(loginLog.getLoginStatus()));
         vo.setIpAddress(loginLog.getIpAddress());
-        vo.setLoginLocation(loginLog.getLoginLocation());
+        vo.setLoginLocation(I18nUtils.translate(loginLog.getLoginLocation()));
         vo.setBrowser(loginLog.getBrowser());
         vo.setOs(loginLog.getOs());
-        vo.setMessage(loginLog.getMessage());
+        vo.setMessage(I18nUtils.translate(loginLog.getMessage()));
         vo.setLoginTime(loginLog.getLoginTime() != null ? loginLog.getLoginTime().format(DATE_TIME_FORMATTER) : null);
         return vo;
     }

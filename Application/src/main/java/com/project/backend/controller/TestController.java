@@ -1,5 +1,6 @@
 package com.project.backend.controller;
 
+import com.project.core.i18n.I18nUtils;
 import com.project.core.result.R;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,7 +40,7 @@ public class TestController {
             return R.ok(hash);
         } catch (Exception e) {
             log.error("生成密码Hash异常", e);
-            return R.fail("生成失败: " + e.getMessage());
+            return R.fail(I18nUtils.format("生成失败: {0}", e.getMessage()));
         }
     }
 
@@ -58,7 +59,7 @@ public class TestController {
             return R.ok(matches);
         } catch (Exception e) {
             log.error("验证密码异常", e);
-            return R.fail("验证失败: " + e.getMessage());
+            return R.fail(I18nUtils.format("验证失败: {0}", e.getMessage()));
         }
     }
 }

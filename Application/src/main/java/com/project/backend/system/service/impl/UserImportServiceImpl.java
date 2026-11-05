@@ -12,6 +12,7 @@ import com.project.backend.system.vo.UserImportErrorVO;
 import com.project.backend.system.vo.UserImportResultVO;
 import com.project.core.constant.RegexConstants;
 import com.project.core.exception.BusinessException;
+import com.project.core.i18n.I18nUtils;
 import com.project.core.util.FileUtils;
 import com.project.core.util.ValidationUtils;
 import lombok.RequiredArgsConstructor;
@@ -85,7 +86,7 @@ public class UserImportServiceImpl implements UserImportService {
             RoleLookup roleLookup = buildRoleLookup();
             int dataRowCount = countDataRows(sheet, headerRowIndex, columnIndexes, formatter, evaluator);
             if (dataRowCount > MAX_ROWS) {
-                throw new BusinessException("单次导入不能超过 " + MAX_ROWS + " 行");
+                throw new BusinessException(I18nUtils.format("单次导入不能超过 {0} 行", MAX_ROWS));
             }
 
             List<UserImportErrorVO> errors = new ArrayList<>();
@@ -114,7 +115,7 @@ public class UserImportServiceImpl implements UserImportService {
                 } catch (Exception e) {
                     log.error("导入用户失败，行号：{}", rowIndex + 1, e);
                     failCount++;
-                    addError(errors, rowIndex + 1, "导入失败", values.get("username"));
+                    addError(errors, rowIndex + 1, I18nUtils.translate("导入失败"), values.get("username"));
                 }
             }
 
@@ -284,7 +285,7 @@ public class UserImportServiceImpl implements UserImportService {
             }
         });
         if (!missing.isEmpty()) {
-            throw new BusinessException("导入模板缺少列：" + String.join("、", missing));
+            throw new BusinessException(I18nUtils.format("导入模板缺少列：{0}", String.join("、", missing)));
         }
     }
 
@@ -447,7 +448,7 @@ public class UserImportServiceImpl implements UserImportService {
                 roleId = roleLookup.byCode.get(name.toLowerCase(Locale.ROOT));
             }
             if (roleId == null) {
-                throw new BusinessException("角色不存在：" + name);
+                throw new BusinessException(I18nUtils.format("角色不存在：{0}", name));
             }
             roleIds.add(roleId);
         }
@@ -467,7 +468,7 @@ public class UserImportServiceImpl implements UserImportService {
             case "1", "男", "male", "m" -> 1;
             case "2", "女", "female", "f" -> 2;
             case "0", "未知", "unknown" -> 0;
-            default -> throw new BusinessException("性别值不正确：" + value);
+            default -> throw new BusinessException(I18nUtils.format("性别值不正确：{0}", value));
         };
     }
 
@@ -479,7 +480,7 @@ public class UserImportServiceImpl implements UserImportService {
         return switch (normalized) {
             case "1", "正常", "启用", "active", "enabled" -> 1;
             case "0", "停用", "禁用", "disabled", "inactive" -> 0;
-            default -> throw new BusinessException("状态值不正确：" + value);
+            default -> throw new BusinessException(I18nUtils.format("状态值不正确：{0}", value));
         };
     }
 

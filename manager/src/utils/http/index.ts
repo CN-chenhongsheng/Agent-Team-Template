@@ -23,7 +23,7 @@ import axios, {
 import { useUserStore } from '@/store/modules/user'
 import { ApiStatus } from './status'
 import { HttpError, handleError, showError, showSuccess, ErrorResponse } from './error'
-import { $t } from '@/locales'
+import { $t, getLocale } from '@/locales'
 import { BaseResponse } from '@/types'
 import { fetchLogout, fetchRefreshToken } from '@/api/auth'
 
@@ -80,6 +80,8 @@ const axiosInstance = axios.create({
 /** 请求拦截器 */
 axiosInstance.interceptors.request.use(
   async (request: InternalAxiosRequestConfig) => {
+    request.headers.set('Accept-Language', getLocale() === 'en' ? 'en-US' : 'zh-CN')
+
     const userStore = useUserStore()
     const { accessToken, isLogin } = userStore
 

@@ -3,6 +3,7 @@ package com.project.backend.util;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.project.backend.system.entity.DictData;
 import com.project.backend.system.mapper.DictDataMapper;
+import com.project.core.i18n.I18nUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -96,7 +97,8 @@ public class DictUtils implements ApplicationContextAware {
         }
 
         Map<String, String> dictMap = getOrLoadDictMap(dictCode);
-        return dictMap.getOrDefault(String.valueOf(value), defaultLabel);
+        String label = dictMap.getOrDefault(String.valueOf(value), defaultLabel);
+        return I18nUtils.translate(label);
     }
 
     /**

@@ -120,4 +120,12 @@ interface Translation {
  */
 export const $t = i18n.global.t as Translation
 
+/**
+ * 获取当前语言
+ */
+export const getLocale = (): string => {
+  const locale = i18n.global.locale
+  return typeof locale === 'string' ? locale : locale.value
+}
+
 export default i18n

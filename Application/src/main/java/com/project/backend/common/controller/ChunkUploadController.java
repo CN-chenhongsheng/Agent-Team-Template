@@ -6,6 +6,7 @@ import com.project.backend.common.dto.chunk.MergeResponse;
 import com.project.backend.common.dto.chunk.PrecheckRequest;
 import com.project.backend.common.dto.chunk.PrecheckResponse;
 import com.project.core.exception.BusinessException;
+import com.project.core.i18n.I18nUtils;
 import com.project.core.result.R;
 import com.project.core.util.FileUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -162,14 +163,14 @@ public class ChunkUploadController {
         try {
             Files.createDirectories(dir);
         } catch (IOException e) {
-            throw new BusinessException("创建临时目录失败: " + e.getMessage());
+            throw new BusinessException(I18nUtils.format("创建临时目录失败: {0}", e.getMessage()));
         }
         Path chunkPath = dir.resolve(String.valueOf(chunkIndex));
         try {
             file.transferTo(chunkPath.toFile());
         } catch (IOException e) {
             log.error("保存分片失败: {}", e.getMessage());
-            throw new BusinessException("保存分片失败: " + e.getMessage());
+            throw new BusinessException(I18nUtils.format("保存分片失败: {0}", e.getMessage()));
         }
         return R.ok();
     }
@@ -205,7 +206,7 @@ public class ChunkUploadController {
         try {
             Files.createDirectories(finalDir);
         } catch (IOException e) {
-            throw new BusinessException("创建目标目录失败: " + e.getMessage());
+            throw new BusinessException(I18nUtils.format("创建目标目录失败: {0}", e.getMessage()));
         }
         Path targetFile = FileUtils.resolveWithin(finalDir, safeName);
 
@@ -215,7 +216,7 @@ public class ChunkUploadController {
             for (int i = 0; i < totalChunks; i++) {
                 Path chunkFile = tempPath.resolve(String.valueOf(i));
                 if (!Files.exists(chunkFile)) {
-                    throw new BusinessException("缺少分片: " + i);
+                    throw new BusinessException(I18nUtils.format("缺少分片: {0}", i));
                 }
                 byte[] buf = Files.readAllBytes(chunkFile);
                 out.write(buf);
@@ -226,7 +227,7 @@ public class ChunkUploadController {
                 Files.deleteIfExists(targetFile);
             } catch (IOException ignored) {
             }
-            throw new BusinessException("合并分片失败: " + e.getMessage());
+            throw new BusinessException(I18nUtils.format("合并分片失败: {0}", e.getMessage()));
         }
 
         // 删除临时分片目录
