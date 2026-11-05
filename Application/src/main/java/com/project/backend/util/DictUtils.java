@@ -93,7 +93,7 @@ public class DictUtils implements ApplicationContextAware {
      */
     public static String getLabel(String dictCode, Object value, String defaultLabel) {
         if (dictCode == null || value == null) {
-            return defaultLabel;
+            return I18nUtils.translate(defaultLabel);
         }
 
         Map<String, String> dictMap = getOrLoadDictMap(dictCode);

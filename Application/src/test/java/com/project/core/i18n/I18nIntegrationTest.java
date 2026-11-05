@@ -97,6 +97,7 @@ class I18nIntegrationTest {
                         .header("Authorization", "Bearer " + token)
                         .header("Accept-Language", "en-US"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.statusText").value("Normal"));
+                .andExpect(jsonPath("$.data.statusText").value("Normal"))
+                .andExpect(jsonPath("$.data.genderText").value("Unknown"));
     }
 }
