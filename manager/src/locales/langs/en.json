@@ -332,6 +332,22 @@
       "refreshHintStart": "Left click: refresh; Right click: enable auto refresh",
       "refreshHintStop": "Left click: refresh; Right click: disable auto refresh"
     },
+    "permissionAssign": {
+      "searchPlaceholder": "Search pages or permission codes",
+      "selectedSummary": "{selected} / {total} selected",
+      "onlySelected": "Selected only",
+      "linkActions": "Link page actions",
+      "expandAll": "Expand All",
+      "collapseAll": "Collapse All",
+      "reset": "Reset",
+      "outOfScope": "Not granted by role",
+      "disabled": "Disabled",
+      "empty": "No assignable permissions",
+      "noResult": "No matching permissions",
+      "nothingSelected": "Nothing selected yet",
+      "saveWithCount": "Save ({count})",
+      "roleScopeTip": "This user's permissions come from roles: {roles}. You can only narrow the scope here."
+    },
     "user": {
       "add": "Add User",
       "import": "Import Users",
@@ -401,8 +417,7 @@
       },
       "permission": {
         "title": "Assign Permissions - {name}",
-        "noRoleTip": "This user has no role and cannot be assigned permissions. Please assign a role first.",
-        "disabled": "Disabled"
+        "noRoleTip": "This user has no role and cannot be assigned permissions. Please assign a role first."
       },
       "search": {
         "username": "Username",
@@ -464,8 +479,7 @@
         "sortRequired": "Please enter sort value"
       },
       "permission": {
-        "title": "Assign Permissions - {name}",
-        "disabled": "Disabled"
+        "title": "Assign Permissions - {name}"
       },
       "search": {
         "roleName": "Role Name",

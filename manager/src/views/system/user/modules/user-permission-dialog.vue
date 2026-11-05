@@ -1,95 +1,31 @@
 <template>
-  <ElDialog
+  <PermissionAssignDialog
     v-model="visible"
     :title="
       $t('system.user.permission.title', {
         name: props.userData?.nickname || props.userData?.username || ''
       })
     "
-    width="520px"
-    align-center
-    class="el-dialog-border"
-    @close="handleClose"
-  >
-    <ElScrollbar height="60vh" v-loading="loading">
-      <!-- 如果用户没有角色，显示提示信息 -->
-      <div v-if="!canAssign" class="no-roles-tip">
-        <ElEmpty :description="$t('system.user.permission.noRoleTip')" />
-      </div>
-      <!-- 如果用户有角色，显示菜单树 -->
-      <ElTree
-        v-else
-        ref="treeRef"
-        :data="menuTree"
-        show-checkbox
-        node-key="id"
-        :default-expand-all="isExpandAll"
-        :props="defaultProps"
-        @check="handleTreeCheck"
-      >
-        <template #default="{ data }">
-          <div
-            style="display: flex; align-items: center"
-            :style="
-              data.status === 0 ? { opacity: 0.5, color: 'var(--el-text-color-disabled)' } : {}
-            "
-          >
-            <i :class="getMenuIcon(data)" style="margin-right: 8px"></i>
-            <span>{{ data.menuName }}</span>
-            <ElTag
-              v-if="data.menuType"
-              :type="getMenuTypeTag(data.menuType)"
-              size="small"
-              style="margin-left: 8px"
-            >
-              {{ getMenuTypeText(data.menuType) }}
-            </ElTag>
-            <ElTag v-if="data.status === 0" type="info" size="small" style="margin-left: 8px">
-              {{ $t('system.user.permission.disabled') }}
-            </ElTag>
-          </div>
-        </template>
-      </ElTree>
-    </ElScrollbar>
-
-    <template #footer>
-      <ElSpace>
-        <ElButton @click="toggleExpandAll" :disabled="!canAssign">
-          <template #icon>
-            <ArtSvgIcon :icon="isExpandAll ? 'ri-skip-down-line' : 'ri-skip-up-line'" />
-          </template>
-          {{ isExpandAll ? $t('system.common.collapseAll') : $t('system.common.expandAll') }}
-        </ElButton>
-        <ElButton @click="toggleSelectAll" :disabled="!canAssign">
-          <template #icon>
-            <ArtSvgIcon
-              :icon="isSelectAll ? 'ri-indeterminate-circle-line' : 'ri-checkbox-circle-line'"
-            />
-          </template>
-          {{ isSelectAll ? $t('system.common.unselectAll') : $t('system.common.selectAll') }}
-        </ElButton>
-        <ElButton @click="handleClose">{{ $t('common.cancel') }}</ElButton>
-        <ElButton
-          type="primary"
-          :loading="submitLoading"
-          @click="savePermission"
-          :disabled="!canAssign"
-        >
-          {{ submitLoading ? $t('system.common.saving') : $t('system.common.save') }}
-        </ElButton>
-      </ElSpace>
-    </template>
-  </ElDialog>
+    :menus="canAssign ? menuTree : []"
+    :selected-ids="selectedIds"
+    :disabled-ids="disabledIds"
+    :banner="banner"
+    :loading="loading"
+    :saving="saving"
+    :empty-text="emptyText"
+    @save="handleSave"
+  />
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import {
-    fetchGetUserPermissions,
     fetchAssignUserPermissions,
+    fetchGetMenuTreeForPermission,
     fetchGetUserAvailableMenus,
-    fetchGetMenuTreeForPermission
+    fetchGetUserPermissions
   } from '@/api/system-manage'
-  import { usePermissionTree } from '@/composables/usePermissionTree'
+  import PermissionAssignDialog from '@/views/system/modules/permission-assign-dialog/index.vue'
 
   type UserListItem = Api.SystemManage.UserListItem
   type MenuListItem = Api.SystemManage.MenuListItem
@@ -110,79 +46,95 @@
   })
   const emit = defineEmits<Emits>()
 
+  const { t } = useI18n()
+
   const visible = computed({
     get: () => props.modelValue,
     set: (value) => emit('update:modelValue', value)
   })
 
-  let availableMenuIds: number[] = []
+  const menuTree = ref<MenuListItem[]>([])
+  const selectedIds = ref<number[]>([])
+  const disabledIds = ref<number[]>([])
+  const allowedIds = ref<Set<number>>(new Set())
+  const canAssign = ref(true)
+  const loading = ref(false)
+  const saving = ref(false)
 
-  const filterAvailableMenus = (menus: MenuListItem[], ids: number[]): MenuListItem[] =>
-    menus
-      .filter((menu) => ids.includes(menu.id))
-      .map((menu) =>
-        menu.children?.length
-          ? { ...menu, children: filterAvailableMenus(menu.children, ids) }
-          : menu
-      )
+  const collectMenuIds = (menus: MenuListItem[]): number[] => {
+    const ids: number[] = []
+    const walk = (nodes: MenuListItem[]) => {
+      nodes.forEach((node) => {
+        ids.push(node.id)
+        if (node.children?.length) walk(node.children)
+      })
+    }
+    walk(menus)
+    return ids
+  }
 
-  const {
-    treeRef,
-    loading,
-    submitLoading,
-    isExpandAll,
-    isSelectAll,
-    menuTree,
-    canAssign,
-    defaultProps,
-    getMenuIcon,
-    getMenuTypeTag,
-    getMenuTypeText,
-    loadData,
-    reset,
-    savePermission: savePermissionTree,
-    toggleExpandAll,
-    toggleSelectAll,
-    handleTreeCheck
-  } = usePermissionTree({
-    getTargetId: () => props.userData?.id,
-    beforeLoad: async () => {
-      availableMenuIds = await fetchGetUserAvailableMenus(props.userData!.id)
-      return availableMenuIds.length > 0
-    },
-    fetchMenuTree: async () =>
-      filterAvailableMenus(await fetchGetMenuTreeForPermission(), availableMenuIds),
-    fetchCheckedPermissions: () => fetchGetUserPermissions(props.userData!.id),
-    savePermissions: (menuIds) => fetchAssignUserPermissions(props.userData!.id, menuIds)
+  const banner = computed(() => {
+    if (!canAssign.value) return ''
+    const roleNames = props.userData?.roleNames?.length
+      ? props.userData.roleNames.join(t('system.common.listSeparator'))
+      : t('system.common.none')
+    return t('system.permissionAssign.roleScopeTip', { roles: roleNames })
   })
+
+  const emptyText = computed(() => (canAssign.value ? '' : t('system.user.permission.noRoleTip')))
+
+  const loadData = async () => {
+    const userId = props.userData?.id
+    if (!userId) return
+
+    loading.value = true
+    try {
+      const [tree, permissions, available] = await Promise.all([
+        fetchGetMenuTreeForPermission(),
+        fetchGetUserPermissions(userId),
+        fetchGetUserAvailableMenus(userId)
+      ])
+
+      menuTree.value = tree
+      selectedIds.value = permissions.map((item) => item.menuId)
+
+      const allowed = new Set(available)
+      allowedIds.value = allowed
+      canAssign.value = allowed.size > 0
+      disabledIds.value = canAssign.value
+        ? collectMenuIds(tree).filter((id) => !allowed.has(id))
+        : []
+    } catch (error) {
+      console.error('加载用户权限失败:', error)
+    } finally {
+      loading.value = false
+    }
+  }
 
   watch(
     () => props.modelValue,
-    (newVal) => {
-      if (newVal) loadData()
+    (open) => {
+      if (open) loadData()
     }
   )
 
-  const handleClose = () => {
-    visible.value = false
-    reset()
-    availableMenuIds = []
-  }
+  const handleSave = async (menuIds: number[]) => {
+    const userId = props.userData?.id
+    if (!userId) {
+      ElMessage.warning(t('system.common.incompleteData'))
+      return
+    }
 
-  const savePermission = async () => {
-    if (await savePermissionTree()) {
+    saving.value = true
+    try {
+      const payload = menuIds.filter((id) => allowedIds.value.has(id))
+      await fetchAssignUserPermissions(userId, payload)
       emit('success')
-      handleClose()
+      visible.value = false
+    } catch (error) {
+      console.error('保存用户权限失败:', error)
+    } finally {
+      saving.value = false
     }
   }
 </script>
-
-<style scoped lang="scss">
-  .no-roles-tip {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    min-height: 200px;
-  }
-</style>
