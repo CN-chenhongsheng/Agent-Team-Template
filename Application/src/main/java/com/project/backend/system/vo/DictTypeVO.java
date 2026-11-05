@@ -34,6 +34,9 @@ public class DictTypeVO implements Serializable {
     @Schema(description = "状态文本")
     private String statusText;
 
+    @Schema(description = "字典数据条目数")
+    private Long dataCount;
+
     @Schema(description = "备注")
     private String remark;
 

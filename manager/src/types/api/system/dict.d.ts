@@ -33,6 +33,7 @@ declare namespace Api {
       dictCode: string
       status: number
       statusText?: string
+      dataCount?: number
       remark?: string
       createTime?: string
       updateTime?: string

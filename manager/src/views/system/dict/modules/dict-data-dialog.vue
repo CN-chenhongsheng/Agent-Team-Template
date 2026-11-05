@@ -7,6 +7,23 @@
     class="el-dialog-border"
     @close="handleClose"
   >
+    <div class="dict-data-context">
+      <div class="dict-data-context__scope">
+        <span class="dict-data-context__label">{{ $t('system.dict.dataForm.scope') }}</span>
+        <span class="dict-data-context__name">{{ dictName || '-' }}</span>
+        <code class="dict-data-context__code">{{ dictCode }}</code>
+      </div>
+      <div class="dict-data-context__preview">
+        <span class="dict-data-context__label">{{ $t('system.dict.dataForm.preview') }}</span>
+        <ElTag v-if="form.listClass" :type="getTagType(form.listClass)" size="small">
+          {{ form.label || $t('system.dict.dataForm.previewLabel') }}
+        </ElTag>
+        <span v-else class="dict-data-context__empty">
+          {{ $t('system.dict.dataForm.noStyle') }}
+        </span>
+      </div>
+    </div>
+
     <ArtForm
       ref="formRef"
       v-model="form"
@@ -22,7 +39,20 @@
     <template #footer>
       <ElSpace>
         <ElButton @click="handleClose">{{ $t('common.cancel') }}</ElButton>
-        <ElButton type="primary" :loading="submitLoading" @click="handleSubmit">
+        <ElButton
+          v-if="dialogType === 'add'"
+          :loading="submitLoading && submitMode === 'continue'"
+          :disabled="submitLoading"
+          @click="handleSubmit(true)"
+        >
+          {{ $t('system.dict.dataForm.saveAndContinue') }}
+        </ElButton>
+        <ElButton
+          type="primary"
+          :loading="submitLoading && submitMode === 'save'"
+          :disabled="submitLoading"
+          @click="handleSubmit(false)"
+        >
           {{ submitLoading ? $t('system.common.saving') : $t('common.confirm') }}
         </ElButton>
       </ElSpace>
@@ -45,30 +75,36 @@
   const { t } = useI18n()
 
   type DictDataListItem = Api.SystemManage.DictDataListItem
+  type TagType = 'primary' | 'success' | 'info' | 'warning' | 'danger'
+
+  const TAG_TYPES: TagType[] = ['primary', 'success', 'info', 'warning', 'danger']
 
   interface Props {
     modelValue: boolean
     dialogType: DialogType
     dataData?: DictDataListItem
     dictCode: string
+    dictName?: string
   }
 
   interface Emits {
     (e: 'update:modelValue', value: boolean): void
-    (e: 'success'): void
+    (e: 'success', payload: { action: DialogType }): void
   }
 
   const props = withDefaults(defineProps<Props>(), {
     modelValue: false,
     dialogType: 'add',
     dataData: undefined,
-    dictCode: ''
+    dictCode: '',
+    dictName: ''
   })
 
   const emit = defineEmits<Emits>()
 
   const formRef = ref()
   const submitLoading = ref(false)
+  const submitMode = ref<'save' | 'continue'>('save')
 
   const visible = computed({
     get: () => props.modelValue,
@@ -76,25 +112,20 @@
   })
 
   const dialogTitle = computed(() => {
-    return props.dialogType === 'add'
-      ? t('system.dict.dataForm.addTitle')
-      : t('system.dict.dataForm.editTitle')
+    const title =
+      props.dialogType === 'add'
+        ? t('system.dict.dataForm.addTitle')
+        : t('system.dict.dataForm.editTitle')
+    return props.dictName ? `${title} · ${props.dictName}` : title
   })
+
+  const getTagType = (value?: string): TagType =>
+    TAG_TYPES.includes(value as TagType) ? (value as TagType) : 'info'
 
   /**
    * 表单配置项
    */
   const formItems = computed<FormItem[]>(() => [
-    {
-      key: 'dictCode',
-      label: t('system.dict.dataForm.dictCode'),
-      type: 'input',
-      span: 12,
-      props: {
-        placeholder: t('system.dict.dataForm.codePlaceholder'),
-        disabled: true
-      }
-    },
     {
       key: 'label',
       label: t('system.dict.dataForm.label'),
@@ -139,11 +170,11 @@
         clearable: true,
         style: 'width: 100%',
         options: [
-          { label: 'primary', value: 'primary' },
-          { label: 'success', value: 'success' },
-          { label: 'info', value: 'info' },
-          { label: 'warning', value: 'warning' },
-          { label: 'danger', value: 'danger' }
+          { label: t('system.dict.dataForm.stylePrimary'), value: 'primary' },
+          { label: t('system.dict.dataForm.styleSuccess'), value: 'success' },
+          { label: t('system.dict.dataForm.styleInfo'), value: 'info' },
+          { label: t('system.dict.dataForm.styleWarning'), value: 'warning' },
+          { label: t('system.dict.dataForm.styleDanger'), value: 'danger' }
         ]
       }
     },
@@ -253,12 +284,30 @@
     formRef.value?.reset()
   }
 
-  const handleSubmit = async () => {
+  const resetForContinue = () => {
+    Object.assign(form, {
+      id: undefined,
+      label: '',
+      value: '',
+      cssClass: '',
+      listClass: '',
+      sort: (form.sort ?? 0) + 1,
+      isDefault: 0,
+      status: 1,
+      remark: ''
+    })
+    nextTick(() => {
+      formRef.value?.ref?.clearValidate()
+    })
+  }
+
+  const handleSubmit = async (continueAdd = false) => {
     if (!formRef.value) return
 
     try {
       await formRef.value.validate()
 
+      submitMode.value = continueAdd ? 'continue' : 'save'
       submitLoading.value = true
 
       if (props.dialogType === 'add') {
@@ -268,8 +317,13 @@
         await fetchUpdateDictData(form.id, form)
       }
 
-      emit('success')
-      handleClose()
+      emit('success', { action: props.dialogType })
+
+      if (continueAdd && props.dialogType === 'add') {
+        resetForContinue()
+      } else {
+        handleClose()
+      }
     } catch (error) {
       console.error('提交失败:', error)
     } finally {
@@ -277,3 +331,44 @@
     }
   }
 </script>
+
+<style scoped lang="scss">
+  .dict-data-context {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    align-items: center;
+    padding: 8px 12px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: var(--el-text-color-regular);
+    background: var(--el-fill-color-lighter);
+    border-radius: 6px;
+
+    &__scope,
+    &__preview {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    &__label {
+      color: var(--el-text-color-secondary);
+    }
+
+    &__name {
+      color: var(--el-text-color-primary);
+    }
+
+    &__code {
+      padding: 1px 6px;
+      font-family: 'Courier New', monospace;
+      background: var(--el-fill-color-light);
+      border-radius: 4px;
+    }
+
+    &__empty {
+      color: var(--el-text-color-placeholder);
+    }
+  }
+</style>

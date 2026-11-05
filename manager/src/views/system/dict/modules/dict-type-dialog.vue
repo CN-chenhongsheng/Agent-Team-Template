@@ -53,7 +53,7 @@
 
   interface Emits {
     (e: 'update:modelValue', value: boolean): void
-    (e: 'success'): void
+    (e: 'success', payload: { action: DialogType; dictCode: string }): void
   }
 
   const props = withDefaults(defineProps<Props>(), {
@@ -200,7 +200,7 @@
         await fetchUpdateDictType(form.id, form)
       }
 
-      emit('success')
+      emit('success', { action: props.dialogType, dictCode: form.dictCode })
       handleClose()
     } catch (error) {
       console.error('提交失败:', error)

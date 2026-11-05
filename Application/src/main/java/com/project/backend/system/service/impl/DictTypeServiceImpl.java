@@ -3,6 +3,7 @@ package com.project.backend.system.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.project.core.exception.BusinessException;
@@ -21,7 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -54,12 +57,48 @@ public class DictTypeServiceImpl extends ServiceImpl<DictTypeMapper, DictType> i
         Page<DictType> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
         page(page, wrapper);
 
-        // 转换为VO
-        List<DictTypeVO> voList = page.getRecords().stream()
-                .map(this::convertToVO)
+        // 转换为VO，并补充当前页各类型下的数据条目数
+        List<DictType> records = page.getRecords();
+        Map<String, Long> dataCountMap = getDataCountMap(records);
+
+        List<DictTypeVO> voList = records.stream()
+                .map(dictType -> {
+                    DictTypeVO vo = convertToVO(dictType);
+                    vo.setDataCount(dataCountMap.getOrDefault(dictType.getDictCode(), 0L));
+                    return vo;
+                })
                 .collect(Collectors.toList());
 
         return PageResult.build(voList, page.getTotal(), page.getCurrent(), page.getSize());
+    }
+
+    /**
+     * 统计当前页字典类型对应的数据条目数
+     */
+    private Map<String, Long> getDataCountMap(List<DictType> dictTypes) {
+        if (dictTypes.isEmpty()) {
+            return Map.of();
+        }
+
+        List<String> dictCodes = dictTypes.stream()
+                .map(DictType::getDictCode)
+                .collect(Collectors.toList());
+
+        QueryWrapper<DictData> wrapper = new QueryWrapper<>();
+        wrapper.select("dict_code", "COUNT(*) AS data_count")
+               .in("dict_code", dictCodes)
+               .eq("deleted", 0)
+               .groupBy("dict_code");
+
+        Map<String, Long> dataCountMap = new HashMap<>();
+        for (Map<String, Object> row : dictDataMapper.selectMaps(wrapper)) {
+            Object dictCode = row.get("dict_code");
+            Object count = row.get("data_count");
+            if (dictCode != null && count instanceof Number number) {
+                dataCountMap.put(dictCode.toString(), number.longValue());
+            }
+        }
+        return dataCountMap;
     }
 
     /**
