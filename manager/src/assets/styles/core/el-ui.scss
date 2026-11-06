@@ -16,7 +16,6 @@
   --el-border-radius-base: calc(var(--custom-radius) / 3 + 2px) !important;
 
   --el-border-radius-small: calc(var(--custom-radius) / 3 + 4px) !important;
-  --el-messagebox-border-radius: calc(var(--custom-radius) / 3 + 4px) !important;
   --el-popover-border-radius: calc(var(--custom-radius) / 3 + 4px) !important;
 
   .region .el-radio-button__original-radio:checked + .el-radio-button__inner {
@@ -341,6 +340,10 @@ html.dark .el-card {
 }
 
 .el-message-box {
+  // 写在组件选择器上才能覆盖 Element Plus 在元素自身声明的变量
+  // 与 el-dialog 使用同一套圆角公式
+  --el-messagebox-border-radius: calc(var(--custom-radius) / 1.2 + 2px) !important;
+
   padding: 25px 20px !important;
 }
 
