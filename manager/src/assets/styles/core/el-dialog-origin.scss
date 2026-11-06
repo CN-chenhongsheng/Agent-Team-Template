@@ -1,54 +1,91 @@
-// 全局弹窗"从按钮位置放大居中、关闭缩回按钮"动画
-// 起点偏移由 utils/sys/dialog-origin.ts 写入 --art-dx / --art-dy（根元素）
-// 作用于所有使用 dialog-fade 过渡的 el-dialog（不影响 messagebox / drawer）
+/**
+ * 全局弹窗方向性缩放动画
+ *
+ * 过渡名 art-dialog 由 utils/sys/dialog-origin.ts 的 dialogConfig 注册，
+ * 替换 Element Plus 默认的 dialog-fade，避免原生 -20px 位移动画叠加。
+ *
+ * 每个弹窗的 transform-origin 由 dialog-origin.ts 在 onEnter 时写入，
+ * 无触发源时回退到中心缩放。
+ */
 
 .el-overlay .el-dialog {
-  transform-origin: center center;
+  transform-origin: var(--art-origin-x, 50%) var(--art-origin-y, 50%);
 }
 
-// 动画期间提升为独立合成层，避免每帧重绘阴影/内容导致卡顿
-.el-overlay.dialog-fade-enter-active .el-dialog,
-.el-overlay.dialog-fade-leave-active .el-dialog {
-  will-change: transform, opacity;
-  backface-visibility: hidden;
+// 兜底：禁用 Element Plus 原生 overlay-dialog 位移动画
+.el-overlay-dialog {
+  animation: none !important;
 }
 
-.el-overlay.dialog-fade-enter-active .el-dialog {
-  animation: artOriginIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+.art-dialog-enter-active {
+  animation: artDialogOverlayIn 240ms both;
+
+  .el-dialog:not(.is-draggable) {
+    animation: artDialogScaleIn 240ms cubic-bezier(0.2, 0, 0, 1) both;
+    will-change: transform;
+
+    // 修复 el-dialog 动画后宽度不自适应问题
+    .el-select__selected-item {
+      display: inline-block;
+    }
+  }
 }
 
-.el-overlay.dialog-fade-leave-active .el-dialog {
-  animation: artOriginOut 0.3s cubic-bezier(0.55, 0, 0.45, 1) both;
+.art-dialog-leave-active {
+  animation: artDialogOverlayOut 280ms both;
+
+  .el-dialog:not(.is-draggable) {
+    animation: artDialogScaleOut 280ms cubic-bezier(0.4, 0, 0.2, 1) both;
+    will-change: transform;
+  }
 }
 
-@keyframes artOriginIn {
-  0% {
+@keyframes artDialogScaleIn {
+  from {
+    transform: scale(0.9);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes artDialogScaleOut {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(0.94);
+  }
+}
+
+@keyframes artDialogOverlayIn {
+  from {
     opacity: 0;
-    transform: translate3d(var(--art-dx, 0), var(--art-dy, 0), 0) scale(0.2);
   }
 
-  15% {
+  to {
     opacity: 1;
-  }
-
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
-@keyframes artOriginOut {
-  0% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  85% {
+@keyframes artDialogOverlayOut {
+  from {
     opacity: 1;
   }
 
-  100% {
+  to {
     opacity: 0;
-    transform: translate3d(var(--art-dx, 0), var(--art-dy, 0), 0) scale(0.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .art-dialog-enter-active,
+  .art-dialog-leave-active,
+  .art-dialog-enter-active .el-dialog,
+  .art-dialog-leave-active .el-dialog {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

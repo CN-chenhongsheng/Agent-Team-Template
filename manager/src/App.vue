@@ -1,5 +1,10 @@
 <template>
-  <ElConfigProvider size="default" :locale="locales[language]" :z-index="3000">
+  <ElConfigProvider
+    size="default"
+    :locale="locales[language]"
+    :z-index="3000"
+    :dialog="dialogConfig"
+  >
     <RouterView></RouterView>
   </ElConfigProvider>
 </template>
@@ -9,6 +14,7 @@
   import zh from 'element-plus/es/locale/lang/zh-cn'
   import en from 'element-plus/es/locale/lang/en'
   import { systemUpgrade } from './utils/sys'
+  import { dialogConfig } from './utils/sys/dialog-origin'
   import { toggleTransition } from './utils/ui/animation'
   import { checkStorageCompatibility } from './utils/storage'
   import { initializeTheme } from './hooks/core/useTheme'
