@@ -90,7 +90,7 @@
         <!-- 国际化按钮 -->
         <ElDropdown
           @command="changeLanguage"
-          popper-class="langDropDownStyle"
+          popper-class="art-dropdown-panel"
           v-if="shouldShowLanguage"
         >
           <ArtIconButton icon="ri:translate-2" class="language-btn text-[19px]" />

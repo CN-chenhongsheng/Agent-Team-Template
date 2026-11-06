@@ -52,27 +52,28 @@
   background: transparent !important;
 }
 
-// 语言切换选中样式
-.langDropDownStyle {
+// 下拉面板通用样式（语言切换、表格「更多」等共用）
+.art-dropdown-panel {
   // 选中项背景颜色
   .is-selected {
     background-color: var(--art-el-active-color) !important;
   }
 
-  // 语言切换按钮菜单样式优化
+  // 通用条目：左缩进与条目间距（3 级选择器以压过 el-ui.scss 的全局 2 级规则）
+  .el-dropdown-menu .el-dropdown-menu__item {
+    padding-left: 13px !important;
+    padding-right: 6px !important;
+    margin-bottom: 3px !important;
+  }
+
+  // 最后一个条目清除下边距（兼容 .lang-btn-item 包层与直接子级两种结构）
+  .lang-btn-item:last-child .el-dropdown-menu__item,
+  .el-dropdown-menu > .el-dropdown-menu__item:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  // 语言切换条目
   .lang-btn-item {
-    .el-dropdown-menu__item {
-      padding-left: 13px !important;
-      padding-right: 6px !important;
-      margin-bottom: 3px !important;
-    }
-
-    &:last-child {
-      .el-dropdown-menu__item {
-        margin-bottom: 0 !important;
-      }
-    }
-
     .menu-txt {
       min-width: 60px;
       display: block;

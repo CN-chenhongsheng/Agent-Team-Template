@@ -34,7 +34,7 @@
       <ElDropdown
         v-if="shouldShowLanguage"
         @command="changeLanguage"
-        popper-class="langDropDownStyle"
+        popper-class="art-dropdown-panel"
       >
         <div class="btn language-btn h-8 w-8 c-p flex-cc tad-300">
           <ArtSvgIcon

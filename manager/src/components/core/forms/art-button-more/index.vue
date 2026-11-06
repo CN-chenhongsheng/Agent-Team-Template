@@ -1,7 +1,12 @@
 <!-- 更多按钮 -->
 <template>
   <div>
-    <ElDropdown v-if="hasAnyAuthItem" :trigger="['click', 'hover']" :hide-timeout="300">
+    <ElDropdown
+      v-if="hasAnyAuthItem"
+      :trigger="['click', 'hover']"
+      :hide-timeout="300"
+      popper-class="art-dropdown-panel"
+    >
       <button
         type="button"
         :aria-label="$t('system.common.more')"
@@ -126,10 +131,10 @@
 
 <style scoped lang="scss">
   .art-button-more {
-    border: none;
     font: inherit;
     color: inherit;
     appearance: none;
+    border: none;
 
     :deep(.art-svg-icon) {
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
