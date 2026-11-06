@@ -98,6 +98,7 @@ export const useMenuStore = defineStore(
     }
 
     return {
+      homePath,
       menuList,
       menuWidth,
       removeRouteFns,

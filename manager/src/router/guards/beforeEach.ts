@@ -42,7 +42,7 @@ import { useSettingStore } from '@/store/modules/setting'
 import { useUserStore } from '@/store/modules/user'
 import { useMenuStore } from '@/store/modules/menu'
 import { useAppStore } from '@/store/modules/app'
-import { setWorktab } from '@/utils/navigation'
+import { getFirstMenuPath, setWorktab } from '@/utils/navigation'
 import { setPageTitle } from '@/utils/router'
 import { RoutesAlias } from '../routesAlias'
 import { loadingService } from '@/utils/ui'
@@ -300,6 +300,7 @@ async function handleDynamicRoutes(
 
       // 1. 注册动态路由（使用缓存数据）
       routeRegistry?.register(menuList)
+      ensureHomePath(menuList)
       menuStore.addRemoveRouteFns(routeRegistry?.getRemoveRouteFns() || [])
 
       // 2. 保存 iframe 路由
@@ -380,6 +381,7 @@ async function handleDynamicRoutes(
 
     // 5. 注册动态路由
     routeRegistry?.register(menuList)
+    ensureHomePath(menuList)
     menuStore.addRemoveRouteFns(routeRegistry?.getRemoveRouteFns() || [])
 
     // 6. 保存 iframe 路由
@@ -499,6 +501,21 @@ export function resetRouterState(delay: number): void {
 }
 
 /**
+ * 确保首页路径有效
+ * 历史缓存的菜单可能缺少 homePath，从菜单列表重新推导并写回
+ */
+function ensureHomePath(menuList: AppRouteRecord[]): void {
+  const menuStore = useMenuStore()
+  if (menuStore.getHomePath()) {
+    return
+  }
+  const firstPath = getFirstMenuPath(menuList)
+  if (firstPath) {
+    menuStore.setHomePath(firstPath)
+  }
+}
+
+/**
  * 处理根路径重定向到首页
  * @returns true 表示已处理跳转，false 表示无需跳转
  */
@@ -508,8 +525,10 @@ function handleRootPathRedirect(to: RouteLocationNormalized, next: NavigationGua
   }
 
   const { homePath } = useCommon()
-  if (homePath.value && homePath.value !== '/') {
-    next({ path: homePath.value, replace: true })
+  // homePath 缺失时从菜单现算一次，避免落到 404 通配路由
+  const target = homePath.value || getFirstMenuPath(useMenuStore().menuList)
+  if (target && target !== '/') {
+    next({ path: target, replace: true })
     return true
   }
 
