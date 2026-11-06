@@ -13,6 +13,7 @@
 import { ref } from 'vue'
 import type { PageAgent } from 'page-agent'
 import { mittBus } from '@/utils/sys'
+import { buildSystemInstructions, getPageInstructions } from './page-agent-knowledge'
 
 let pageAgent: PageAgent | null = null
 
@@ -74,8 +75,10 @@ export async function setupPageAgent() {
     apiKey,
     language: 'zh-CN',
     instructions: {
-      system:
+      system: buildSystemInstructions(
         '用户通过页面右侧聊天窗口下达任务。不要操作右侧聊天抽屉里的输入框、按钮或消息列表。表格操作列的查看、编辑、删除、更多是图标按钮，请根据 aria-label / title 识别。需要「分配权限」等收在更多里的操作时，先点击「更多」打开菜单，再点击对应菜单项。完成后用中文简短回复结果。'
+      ),
+      getPageInstructions
     },
     // PageController 的黑名单是元素全等匹配，必须把抽屉内每个节点都列进去
     interactiveBlacklist: chatDrawerBlacklist as unknown as Element[]
