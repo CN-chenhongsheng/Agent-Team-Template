@@ -58,7 +58,8 @@
                   message.isMe ? 'flex-row-reverse' : 'flex-row'
                 ]"
               >
-                <ElAvatar :size="32" :src="message.avatar" class="shrink-0" />
+                <AiAvatarCanvas v-if="!message.isMe" :size="32" class="shrink-0" />
+                <ElAvatar v-else :size="32" :src="message.avatar" class="shrink-0" />
                 <div
                   :class="[
                     'flex min-w-0 max-w-[70%] flex-col',
@@ -138,8 +139,8 @@
   import type { AgentActivity } from 'page-agent'
   import { mittBus } from '@/utils/sys'
   import { getPageAgent, pageAgentReady, setPageAgentAskUser } from '@/utils/sys/page-agent'
+  import AiAvatarCanvas from './ai-avatar-canvas.vue'
   import meAvatar from '@/assets/images/avatar/avatar5.webp'
-  import aiAvatar from '@/assets/images/avatar/avatar10.webp'
 
   defineOptions({ name: 'ArtChatWindow' })
 
@@ -191,7 +192,7 @@
       content: t('system.pageAgent.greeting'),
       time: formatCurrentTime(),
       isMe: false,
-      avatar: aiAvatar
+      avatar: ''
     }
   ])
 
@@ -254,7 +255,7 @@
       content,
       time: formatCurrentTime(),
       isMe,
-      avatar: isMe ? meAvatar : aiAvatar
+      avatar: isMe ? meAvatar : ''
     })
     scrollToBottom()
   }
