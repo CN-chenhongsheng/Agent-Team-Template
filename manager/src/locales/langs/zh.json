@@ -284,6 +284,9 @@
       "expand": "展开",
       "index": "序号"
     },
+    "alignLeft": "左对齐",
+    "alignCenter": "居中",
+    "alignRight": "右对齐",
     "zebra": "斑马纹",
     "border": "边框",
     "headerBackground": "表头背景"
@@ -500,7 +503,7 @@
       "componentPath": "组件路径",
       "permission": "权限标识",
       "permissionCount": "{count} 个权限标识",
-      "visible": "可见",
+      "visible": "菜单显示",
       "typeDirectory": "目录",
       "typeMenu": "菜单",
       "typeButton": "按钮",
@@ -575,7 +578,7 @@
       "selectTypeFirst": "请先选择左侧字典类型",
       "dictLabel": "字典标签",
       "dictValue": "字典值",
-      "style": "样式",
+      "style": "标签样式",
       "defaultTag": "默认",
       "itemCount": "共 {count} 项",
       "copyCode": "复制编码",
@@ -610,7 +613,7 @@
         "label": "字典标签",
         "value": "字典值",
         "sort": "排序",
-        "style": "表格样式",
+        "style": "标签样式",
         "cssClass": "CSS类名",
         "isDefault": "是否默认",
         "remark": "备注",
@@ -1013,12 +1016,32 @@
     "sales": {
       "title": "访问量",
       "growth": "今年增长",
-      "months": ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
+      "months": [
+        "1月",
+        "2月",
+        "3月",
+        "4月",
+        "5月",
+        "6月",
+        "7月",
+        "8月",
+        "9月",
+        "10月",
+        "11月",
+        "12月"
+      ]
     },
     "todo": {
       "title": "代办事项",
       "pending": "待处理",
-      "tasks": ["查看今天工作内容", "回复邮件", "工作汇报整理", "产品需求会议", "整理会议内容", "明天工作计划"],
+      "tasks": [
+        "查看今天工作内容",
+        "回复邮件",
+        "工作汇报整理",
+        "产品需求会议",
+        "整理会议内容",
+        "明天工作计划"
+      ],
       "times": ["上午 09:30", "上午 10:30", "上午 11:00", "下午 02:00", "下午 03:30", "下午 06:30"]
     }
   }

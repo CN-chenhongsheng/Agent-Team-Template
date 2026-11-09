@@ -64,7 +64,7 @@
       </div>
 
       <!-- 列设置 -->
-      <ElPopover v-if="shouldShow('columns')" placement="bottom" trigger="click">
+      <ElPopover v-if="shouldShow('columns')" placement="bottom" trigger="click" width="240">
         <template #reference>
           <div class="button">
             <ArtSvgIcon icon="ri:align-right" />
@@ -98,11 +98,28 @@
                   :model-value="getColumnVisibility(item)"
                   @update:model-value="(val) => updateColumnVisibility(item, val)"
                   :disabled="item.disabled"
-                  class="flex-1 min-w-0 [&_.el-checkbox__label]:overflow-hidden [&_.el-checkbox__label]:text-ellipsis [&_.el-checkbox__label]:whitespace-nowrap"
+                  class="flex-1 min-w-0"
                   >{{
                     item.label || (item.type === 'selection' ? t('table.selection') : '')
                   }}</ElCheckbox
                 >
+                <div class="align-switch">
+                  <ElTooltip
+                    v-for="option in alignOptions"
+                    :key="option.value"
+                    :content="t(option.labelKey)"
+                    placement="top"
+                  >
+                    <button
+                      type="button"
+                      class="align-btn"
+                      :class="{ active: getColumnAlign(item) === option.value }"
+                      @click="setColumnAlign(item, option.value)"
+                    >
+                      <ArtSvgIcon :icon="option.icon" class="text-sm" />
+                    </button>
+                  </ElTooltip>
+                </div>
               </div>
             </VueDraggable>
           </ElScrollbar>
@@ -246,6 +263,21 @@
     const boolValue = !!value
     col.checked = boolValue
     col.visible = boolValue
+  }
+
+  /** 列对齐选项（顺序即 UI 顺序：左/中/右） */
+  const alignOptions = [
+    { value: 'left', icon: 'ri:align-left', labelKey: 'table.alignLeft' },
+    { value: 'center', icon: 'ri:align-center', labelKey: 'table.alignCenter' },
+    { value: 'right', icon: 'ri:align-right', labelKey: 'table.alignRight' }
+  ] as const
+
+  /** 获取列对齐方式，undefined 视为左对齐（不显式写回） */
+  const getColumnAlign = (col: ColumnOption): 'left' | 'center' | 'right' => col.align ?? 'left'
+
+  /** 设置整列对齐（表头与单元格统一，对应 Element Plus align 属性） */
+  const setColumnAlign = (col: ColumnOption, align: 'left' | 'center' | 'right'): void => {
+    col.align = align
   }
 
   /** 表格大小选项配置 */
@@ -431,5 +463,55 @@
     hover:bg-g-300
     md:ml-0
     md:mr-2.5;
+  }
+
+  .align-switch {
+    display: flex;
+    flex-shrink: 0;
+    gap: 2px;
+    align-items: center;
+    margin-left: 4px;
+  }
+
+  .column-option {
+    user-select: none;
+  }
+
+  .column-option :deep(.el-checkbox) {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .column-option :deep(.el-checkbox__label) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .align-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    color: var(--el-text-color-secondary);
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    transition:
+      color 0.2s,
+      background-color 0.2s;
+  }
+
+  .align-btn:hover {
+    color: var(--el-color-primary);
+    background-color: var(--el-fill-color-light);
+  }
+
+  .align-btn.active {
+    color: var(--el-color-primary);
+    background-color: var(--el-color-primary-light-9);
   }
 </style>

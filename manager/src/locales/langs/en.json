@@ -284,6 +284,9 @@
       "expand": "Expand",
       "index": "Index"
     },
+    "alignLeft": "Align left",
+    "alignCenter": "Align center",
+    "alignRight": "Align right",
     "zebra": "Zebra",
     "border": "Border",
     "headerBackground": "Header BG"
@@ -500,7 +503,7 @@
       "componentPath": "Component Path",
       "permission": "Permission",
       "permissionCount": "{count} permissions",
-      "visible": "Visible",
+      "visible": "Menu Display",
       "typeDirectory": "Directory",
       "typeMenu": "Menu",
       "typeButton": "Button",
@@ -575,7 +578,7 @@
       "selectTypeFirst": "Please select a dict type on the left first",
       "dictLabel": "Dict Label",
       "dictValue": "Dict Value",
-      "style": "Style",
+      "style": "Tag Style",
       "defaultTag": "Default",
       "itemCount": "{count} items",
       "copyCode": "Copy code",
@@ -610,7 +613,7 @@
         "label": "Dict Label",
         "value": "Dict Value",
         "sort": "Sort",
-        "style": "Table Style",
+        "style": "Tag Style",
         "cssClass": "CSS Class",
         "isDefault": "Default",
         "remark": "Remark",
@@ -1018,7 +1021,14 @@
     "todo": {
       "title": "Todo List",
       "pending": "Pending",
-      "tasks": ["Check today's work", "Reply to emails", "Prepare work report", "Product requirement meeting", "Organize meeting notes", "Plan for tomorrow"],
+      "tasks": [
+        "Check today's work",
+        "Reply to emails",
+        "Prepare work report",
+        "Product requirement meeting",
+        "Organize meeting notes",
+        "Plan for tomorrow"
+      ],
       "times": ["09:30 AM", "10:30 AM", "11:00 AM", "02:00 PM", "03:30 PM", "06:30 PM"]
     }
   }

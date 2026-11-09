@@ -61,6 +61,8 @@ export interface ColumnOption<T = any> {
   fixed?: boolean | 'left' | 'right'
   // 是否可排序
   sortable?: boolean
+  // 列对齐方式（表头与单元格统一对齐，对应 Element Plus align 属性）
+  align?: 'left' | 'center' | 'right'
   // 过滤器选项
   filters?: any[]
   // 过滤方法

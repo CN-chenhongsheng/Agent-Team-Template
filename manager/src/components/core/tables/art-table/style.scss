@@ -8,6 +8,33 @@
     margin-top: 10px;
   }
 
+  // 整列对齐：单元格内容为块级容器（如 formatter 返回的 flex div）时，
+  // 让 Element Plus 的 align 对内容生效，而不只是影响纯文本
+  :deep(.el-table__cell.is-center > .cell > div) {
+    width: fit-content;
+    margin-inline: auto;
+  }
+
+  :deep(.el-table__cell.is-right > .cell > div) {
+    width: fit-content;
+    margin-left: auto;
+  }
+
+  // 可排序表头：文字与排序图标保持水平排列（宽松尺寸下窄列会折行）
+  :deep(.el-table__header .el-table__cell.is-sortable > .cell) {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  :deep(.el-table__header .el-table__cell.is-sortable.is-center > .cell) {
+    justify-content: center;
+  }
+
+  :deep(.el-table__header .el-table__cell.is-sortable.is-right > .cell) {
+    justify-content: flex-end;
+  }
+
   :deep(.el-loading-mask) {
     z-index: 100;
     background-color: var(--default-box-color) !important;

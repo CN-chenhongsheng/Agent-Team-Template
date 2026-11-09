@@ -4,7 +4,7 @@
     :title="title"
     width="760px"
     align-center
-    class="el-dialog-border permission-assign-dialog"
+    class="permission-assign-dialog"
   >
     <div class="permission-assign">
       <div v-if="banner" class="permission-assign__banner">

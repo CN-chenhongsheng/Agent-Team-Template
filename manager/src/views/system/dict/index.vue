@@ -7,7 +7,7 @@
         <aside class="dict-sidebar">
           <div class="dict-sidebar__header">
             <div class="dict-sidebar__heading">
-              <ArtSvgIcon icon="ri:book-open-line" class="dict-sidebar__heading-icon" />
+              <ArtSvgIcon icon="ri:database-2-line" class="dict-sidebar__heading-icon" />
               <span class="dict-sidebar__title">{{ $t('system.dict.typeTitle') }}</span>
               <span class="dict-sidebar__badge">{{ filteredTypes.length }}</span>
             </div>
@@ -776,6 +776,8 @@
     &__heading-icon {
       font-size: 16px;
       color: var(--theme-color);
+      // 字形在视框内略偏下，上移 2px 与标题文字视觉居中
+      transform: translateY(-2px);
     }
 
     &__title {
@@ -997,7 +999,7 @@
     &__name {
       overflow: hidden;
       font-size: 13px;
-      color: var(--el-text-color-primary);
+      color: var(--el-text-color-secondary);
       text-overflow: ellipsis;
       white-space: nowrap;
     }

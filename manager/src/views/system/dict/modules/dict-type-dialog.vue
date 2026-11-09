@@ -1,12 +1,5 @@
 <template>
-  <ElDialog
-    v-model="visible"
-    :title="dialogTitle"
-    width="600px"
-    align-center
-    class="el-dialog-border"
-    @close="handleClose"
-  >
+  <ElDialog v-model="visible" :title="dialogTitle" width="600px" align-center @close="handleClose">
     <ArtForm
       ref="formRef"
       v-model="form"

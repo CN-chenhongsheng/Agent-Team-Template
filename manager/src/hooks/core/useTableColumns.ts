@@ -33,6 +33,7 @@
  */
 
 import { ref, computed, watch, h } from 'vue'
+import { useRoute } from 'vue-router'
 import { $t } from '@/locales'
 import { ElTooltip } from 'element-plus'
 import type { ColumnOption } from '@/types/component'
@@ -46,6 +47,17 @@ const SPECIAL_COLUMNS: Record<string, { prop: string; label: string }> = {
   expand: { prop: '__expand__', label: $t('table.column.expand') },
   index: { prop: '__index__', label: $t('table.column.index') }
 }
+
+/**
+ * 持久化的列状态（顺序 + 可见性 + 对齐）
+ */
+export interface PersistedColumnState {
+  key: string
+  visible: boolean
+  align?: 'left' | 'center' | 'right'
+}
+
+const ALIGN_VALUES = ['left', 'center', 'right'] as const
 
 /**
  * 获取列的唯一标识
@@ -79,6 +91,19 @@ export const getColumnChecks = <T>(columns: ColumnOption<T>[]) =>
     }
     return { ...col, checked: visibility, visible: visibility }
   })
+
+/**
+ * 按 key → 序号 映射排序：已知 key 按序号排列，新 key 保持相对顺序追加到末尾
+ */
+const sortColumnsByKeyOrder = <T>(
+  columns: ColumnOption<T>[],
+  orderMap: Map<string, number>
+): ColumnOption<T>[] => [
+  ...columns
+    .filter((c) => orderMap.has(getColumnKey(c)))
+    .sort((a, b) => orderMap.get(getColumnKey(a))! - orderMap.get(getColumnKey(b))!),
+  ...columns.filter((c) => !orderMap.has(getColumnKey(c)))
+]
 
 /**
  * 动态列配置接口
@@ -149,23 +174,105 @@ export function useTableColumns<T = any>(
   const dynamicColumns = ref<ColumnOption<T>[]>(columnsFactory())
   const columnChecks = ref<ColumnOption<T>[]>(getColumnChecks(dynamicColumns.value))
 
-  // 当 dynamicColumns 变动时，重新生成 columnChecks 且保留已存在的显示状态
+  // —— 列布局持久化：顺序 + 可见性 + 对齐（按路由路径隔离）——
+  const route = useRoute()
+  const getTableColumnsStorageKey = (): string | null => {
+    try {
+      return route.path ? `table-columns:${route.path}` : null
+    } catch {
+      return null
+    }
+  }
+
+  const loadPersistedColumnState = (): PersistedColumnState[] => {
+    if (typeof window === 'undefined') return []
+    const key = getTableColumnsStorageKey()
+    if (!key) return []
+    try {
+      const raw = window.localStorage.getItem(key)
+      if (!raw) return []
+      const parsed = JSON.parse(raw)
+      if (!Array.isArray(parsed)) return []
+      return parsed.filter(
+        (p): p is PersistedColumnState =>
+          !!p && typeof p.key === 'string' && typeof p.visible === 'boolean'
+      )
+    } catch (e) {
+      console.warn('[TableColumns] Failed to load persisted column state:', e)
+      return []
+    }
+  }
+
+  const applyPersistedColumnState = (states: PersistedColumnState[]): void => {
+    if (!states.length) return
+    const stateMap = new Map(states.map((s) => [s.key, s]))
+    const orderMap = new Map(states.map((s, i) => [s.key, i]))
+    const sorted = sortColumnsByKeyOrder(columnChecks.value, orderMap)
+    columnChecks.value = sorted.map((c) => {
+      const state = stateMap.get(getColumnKey(c))
+      if (!state) return c
+      return {
+        ...c,
+        visible: state.visible,
+        checked: state.visible,
+        ...(state.align && ALIGN_VALUES.includes(state.align) ? { align: state.align } : {})
+      }
+    })
+  }
+
+  applyPersistedColumnState(loadPersistedColumnState())
+
+  // 持久化保存：顺序 + 可见性 + 对齐（deep 监听，拖拽/勾选/对齐三种变更均可捕获）
+  watch(
+    columnChecks,
+    (checks) => {
+      const key = getTableColumnsStorageKey()
+      if (!key) return
+      try {
+        // 与工厂默认值相同的 align 视为"未设置"，只持久化用户显式改过的值
+        const factoryAlignMap = new Map(dynamicColumns.value.map((c) => [getColumnKey(c), c.align]))
+        const payload: PersistedColumnState[] = checks.map((c) => {
+          const colKey = getColumnKey(c)
+          const aligned = c.align && c.align !== factoryAlignMap.get(colKey)
+          return {
+            key: colKey,
+            visible: getColumnVisibility(c),
+            ...(aligned ? { align: c.align } : {})
+          }
+        })
+        window.localStorage.setItem(key, JSON.stringify(payload))
+      } catch (e) {
+        console.warn('[TableColumns] Failed to save column state:', e)
+      }
+    },
+    { deep: true }
+  )
+
+  // 当 dynamicColumns 变动时，重新生成 columnChecks 且保留用户布局（顺序、显示状态、对齐）
   watch(
     dynamicColumns,
     (newCols) => {
-      const visibilityMap = new Map(
-        columnChecks.value.map((c) => [getColumnKey(c), getColumnVisibility(c)])
+      const prevState = new Map(
+        columnChecks.value.map((c) => [
+          getColumnKey(c),
+          { visibility: getColumnVisibility(c), align: c.align }
+        ])
       )
-      const newChecks = getColumnChecks(newCols).map((c) => {
+      const prevIndex = new Map(columnChecks.value.map((c, i) => [getColumnKey(c), i]))
+      const sorted = sortColumnsByKeyOrder(getColumnChecks(newCols), prevIndex)
+      columnChecks.value = sorted.map((c) => {
         const key = getColumnKey(c)
-        const visibility = visibilityMap.has(key) ? visibilityMap.get(key) : getColumnVisibility(c)
+        const prev = prevState.get(key)
+        const visibility = prev ? prev.visibility : getColumnVisibility(c)
+        // 检查项中的 align 优先于 dynamicColumns 中传入的 align
+        const align = prev?.align !== undefined ? prev.align : c.align
         return {
           ...c,
           checked: visibility,
-          visible: visibility
+          visible: visibility,
+          ...(align !== undefined ? { align } : {})
         }
       })
-      columnChecks.value = newChecks
     },
     { deep: true }
   )
@@ -175,7 +282,12 @@ export function useTableColumns<T = any>(
     const colMap = new Map(dynamicColumns.value.map((c) => [getColumnKey(c), c]))
     const visibleColumns = columnChecks.value
       .filter((c) => getColumnVisibility(c))
-      .map((c) => colMap.get(getColumnKey(c)))
+      .map((c) => {
+        const base = colMap.get(getColumnKey(c))
+        if (!base) return undefined
+        // 仅合并用户对齐设置；undefined 视为默认左对齐，不显式写出
+        return c.align ? { ...base, align: c.align } : base
+      })
       .filter(Boolean) as ColumnOption<T>[]
 
     // 自动处理操作列的 formatter 和表头提示
@@ -234,17 +346,20 @@ export function useTableColumns<T = any>(
     /**
      * 新增列（支持单个或批量）
      */
-    addColumn: (column: ColumnOption<T> | ColumnOption<T>[], index?: number) =>
+    addColumn: (column: ColumnOption<T> | ColumnOption<T>[], index?: number) => {
+      const columnsToAdd = Array.isArray(column) ? column : [column]
+      const resolveIndex = (length: number) =>
+        typeof index === 'number' && index >= 0 && index <= length ? index : length
       setDynamicColumns((cols) => {
         const next = [...cols]
-        const columnsToAdd = Array.isArray(column) ? column : [column]
-        const insertIndex =
-          typeof index === 'number' && index >= 0 && index <= next.length ? index : next.length
-
-        // 批量插入
-        next.splice(insertIndex, 0, ...columnsToAdd)
+        next.splice(resolveIndex(next.length), 0, ...columnsToAdd)
         return next
-      }),
+      })
+      // 同步插入检查项，使显示位置与插入位置一致（显示顺序由 columnChecks 决定）
+      const nextChecks = [...columnChecks.value]
+      nextChecks.splice(resolveIndex(nextChecks.length), 0, ...getColumnChecks(columnsToAdd))
+      columnChecks.value = nextChecks
+    },
 
     /**
      * 删除列（支持单个或批量）
@@ -272,12 +387,27 @@ export function useTableColumns<T = any>(
             return upd ? { ...c, ...upd } : c
           })
         })
+        // 同步 align 到检查项，保证运行时更新不被重建逻辑用旧值覆盖
+        const alignMap = new Map(
+          prop.filter((u) => u.updates.align !== undefined).map((u) => [u.prop, u.updates.align])
+        )
+        if (alignMap.size) {
+          columnChecks.value = columnChecks.value.map((c) => {
+            const nextAlign = alignMap.get(getColumnKey(c))
+            return nextAlign !== undefined ? { ...c, align: nextAlign } : c
+          })
+        }
       }
       // 单个模式：prop 是字符串
       else if (updates) {
         setDynamicColumns((cols) =>
           cols.map((c) => (getColumnKey(c) === prop ? { ...c, ...updates } : c))
         )
+        if (updates.align !== undefined) {
+          columnChecks.value = columnChecks.value.map((c) =>
+            getColumnKey(c) === prop ? { ...c, align: updates.align } : c
+          )
+        }
       }
     },
 
@@ -302,10 +432,21 @@ export function useTableColumns<T = any>(
     },
 
     /**
-     * 重置所有列
+     * 重置所有列（恢复工厂顺序、可见性与对齐，并清除本页持久化状态）
      */
     resetColumns: () => {
-      dynamicColumns.value = columnsFactory()
+      const fresh = columnsFactory()
+      dynamicColumns.value = fresh
+      // 同步复原检查项，避免重建逻辑把旧布局重新套用回来
+      columnChecks.value = getColumnChecks(fresh)
+      const storageKey = getTableColumnsStorageKey()
+      if (storageKey) {
+        try {
+          window.localStorage.removeItem(storageKey)
+        } catch (e) {
+          console.warn('[TableColumns] Failed to clear persisted column state:', e)
+        }
+      }
     },
 
     /**
@@ -325,22 +466,26 @@ export function useTableColumns<T = any>(
     /**
      * 重新排序列
      */
-    reorderColumns: (fromIndex: number, toIndex: number) =>
-      setDynamicColumns((cols) => {
+    reorderColumns: (fromIndex: number, toIndex: number) => {
+      const reorder = (list: ColumnOption<T>[]): ColumnOption<T>[] => {
         if (
           fromIndex < 0 ||
-          fromIndex >= cols.length ||
+          fromIndex >= list.length ||
           toIndex < 0 ||
-          toIndex >= cols.length ||
+          toIndex >= list.length ||
           fromIndex === toIndex
         ) {
-          return cols
+          return list
         }
-        const next = [...cols]
+        const next = [...list]
         const [moved] = next.splice(fromIndex, 1)
         next.splice(toIndex, 0, moved)
         return next
-      }),
+      }
+      setDynamicColumns(reorder)
+      // 显示顺序由 columnChecks 决定，需同步重排
+      columnChecks.value = reorder(columnChecks.value)
+    },
 
     /**
      * 获取列配置

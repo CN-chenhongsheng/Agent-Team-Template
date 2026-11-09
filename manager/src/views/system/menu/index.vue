@@ -238,7 +238,7 @@
         {
           prop: 'visible',
           label: t('system.menu.visible'),
-          width: 80,
+          width: 100,
           formatter: (row: MenuListItem) => {
             return h(
               ElTag,
@@ -246,7 +246,8 @@
                 type: row.visible === 1 ? 'success' : 'info',
                 size: 'small'
               },
-              () => (row.visible === 1 ? t('system.common.yes') : t('system.common.no'))
+              () =>
+                row.visible === 1 ? t('system.menu.dialog.show') : t('system.menu.dialog.hide')
             )
           }
         },
@@ -481,6 +482,15 @@
           display: flex;
           align-items: center;
         }
+      }
+
+      // 配合列设置弹窗中的对齐：EP 将 align 渲染为单元格的 is-center/is-right 类
+      .el-table__cell.is-center .cell {
+        justify-content: center;
+      }
+
+      .el-table__cell.is-right .cell {
+        justify-content: flex-end;
       }
     }
   }

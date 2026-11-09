@@ -1,12 +1,5 @@
 <template>
-  <ElDialog
-    v-model="visible"
-    :title="dialogTitle"
-    width="700px"
-    align-center
-    class="el-dialog-border"
-    @close="handleClose"
-  >
+  <ElDialog v-model="visible" :title="dialogTitle" width="700px" align-center @close="handleClose">
     <div class="dict-data-context">
       <div class="dict-data-context__scope">
         <span class="dict-data-context__label">{{ $t('system.dict.dataForm.scope') }}</span>
@@ -336,13 +329,15 @@
   .dict-data-context {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px 24px;
+    gap: 8px;
     align-items: center;
     padding: 8px 12px;
     margin-bottom: 16px;
     font-size: 12px;
+    line-height: 20px;
     color: var(--el-text-color-regular);
-    background: var(--el-fill-color-lighter);
+    background: var(--el-bg-color);
+    border: 1px solid var(--el-border-color-lighter);
     border-radius: 6px;
 
     &__scope,
@@ -350,6 +345,12 @@
       display: flex;
       gap: 8px;
       align-items: center;
+      min-height: 20px;
+    }
+
+    // 预览组靠右，形成「左上下文 ｜ 右预览」两区
+    &__preview {
+      margin-left: auto;
     }
 
     &__label {
@@ -357,13 +358,17 @@
     }
 
     &__name {
+      font-size: 13px;
+      font-weight: 600;
       color: var(--el-text-color-primary);
     }
 
     &__code {
-      padding: 1px 6px;
-      font-family: 'Courier New', monospace;
-      background: var(--el-fill-color-light);
+      padding: 0 6px;
+      font-family:
+        ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+      color: var(--el-text-color-regular);
+      background: var(--el-fill-color);
       border-radius: 4px;
     }
 
