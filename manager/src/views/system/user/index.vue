@@ -131,7 +131,7 @@
 
   const { onlineStatusMap } = useUserOnlineStatus()
 
-  const showSearchBar = ref(false)
+  const showSearchBar = ref(true)
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
   const editData = ref<Partial<UserListItem>>({})

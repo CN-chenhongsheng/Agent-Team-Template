@@ -69,7 +69,7 @@
           </ElFormItem>
         </ElCol>
         <ElCol :xs="24" :sm="24" :md="span" :lg="span" :xl="span" class="action-column">
-          <div class="action-buttons-wrapper" :style="actionButtonsStyle">
+          <div class="action-buttons-wrapper">
             <div class="form-buttons">
               <ElButton v-if="showReset" class="reset-button" @click="handleReset" v-ripple>
                 {{ t('table.searchBar.reset') }}
@@ -103,7 +103,6 @@
 
 <script setup lang="ts">
   import { ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue'
-  import { useWindowSize } from '@vueuse/core'
   import { useI18n } from 'vue-i18n'
   import type { Component } from 'vue'
   import {
@@ -149,9 +148,7 @@
     treeselect: ElTreeSelect // 树选择器
   }
 
-  const { width } = useWindowSize()
   const { t } = useI18n()
-  const isMobile = computed(() => width.value < 500)
 
   const formInstance = useTemplateRef<FormInstance>('formRef')
 
@@ -200,8 +197,6 @@
     labelWidth?: string | number
     /** 是否需要展示，收起 */
     showExpand?: boolean
-    /** 按钮靠左对齐限制（表单项小于等于该值时） */
-    buttonLeftLimit?: number
     /** 是否显示重置按钮 */
     showReset?: boolean
     /** 是否显示搜索按钮 */
@@ -219,7 +214,6 @@
     labelWidth: '70px',
     showExpand: true,
     defaultExpanded: false,
-    buttonLeftLimit: 2,
     showReset: true,
     showSearch: true,
     disabledSearch: false
@@ -308,17 +302,6 @@
   const expandToggleText = computed(() => {
     return isExpanded.value ? t('table.searchBar.collapse') : t('table.searchBar.expand')
   })
-
-  /**
-   * 操作按钮样式
-   */
-  const actionButtonsStyle = computed(() => ({
-    'justify-content': isMobile.value
-      ? 'flex-end'
-      : props.items.filter((item) => !item.hidden).length <= props.buttonLeftLimit
-        ? 'flex-start'
-        : 'flex-end'
-  }))
 
   /**
    * 切换展开/收起状态

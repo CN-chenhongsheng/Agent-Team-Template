@@ -81,7 +81,7 @@
   // 状态管理
   const isExpanded = ref(false)
   const tableRef = ref()
-  const showSearchBar = ref(false)
+  const showSearchBar = ref(true)
 
   // 弹窗相关
   const dialogVisible = ref(false)
@@ -97,9 +97,9 @@
   /**
    * 获取菜单类型标签颜色
    */
-  const getMenuTypeTag = (type: string): 'primary' | 'success' | 'info' => {
-    const typeMap: Record<string, 'primary' | 'success' | 'info'> = {
-      M: 'success', // 目录
+  const getMenuTypeTag = (type: string): 'primary' | 'warning' | 'info' => {
+    const typeMap: Record<string, 'primary' | 'warning' | 'info'> = {
+      M: 'warning', // 目录
       C: 'primary', // 菜单
       F: 'info' // 按钮
     }

@@ -153,10 +153,10 @@
 
 <style scoped lang="scss">
   .art-button-table {
-    border: none;
     font: inherit;
     color: inherit;
     appearance: none;
+    border: none;
 
     :deep(.art-svg-icon) {
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -180,10 +180,6 @@
     &:hover {
       background-color: rgb(0 0 0 / 5%) !important;
     }
-
-    &.dark-mode:hover {
-      background-color: rgb(255 255 255 / 5%) !important;
-    }
   }
 
   // 文字模式（SMALL）：显示中文文字
@@ -203,9 +199,11 @@
     &:hover {
       background-color: rgb(0 0 0 / 5%) !important;
     }
+  }
 
-    &.dark-mode:hover {
-      background-color: rgb(255 255 255 / 5%) !important;
-    }
+  // 暗色模式悬停背景
+  .dark .art-button-table.compact-icon-mode:hover,
+  .dark .art-button-table.text-mode:hover {
+    background-color: color-mix(in oklab, var(--color-g-300) 40%, transparent) !important;
   }
 </style>

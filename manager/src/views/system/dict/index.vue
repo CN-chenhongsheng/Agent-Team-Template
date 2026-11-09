@@ -837,6 +837,7 @@
     }
 
     &__add-icon {
+      margin-right: 6px;
       font-size: 15px;
     }
   }
@@ -846,7 +847,8 @@
     gap: 8px;
     align-items: center;
     padding: 8px 10px 8px 12px;
-    cursor: pointer;
+    margin-bottom: 4px;
+    cursor: var(--cursor-pointer);
     border-radius: 6px;
     transition: background-color 0.2s;
 
@@ -874,8 +876,8 @@
       border-radius: 50%;
 
       &.is-on {
-        background: var(--el-color-success);
-        box-shadow: 0 0 0 2px var(--el-color-success-light-9);
+        background: var(--el-color-primary);
+        box-shadow: 0 0 0 2px var(--el-color-primary-light-9);
       }
 
       &.is-off {
@@ -941,7 +943,7 @@
       padding: 0;
       font-size: 14px;
       color: var(--el-text-color-secondary);
-      cursor: pointer;
+      cursor: var(--cursor-pointer);
       background: transparent;
       border: 0;
       border-radius: 4px;

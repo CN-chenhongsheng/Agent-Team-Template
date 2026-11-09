@@ -256,6 +256,14 @@ html.dark .el-card {
   }
 }
 
+// 成功标签跟随系统主题色（提升优先级以覆盖 Element Plus 内置变量）
+html .el-tag.el-tag--success {
+  --el-tag-bg-color: var(--el-color-primary-light-9);
+  --el-tag-border-color: var(--el-color-primary-light-8);
+  --el-tag-hover-color: var(--el-color-primary);
+  --el-tag-text-color: var(--el-color-primary);
+}
+
 .el-checkbox-group {
   &.el-table-filter__checkbox-group label.el-checkbox {
     height: 17px !important;

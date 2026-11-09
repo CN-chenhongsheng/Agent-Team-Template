@@ -81,7 +81,7 @@
 
   type OperLogListItem = Api.SystemManage.OperLogListItem
 
-  const showSearchBar = ref(false)
+  const showSearchBar = ref(true)
   const detailDialogVisible = ref(false)
   const currentLogData = ref<OperLogListItem | null>(null)
 

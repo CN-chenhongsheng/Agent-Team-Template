@@ -6,12 +6,12 @@
 
 /* 根节点定义光标 CSS 变量 */
 :root {
-  /* 光标图片路径 */
-  --cursor-default: url('/src/assets/svg/cursor/1.svg') 0 0, auto;
-  --cursor-pointer: url('/src/assets/svg/cursor/2.svg') 6 6, pointer;
-  --cursor-text: url('/src/assets/svg/cursor/3.svg') 6 12, text;
-  --cursor-grab: url('/src/assets/svg/cursor/4.svg') 14 14, grab;
-  --cursor-grabbing: url('/src/assets/svg/cursor/5.svg') 14 12, grabbing;
+  /* 光标图片路径（PNG 为主、SVG 兜底；放在 public 下避免被构建内联成 DataURI） */
+  --cursor-default: url('/cursor/default.svg') 0 0, auto;
+  --cursor-pointer: url('/cursor/hand.png') 6 6, pointer;
+  --cursor-text: url('/cursor/text.svg') 6 12, text;
+  --cursor-grab: url('/cursor/grab.svg') 14 14, grab;
+  --cursor-grabbing: url('/cursor/grabbing.svg') 14 12, grabbing;
 
   /* 系统光标（特殊状态） */
   --cursor-not-allowed: not-allowed;
@@ -37,6 +37,7 @@ input[type='reset'],
 label[for],
 .el-radio-button__inner,
 .el-dropdown-menu__item,
+.el-select-dropdown__item,
 svg,
 select {
   cursor: var(--cursor-pointer) !important;
@@ -99,6 +100,32 @@ textarea,
   cursor: var(--cursor-pointer) !important;
 }
 
+/* 下拉菜单项内部区域保持指针光标 */
+.el-dropdown-menu__item:not(.is-disabled),
+.el-dropdown-menu__item:not(.is-disabled) * {
+  cursor: var(--cursor-pointer) !important;
+}
+
+/* 下拉框本体（未展开时） */
+.el-select__wrapper:not(.is-disabled),
+.el-select__wrapper:not(.is-disabled) .el-select__selection,
+.el-select__wrapper:not(.is-disabled) .el-select__selected-item,
+.el-select__wrapper:not(.is-disabled) .el-select__placeholder,
+.el-select__wrapper:not(.is-disabled) .el-select__suffix,
+.el-select__wrapper:not(.is-disabled) .el-select__tags,
+.el-select .el-select__input {
+  cursor: var(--cursor-pointer) !important;
+}
+
+/* 表格头部操作按钮与可交互表头 */
+#art-table-header .button,
+.el-table__cell.is-sortable,
+.el-table__column-filter-trigger,
+.el-select__caret,
+.el-select__clear {
+  cursor: var(--cursor-pointer) !important;
+}
+
 .el-input__inner,
 .el-textarea__inner {
   cursor: var(--cursor-text) !important;
@@ -129,8 +156,7 @@ textarea,
 }
 
 /* 帮助光标保持系统默认 */
-.cursor-help,
-[title]:not([title='']):hover {
+.cursor-help {
   cursor: var(--cursor-help) !important;
 }
 

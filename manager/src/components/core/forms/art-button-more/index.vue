@@ -1,12 +1,7 @@
 <!-- 更多按钮 -->
 <template>
   <div>
-    <ElDropdown
-      v-if="hasAnyAuthItem"
-      :trigger="['click', 'hover']"
-      :hide-timeout="300"
-      popper-class="art-dropdown-panel"
-    >
+    <ElDropdown v-if="hasAnyAuthItem" popper-class="art-dropdown-panel">
       <button
         type="button"
         :aria-label="$t('system.common.more')"
@@ -155,11 +150,7 @@
     transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     &:hover {
-      background-color: var(--g-300);
-    }
-
-    &.dark-mode:hover {
-      background-color: rgb(255 255 255 / 10%);
+      background-color: var(--color-g-300);
     }
   }
 
@@ -170,10 +161,6 @@
 
     &:hover {
       background-color: rgb(0 0 0 / 5%) !important;
-    }
-
-    &.dark-mode:hover {
-      background-color: rgb(255 255 255 / 5%) !important;
     }
   }
 
@@ -194,9 +181,11 @@
     &:hover {
       background-color: rgb(0 0 0 / 5%) !important;
     }
+  }
 
-    &.dark-mode:hover {
-      background-color: rgb(255 255 255 / 5%) !important;
-    }
+  // 暗色模式悬停背景
+  .dark .art-button-more.compact-icon-mode:hover,
+  .dark .art-button-more.text-mode:hover {
+    background-color: color-mix(in oklab, var(--color-g-300) 40%, transparent) !important;
   }
 </style>

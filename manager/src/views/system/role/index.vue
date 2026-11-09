@@ -105,7 +105,7 @@
     status: undefined
   })
 
-  const showSearchBar = ref(false)
+  const showSearchBar = ref(true)
   const dialogVisible = ref(false)
   const permissionDialog = ref(false)
   const editData = ref<RoleListItem | undefined>(undefined)

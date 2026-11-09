@@ -7,6 +7,39 @@
     class="menu-dialog"
     @closed="handleClosed"
   >
+    <div class="menu-type-picker">
+      <div class="menu-type-picker__header">
+        <span class="menu-type-picker__title">{{ $t('system.menu.dialog.selectType') }}</span>
+        <span v-if="isEdit" class="menu-type-picker__locked">
+          <ArtSvgIcon icon="ri:lock-2-line" />
+          {{ $t('system.menu.dialog.typeLocked') }}
+        </span>
+        <ElTooltip v-else-if="typeHintShort" :content="typeHint" placement="top">
+          <span class="menu-type-picker__note">
+            <ArtSvgIcon icon="ri:information-line" />
+            {{ typeHintShort }}
+          </span>
+        </ElTooltip>
+      </div>
+      <div class="menu-type-picker__cards">
+        <button
+          v-for="opt in typeOptions"
+          :key="opt.value"
+          type="button"
+          class="menu-type-card"
+          :class="{ 'is-active': form.menuType === opt.value, 'is-disabled': opt.disabled }"
+          :disabled="opt.disabled"
+          @click="handleTypeSelect(opt.value)"
+        >
+          <span class="menu-type-card__head">
+            <ArtSvgIcon :icon="opt.icon" class="menu-type-card__icon" />
+            <span class="menu-type-card__title">{{ opt.label }}</span>
+          </span>
+          <span class="menu-type-card__desc">{{ opt.desc }}</span>
+        </button>
+      </div>
+    </div>
+
     <ArtForm
       ref="formRef"
       v-model="form"
@@ -18,20 +51,6 @@
       :show-submit="false"
       :show-reset="false"
     >
-      <template #menuType>
-        <ElRadioGroup v-model="form.menuType">
-          <ElRadioButton value="M" :disabled="!isMenuTypeAvailable('M')">
-            {{ $t('system.menu.typeDirectory') }}
-          </ElRadioButton>
-          <ElRadioButton value="C" :disabled="!isMenuTypeAvailable('C')">
-            {{ $t('system.menu.typeMenu') }}
-          </ElRadioButton>
-          <ElRadioButton value="F" :disabled="!isMenuTypeAvailable('F')">
-            {{ $t('system.menu.typeButton') }}
-          </ElRadioButton>
-        </ElRadioGroup>
-      </template>
-
       <template #icon>
         <ElInput v-model="form.icon" :placeholder="$t('system.menu.dialog.iconPlaceholder')">
           <template #prefix>
@@ -43,6 +62,38 @@
             </ElButton>
           </template>
         </ElInput>
+      </template>
+
+      <template #visible>
+        <div class="switch-field">
+          <ElSwitch
+            v-model="form.visible"
+            :active-value="1"
+            :inactive-value="0"
+            inline-prompt
+            active-text="✓"
+            inactive-text="✗"
+          />
+          <span class="switch-field__text">
+            {{ form.visible === 1 ? $t('system.menu.dialog.show') : $t('system.menu.dialog.hide') }}
+          </span>
+        </div>
+      </template>
+
+      <template #keepAlive>
+        <div class="switch-field">
+          <ElSwitch
+            v-model="form.keepAlive"
+            :active-value="1"
+            :inactive-value="0"
+            inline-prompt
+            active-text="✓"
+            inactive-text="✗"
+          />
+          <span class="switch-field__text">
+            {{ form.keepAlive === 1 ? $t('system.menu.dialog.on') : $t('system.menu.dialog.off') }}
+          </span>
+        </div>
       </template>
     </ArtForm>
 
@@ -96,6 +147,8 @@
   const formRef = ref()
   const submitLoading = ref(false)
   const menuTreeOptions = ref<MenuListItem[]>([])
+  const isEdit = computed(() => props.dialogType === 'edit')
+  const typeTouched = ref(false)
 
   const form = reactive<Api.SystemManage.MenuSaveParams>({
     parentId: 0,
@@ -117,6 +170,18 @@
     ],
     menuType: [
       { required: true, message: t('system.menu.dialog.menuTypeRequired'), trigger: 'change' }
+    ],
+    parentId: [
+      {
+        validator: (rule, value, callback) => {
+          if (form.menuType !== 'M' && (value === 0 || value === undefined || value === null)) {
+            callback(new Error(t('system.menu.dialog.parentRequired')))
+          } else {
+            callback()
+          }
+        },
+        trigger: 'change'
+      }
     ],
     sort: [{ required: true, message: t('system.menu.dialog.sortRequired'), trigger: 'blur' }],
     path: [
@@ -159,6 +224,116 @@
   })
 
   /**
+   * 类型卡片元数据
+   */
+  const MENU_TYPE_META = {
+    M: { icon: 'ri:folders-line', desc: 'typeDirectoryDesc' },
+    C: { icon: 'ri:file-list-3-line', desc: 'typeMenuDesc' },
+    F: { icon: 'ri:checkbox-circle-line', desc: 'typeButtonDesc' }
+  } as const
+
+  const menuTypeLabel = (type: string): string => {
+    if (type === 'M') return t('system.menu.typeDirectory')
+    if (type === 'C') return t('system.menu.typeMenu')
+    if (type === 'F') return t('system.menu.typeButton')
+    return ''
+  }
+
+  const typeOptions = computed(() =>
+    (Object.keys(MENU_TYPE_META) as Array<keyof typeof MENU_TYPE_META>).map((value) => ({
+      value,
+      label: menuTypeLabel(value),
+      desc: t(`system.menu.dialog.${MENU_TYPE_META[value].desc}`),
+      icon: MENU_TYPE_META[value].icon,
+      disabled: isEdit.value || !isMenuTypeAvailable(value)
+    }))
+  )
+
+  /**
+   * 根据上级菜单推荐类型
+   */
+  const recommendedType = computed<string | null>(() => {
+    const parentType = selectedParentMenu.value?.menuType
+    if (parentType === 'ROOT') return 'M'
+    if (parentType === 'M') return 'C'
+    if (parentType === 'C') return 'F'
+    return null
+  })
+
+  const typeHint = computed(() => {
+    if (isEdit.value) return ''
+    const parentType = selectedParentMenu.value?.menuType
+    if (parentType === 'ROOT') return t('system.menu.dialog.parentHintRoot')
+    if (parentType === 'M') return t('system.menu.dialog.parentHintDirectory')
+    if (parentType === 'C') return t('system.menu.dialog.parentHintMenu')
+    return t('system.menu.dialog.parentHintUnknown')
+  })
+
+  const typeHintShort = computed(() => {
+    if (isEdit.value) return ''
+    const parentType = selectedParentMenu.value?.menuType
+    if (parentType === 'ROOT') return t('system.menu.dialog.parentShortRoot')
+    if (parentType === 'M') return t('system.menu.dialog.parentShortDirectory')
+    if (parentType === 'C') return t('system.menu.dialog.parentShortMenu')
+    return t('system.menu.dialog.parentShortUnknown')
+  })
+
+  const findMenuById = (list: MenuListItem[], id: number): MenuListItem | null => {
+    for (const item of list) {
+      if (item.id === id) return item
+      const found = item.children?.length ? findMenuById(item.children, id) : null
+      if (found) return found
+    }
+    return null
+  }
+
+  /**
+   * 编辑时禁止把自己或自己的子孙选为上级
+   */
+  const lockedParentIds = computed(() => {
+    const ids = new Set<number>()
+    if (!isEdit.value || !form.id) return ids
+    const node = findMenuById(menuTreeOptions.value, form.id)
+    if (!node) return ids
+    const walk = (item: MenuListItem) => {
+      ids.add(item.id)
+      item.children?.forEach(walk)
+    }
+    walk(node)
+    return ids
+  })
+
+  /**
+   * 父级树节点：带类型标签；编辑时禁用自身及子孙，避免形成环
+   */
+  interface ParentTreeNode extends MenuListItem {
+    label: string
+    disabled: boolean
+    children?: ParentTreeNode[]
+  }
+
+  const buildParentTree = (list: MenuListItem[]): ParentTreeNode[] =>
+    list.map((node) => {
+      const typeLabel = node.menuType ? menuTypeLabel(node.menuType) : ''
+      return {
+        ...node,
+        label: typeLabel ? `${node.menuName} · ${typeLabel}` : node.menuName,
+        disabled: lockedParentIds.value.has(node.id),
+        children: node.children ? buildParentTree(node.children) : undefined
+      }
+    })
+
+  const parentTreeOptions = computed(() => buildParentTree(menuTreeOptions.value))
+
+  const handleTypeSelect = (type: string) => {
+    if (isEdit.value) return
+    typeTouched.value = true
+    if (type !== form.menuType) {
+      form.menuType = type
+    }
+  }
+
+  /**
    * 表单项配置
    */
   const formItems = computed<FormItem[]>(() => {
@@ -168,24 +343,19 @@
         key: 'parentId',
         label: t('system.menu.dialog.parent'),
         type: 'treeselect',
-        span: 12,
+        span: 24,
         props: {
-          data: menuTreeOptions.value,
-          props: { label: 'menuName' },
+          data: parentTreeOptions.value,
+          props: { label: 'label', disabled: 'disabled' },
           valueKey: 'id',
           checkStrictly: true,
           renderAfterExpand: false,
+          defaultExpandedKeys: [0],
           placeholder: t('system.menu.dialog.parentPlaceholder'),
           clearable: true,
           filterable: true,
           style: 'width: 100%'
         }
-      },
-      {
-        key: 'menuType',
-        label: t('system.menu.dialog.currentType'),
-        type: 'radiogroup',
-        span: 12
       },
       {
         key: 'menuName',
@@ -237,28 +407,14 @@
         key: 'visible',
         label: t('system.menu.dialog.visible'),
         type: 'switch',
-        span: 12,
-        props: {
-          activeValue: 1,
-          inactiveValue: 0,
-          activeText: t('system.menu.dialog.show'),
-          inactiveText: t('system.menu.dialog.hide'),
-          inlinePrompt: true
-        }
+        span: 12
       },
       {
         key: 'keepAlive',
         label: t('system.menu.dialog.keepAlive'),
         type: 'switch',
         span: 12,
-        hidden: isButton,
-        props: {
-          activeValue: 1,
-          inactiveValue: 0,
-          activeText: t('system.menu.dialog.on'),
-          inactiveText: t('system.menu.dialog.off'),
-          inlinePrompt: true
-        }
+        hidden: isButton
       }
     ]
   })
@@ -319,8 +475,7 @@
     try {
       const list = await fetchGetMenuList()
       menuTreeOptions.value = [
-        { id: 0, menuName: t('system.menu.dialog.topMenu'), parentId: -1, children: list } as any,
-        ...list
+        { id: 0, menuName: t('system.menu.dialog.topMenu'), parentId: -1, children: list } as any
       ]
     } catch (error) {
       console.error('加载菜单树失败:', error)
@@ -331,6 +486,7 @@
    * 重置表单数据
    */
   const resetForm = (): void => {
+    typeTouched.value = false
     Object.assign(form, {
       id: undefined,
       parentId: 0,
@@ -353,6 +509,7 @@
    */
   const loadFormData = (): void => {
     if (props.dialogType === 'edit' && props.editData) {
+      typeTouched.value = true
       Object.assign(form, {
         id: props.editData.id,
         parentId: props.editData.parentId ?? 0,
@@ -440,16 +597,21 @@
   )
 
   /**
-   * 监听上级菜单变化，自动调整菜单类型
+   * 监听上级菜单变化，自动调整/推荐菜单类型
    */
   watch(
     () => form.parentId,
     () => {
-      const isCurrentTypeAvailable = availableMenuTypes.value.some(
-        (item) => item.value === form.menuType
-      )
-      if (!isCurrentTypeAvailable && availableMenuTypes.value.length > 0) {
-        form.menuType = availableMenuTypes.value[0].value
+      if (isEdit.value) return
+      const available = availableMenuTypes.value
+      const isValid = available.some((item) => item.value === form.menuType)
+      if (!isValid) {
+        const next = recommendedType.value || available[0]?.value
+        if (next) form.menuType = next
+        return
+      }
+      if (!typeTouched.value && recommendedType.value) {
+        form.menuType = recommendedType.value
       }
     }
   )
@@ -462,6 +624,111 @@
     }
   }
 
+  .menu-type-picker {
+    margin-bottom: 18px;
+
+    &__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    &__title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--el-text-color-secondary);
+    }
+
+    &__locked,
+    &__note {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
+
+    &__cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+  }
+
+  .menu-type-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    text-align: left;
+    background-color: transparent;
+    border: 1px solid var(--el-border-color);
+    border-radius: 6px;
+    transition: border-color 0.2s ease;
+
+    &:hover:not(:disabled) {
+      border-color: var(--el-color-primary-light-5);
+    }
+
+    &.is-active {
+      border-color: var(--el-color-primary);
+
+      .menu-type-card__icon,
+      .menu-type-card__title {
+        color: var(--el-color-primary);
+      }
+    }
+
+    &.is-disabled:not(.is-active) {
+      opacity: 0.5;
+    }
+
+    &__head {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    &__icon {
+      flex-shrink: 0;
+      font-size: 14px;
+      color: var(--el-text-color-secondary);
+    }
+
+    &__title {
+      overflow: hidden;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--el-text-color-primary);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &__desc {
+      overflow: hidden;
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--el-text-color-secondary);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .switch-field {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    height: 36px;
+
+    &__text {
+      min-width: 28px;
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
+    }
+  }
+
   :deep(.el-form-item__content) {
     justify-content: flex-start;
   }
@@ -469,5 +736,14 @@
   :deep(.icon-link-btn) {
     height: 24px;
     padding: 0 6px;
+  }
+
+  :global(.menu-dialog .el-button.icon-link-btn) {
+    color: var(--el-text-color-secondary);
+  }
+
+  :global(.menu-dialog .el-button.icon-link-btn:hover) {
+    color: var(--el-color-primary) !important;
+    background-color: transparent !important;
   }
 </style>
