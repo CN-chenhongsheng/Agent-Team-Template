@@ -27,7 +27,6 @@
  * @module utils/theme/animation
  * @author 陈鸿昇
  */
-import { useCommon } from '@/hooks/core/useCommon'
 import { useTheme } from '@/hooks/core/useTheme'
 import { SystemThemeEnum } from '@/enums/appEnum'
 import { useSettingStore } from '@/store/modules/setting'
@@ -59,8 +58,9 @@ export const themeAnimation = (e: any) => {
  * 切换主题
  */
 const toggleTheme = () => {
+  // 只切换主题，不做整页刷新：各组件（图表、标签等）已响应 isDark 与 CSS 变量自行更新，
+  // 重建整棵路由组件树会在 View Transition 开始前制造数百毫秒主线程长任务，导致切换顿挫。
   useTheme().switchThemeStyles(useSettingStore().systemThemeType === LIGHT ? DARK : LIGHT)
-  useCommon().refresh()
 }
 
 /**
