@@ -135,7 +135,9 @@
 
   @layer components {
     .btn-item {
-      @apply flex items-center p-2 mb-3 select-none rounded-md cursor-pointer last:mb-0;
+      @apply flex items-center p-2 mb-3 select-none rounded-md last:mb-0;
+
+      cursor: var(--cursor-pointer);
 
       span {
         @apply text-sm;

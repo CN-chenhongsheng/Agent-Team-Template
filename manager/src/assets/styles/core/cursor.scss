@@ -35,7 +35,6 @@ input[type='submit'],
 input[type='button'],
 input[type='reset'],
 label[for],
-.el-radio-button__inner,
 .el-dropdown-menu__item,
 .el-select-dropdown__item,
 svg,
@@ -126,6 +125,65 @@ textarea,
   cursor: var(--cursor-pointer) !important;
 }
 
+/* 选择类控件：内部元素自带 cursor:pointer，需覆盖后才能显示自定义光标 */
+.el-checkbox:not(.is-disabled) *,
+.el-checkbox-button:not(.is-disabled) *,
+.el-radio:not(.is-disabled) *,
+.el-radio-button:not(.is-disabled) *,
+.el-switch:not(.is-disabled) *,
+.el-rate:not(.is-disabled) *,
+.el-check-tag,
+.el-segmented__item {
+  cursor: var(--cursor-pointer) !important;
+}
+
+/* 滑块：轨道与手柄为指针，拖拽时切换为抓取光标 */
+.el-slider:not(.is-disabled) .el-slider__runway,
+.el-slider:not(.is-disabled) .el-slider__button-wrapper,
+.el-slider:not(.is-disabled) .el-slider__button {
+  cursor: var(--cursor-pointer) !important;
+}
+
+.el-slider:not(.is-disabled) .el-slider__button-wrapper:hover,
+.el-slider:not(.is-disabled) .el-slider__button:hover {
+  cursor: var(--cursor-grab) !important;
+}
+
+.el-slider:not(.is-disabled) .el-slider__button-wrapper.dragging,
+.el-slider:not(.is-disabled) .el-slider__button.dragging {
+  cursor: var(--cursor-grabbing) !important;
+}
+
+/* 其他常用可点击元素（组件内部自带 cursor:pointer） */
+.el-cascader-node:not(.is-disabled),
+.el-cascader__suggestion-item,
+.el-autocomplete-suggestion li,
+.el-mention-dropdown__item,
+.el-collapse-item__header,
+.el-tree-node__expand-icon,
+.el-tabs__nav-next,
+.el-tabs__nav-prev,
+.el-tabs__new-tab,
+.el-carousel__arrow,
+.el-carousel__indicator,
+.el-carousel__button,
+.el-color-picker__trigger,
+.el-table .caret-wrapper,
+.el-tag .el-icon,
+.el-select__selection .el-tag,
+.el-input-tag__inner .el-tag,
+.el-input-tag__input-tag-list .el-tag,
+.el-upload,
+.el-upload--picture-card,
+.el-upload-list__item .el-icon--close,
+.el-upload-list--picture-card .el-upload-list__item-actions span,
+.el-upload-cover__interact .btn,
+.el-date-table td,
+.el-month-table td,
+.el-year-table td {
+  cursor: var(--cursor-pointer) !important;
+}
+
 .el-input__inner,
 .el-textarea__inner {
   cursor: var(--cursor-text) !important;
@@ -161,6 +219,15 @@ textarea,
 }
 
 /* 滚动条光标样式 */
+/* Element Plus 自定义滚动条 */
+.el-scrollbar__thumb {
+  cursor: var(--cursor-pointer) !important;
+}
+
+.el-scrollbar__thumb:active {
+  cursor: var(--cursor-grabbing) !important;
+}
+
 /* WebKit 浏览器 (Chrome, Edge, Safari) */
 ::-webkit-scrollbar-thumb {
   cursor: var(--cursor-pointer) !important;

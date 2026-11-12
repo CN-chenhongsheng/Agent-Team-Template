@@ -31,7 +31,7 @@
       margin: auto;
       margin-top: 12px;
       margin-bottom: 3px;
-      cursor: pointer;
+      cursor: var(--cursor-pointer);
     }
 
     ul {
@@ -45,7 +45,7 @@
           margin: 8px;
           overflow: hidden;
           text-align: center;
-          cursor: pointer;
+          cursor: var(--cursor-pointer);
           border-radius: 5px;
 
           .art-svg-icon {
@@ -112,7 +112,7 @@
       z-index: 10;
       width: 11px;
       height: 50px;
-      cursor: pointer;
+      cursor: var(--cursor-pointer);
       background-color: var(--default-box-color);
       border: 1px solid var(--art-card-border);
       border-radius: 0 15px 15px 0;
@@ -146,7 +146,7 @@
     height: 60px;
     overflow: hidden;
     line-height: 60px;
-    cursor: pointer;
+    cursor: var(--cursor-pointer);
 
     .logo {
       margin-left: 22px;

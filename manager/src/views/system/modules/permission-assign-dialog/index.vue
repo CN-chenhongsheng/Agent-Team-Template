@@ -577,7 +577,7 @@
       height: 20px;
       padding: 0;
       color: var(--el-text-color-secondary);
-      cursor: pointer;
+      cursor: var(--cursor-pointer);
       background: transparent;
       border: 0;
       border-radius: 4px;
@@ -597,7 +597,7 @@
       font-size: 13px;
       font-weight: 600;
       color: var(--el-text-color-primary);
-      cursor: pointer;
+      cursor: var(--cursor-pointer);
       background: transparent;
       border: 0;
     }

@@ -85,15 +85,26 @@
                 {{ t('table.searchBar.search') }}
               </ElButton>
             </div>
-            <div v-if="shouldShowExpandToggle" class="filter-toggle" @click="toggleExpand">
-              <span>{{ expandToggleText }}</span>
-              <div class="icon-wrapper">
-                <ElIcon>
-                  <ArrowUpBold v-if="isExpanded" />
-                  <ArrowDownBold v-else />
-                </ElIcon>
-              </div>
-            </div>
+            <ElTooltip
+              v-if="shouldShowExpandToggle"
+              :content="expandToggleText"
+              placement="top"
+              :show-after="300"
+            >
+              <span class="filter-toggle-wrapper">
+                <ElButton
+                  class="filter-toggle"
+                  :class="{ 'is-expanded': isExpanded }"
+                  :aria-label="expandToggleText"
+                  :aria-expanded="isExpanded ? 'true' : 'false'"
+                  @click="toggleExpand"
+                >
+                  <ElIcon>
+                    <ArrowDownBold />
+                  </ElIcon>
+                </ElButton>
+              </span>
+            </ElTooltip>
           </div>
         </ElCol>
       </ElRow>
@@ -102,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ArrowUpBold, ArrowDownBold } from '@element-plus/icons-vue'
+  import { ArrowDownBold } from '@element-plus/icons-vue'
   import { useI18n } from 'vue-i18n'
   import type { Component } from 'vue'
   import {
@@ -119,6 +130,7 @@
     ElSlider,
     ElTimePicker,
     ElTimeSelect,
+    ElTooltip,
     ElTreeSelect,
     type FormInstance
   } from 'element-plus'
@@ -348,6 +360,12 @@
   .art-search-bar {
     padding: 15px 20px 0;
 
+    // 日期选择器默认 220px，与普通输入框统一为撑满整列
+    :deep(.el-date-editor.el-input),
+    :deep(.el-date-editor.el-input__wrapper) {
+      width: 100%;
+    }
+
     .action-column {
       flex: 1;
       max-width: 100%;
@@ -363,32 +381,30 @@
       .form-buttons {
         display: flex;
         gap: 8px;
+
+        // 去掉 Element Plus 默认的相邻按钮 12px 外边距，避免与 gap 叠加
+        .el-button + .el-button {
+          margin-left: 0;
+        }
+      }
+
+      .filter-toggle-wrapper {
+        display: inline-flex;
+        margin-left: 8px;
       }
 
       .filter-toggle {
-        display: flex;
-        align-items: center;
-        margin-left: 10px;
-        line-height: 32px;
-        color: var(--theme-color);
-        cursor: var(--cursor-pointer);
-        transition: color 0.2s ease;
+        width: 36px;
+        height: 36px;
+        padding: 0;
 
-        &:hover {
-          opacity: 0.8;
-        }
-
-        span {
-          font-size: 14px;
-          user-select: none;
-        }
-
-        .icon-wrapper {
-          display: flex;
-          align-items: center;
-          margin-left: 4px;
+        .el-icon {
           font-size: 14px;
           transition: transform 0.2s ease;
+        }
+
+        &.is-expanded .el-icon {
+          transform: rotate(180deg);
         }
       }
     }
@@ -409,8 +425,8 @@
             justify-content: center;
           }
 
-          .filter-toggle {
-            justify-content: center;
+          .filter-toggle-wrapper {
+            align-self: center;
             margin-left: 0;
           }
         }

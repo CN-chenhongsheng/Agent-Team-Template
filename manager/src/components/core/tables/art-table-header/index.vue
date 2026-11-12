@@ -496,7 +496,7 @@
     height: 18px;
     padding: 0;
     color: var(--el-text-color-secondary);
-    cursor: pointer;
+    cursor: var(--cursor-pointer);
     background: transparent;
     border: none;
     border-radius: 4px;

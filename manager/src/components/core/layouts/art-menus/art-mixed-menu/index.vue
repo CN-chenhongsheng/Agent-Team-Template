@@ -331,13 +331,14 @@
     justify-center
     size-7.5
     text-g-600
-    cursor-pointer
     rounded
     transition-all
     duration-300
     -translate-y-1/2
     hover:text-g-900
     hover:bg-g-200;
+
+    cursor: var(--cursor-pointer);
   }
 </style>
 

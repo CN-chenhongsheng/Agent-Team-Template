@@ -242,7 +242,7 @@
       font-size: 14px;
       line-height: var(--el-component-custom-height);
       text-align: center;
-      cursor: pointer;
+      cursor: var(--cursor-pointer);
       user-select: none;
       transition: all 0.3s;
 
