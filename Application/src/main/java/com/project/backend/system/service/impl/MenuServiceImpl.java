@@ -97,6 +97,14 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
         Menu menu = new Menu();
         BeanUtil.copyProperties(saveDTO, menu);
         validateParentMenu(menu.getId(), menu.getParentId());
+        validateParentTypeMatch(menu.getMenuType(), menu.getParentId());
+        // 按钮必须有权限标识，菜单必须有组件路径
+        if ("F".equals(menu.getMenuType()) && StrUtil.isBlank(menu.getPermission())) {
+            throw new BusinessException("按钮必须填写权限标识");
+        }
+        if ("C".equals(menu.getMenuType()) && StrUtil.isBlank(menu.getComponent())) {
+            throw new BusinessException("菜单必须填写组件路径");
+        }
 
         if (saveDTO.getId() == null) {
             // 新增
@@ -147,7 +155,38 @@ public class MenuServiceImpl extends ServiceImpl<MenuMapper, Menu> implements Me
             if (ancestor == null) {
                 throw new BusinessException("上级菜单不存在");
             }
+            // 按钮只是页面内的权限点，不能作为任何菜单的上级
+            if ("F".equals(ancestor.getMenuType())) {
+                throw new BusinessException("上级菜单不能为按钮类型");
+            }
             cursor = ancestor.getParentId();
+        }
+    }
+
+    /**
+     * 校验父子类型匹配：按钮只能挂菜单下，菜单只能挂目录下，目录只能挂顶级或目录下
+     */
+    private void validateParentTypeMatch(String childType, Long parentId) {
+        if (parentId == null || parentId == 0) {
+            // 顶级只允许挂目录
+            if (!"M".equals(childType)) {
+                throw new BusinessException("顶级菜单下只能创建目录");
+            }
+            return;
+        }
+        Menu parent = getById(parentId);
+        if (parent == null) {
+            throw new BusinessException("上级菜单不存在");
+        }
+        String parentType = parent.getMenuType();
+        if ("F".equals(childType) && !"C".equals(parentType)) {
+            throw new BusinessException("按钮的上级只能是菜单");
+        }
+        if ("C".equals(childType) && !"M".equals(parentType)) {
+            throw new BusinessException("菜单的上级只能是目录");
+        }
+        if ("M".equals(childType) && !"M".equals(parentType)) {
+            throw new BusinessException("目录的上级只能是顶级或目录");
         }
     }
 

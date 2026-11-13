@@ -526,14 +526,6 @@
         "typeDirectoryDesc": "用于分组，不是页面",
         "typeMenuDesc": "可访问的页面",
         "typeButtonDesc": "页面内的权限点",
-        "parentHintRoot": "当前位于顶级，只能创建目录",
-        "parentHintDirectory": "该目录下可以创建子目录或菜单",
-        "parentHintMenu": "该菜单下只能创建按钮",
-        "parentHintUnknown": "请先选择上级菜单，系统会自动推荐可创建的类型",
-        "parentShortRoot": "顶级仅可建目录",
-        "parentShortDirectory": "可建目录 / 菜单",
-        "parentShortMenu": "仅可建按钮",
-        "parentShortUnknown": "请先选择上级菜单",
         "currentType": "当前类型",
         "nameDirectory": "目录名称",
         "nameMenu": "菜单名称",
@@ -559,7 +551,9 @@
         "menuNameRequired": "请输入菜单名称",
         "menuTypeRequired": "请选择菜单类型",
         "sortRequired": "请输入排序值",
-        "pathRequired": "请输入路由地址"
+        "pathRequired": "请输入路由地址",
+        "componentRequired": "请输入组件路径",
+        "permissionRequired": "请输入权限标识"
       },
       "search": {
         "menuName": "菜单名称",

@@ -526,14 +526,6 @@
         "typeDirectoryDesc": "Grouping only, not a page",
         "typeMenuDesc": "A navigable page",
         "typeButtonDesc": "A permission point",
-        "parentHintRoot": "At top level, only directories can be created",
-        "parentHintDirectory": "Directories or menus can be created under this directory",
-        "parentHintMenu": "Only buttons can be created under this menu",
-        "parentHintUnknown": "Select a parent menu first; a valid type will be recommended",
-        "parentShortRoot": "Top level: directories only",
-        "parentShortDirectory": "Directories or menus",
-        "parentShortMenu": "Buttons only",
-        "parentShortUnknown": "Select a parent first",
         "currentType": "Current Type",
         "nameDirectory": "Directory Name",
         "nameMenu": "Menu Name",
@@ -559,7 +551,9 @@
         "menuNameRequired": "Please enter menu name",
         "menuTypeRequired": "Please select menu type",
         "sortRequired": "Please enter sort value",
-        "pathRequired": "Please enter route path"
+        "pathRequired": "Please enter route path",
+        "componentRequired": "Please enter component path",
+        "permissionRequired": "Please enter permission code"
       },
       "search": {
         "menuName": "Menu Name",

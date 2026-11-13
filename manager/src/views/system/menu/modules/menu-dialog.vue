@@ -7,39 +7,6 @@
     class="menu-dialog"
     @closed="handleClosed"
   >
-    <div class="menu-type-picker">
-      <div class="menu-type-picker__header">
-        <span class="menu-type-picker__title">{{ $t('system.menu.dialog.selectType') }}</span>
-        <span v-if="isEdit" class="menu-type-picker__locked">
-          <ArtSvgIcon icon="ri:lock-2-line" />
-          {{ $t('system.menu.dialog.typeLocked') }}
-        </span>
-        <ElTooltip v-else-if="typeHintShort" :content="typeHint" placement="top">
-          <span class="menu-type-picker__note">
-            <ArtSvgIcon icon="ri:information-line" />
-            {{ typeHintShort }}
-          </span>
-        </ElTooltip>
-      </div>
-      <div class="menu-type-picker__cards">
-        <button
-          v-for="opt in typeOptions"
-          :key="opt.value"
-          type="button"
-          class="menu-type-card"
-          :class="{ 'is-active': form.menuType === opt.value, 'is-disabled': opt.disabled }"
-          :disabled="opt.disabled"
-          @click="handleTypeSelect(opt.value)"
-        >
-          <span class="menu-type-card__head">
-            <ArtSvgIcon :icon="opt.icon" class="menu-type-card__icon" />
-            <span class="menu-type-card__title">{{ opt.label }}</span>
-          </span>
-          <span class="menu-type-card__desc">{{ opt.desc }}</span>
-        </button>
-      </div>
-    </div>
-
     <ArtForm
       ref="formRef"
       v-model="form"
@@ -50,7 +17,34 @@
       :rules="rules"
       :show-submit="false"
       :show-reset="false"
+      :validate-on-rule-change="false"
     >
+      <template #menuType>
+        <div class="menu-type-field">
+          <span v-if="isEdit" class="menu-type-field__locked">
+            <ArtSvgIcon icon="ri:lock-2-line" />
+            {{ $t('system.menu.dialog.typeLocked') }}
+          </span>
+          <div class="menu-type-field__cards">
+            <button
+              v-for="opt in typeOptions"
+              :key="opt.value"
+              type="button"
+              class="menu-type-card"
+              :class="{ 'is-active': form.menuType === opt.value, 'is-disabled': opt.disabled }"
+              :disabled="opt.disabled"
+              @click="handleTypeSelect(opt.value)"
+            >
+              <span class="menu-type-card__head">
+                <ArtSvgIcon :icon="opt.icon" class="menu-type-card__icon" />
+                <span class="menu-type-card__title">{{ opt.label }}</span>
+              </span>
+              <span class="menu-type-card__desc">{{ opt.desc }}</span>
+            </button>
+          </div>
+        </div>
+      </template>
+
       <template #icon>
         <ElInput v-model="form.icon" :placeholder="$t('system.menu.dialog.iconPlaceholder')">
           <template #prefix>
@@ -148,7 +142,6 @@
   const submitLoading = ref(false)
   const menuTreeOptions = ref<MenuListItem[]>([])
   const isEdit = computed(() => props.dialogType === 'edit')
-  const typeTouched = ref(false)
 
   const form = reactive<Api.SystemManage.MenuSaveParams>({
     parentId: 0,
@@ -171,31 +164,41 @@
     menuType: [
       { required: true, message: t('system.menu.dialog.menuTypeRequired'), trigger: 'change' }
     ],
+    // 所有类型都必须显式选择上级；空值由自定义 validator 兜底（required 仅用于红星显示），菜单/按钮选顶级(0)同样拦截
     parentId: [
       {
+        required: true,
         validator: (rule, value, callback) => {
-          if (form.menuType !== 'M' && (value === 0 || value === undefined || value === null)) {
+          if (
+            value === undefined ||
+            value === null ||
+            (form.menuType !== 'M' && value === 0)
+          ) {
             callback(new Error(t('system.menu.dialog.parentRequired')))
           } else {
             callback()
           }
         },
+        message: t('system.menu.dialog.parentRequired'),
         trigger: 'change'
       }
     ],
     sort: [{ required: true, message: t('system.menu.dialog.sortRequired'), trigger: 'blur' }],
-    path: [
-      {
-        validator: (rule, value, callback) => {
-          if (form.menuType !== 'F' && !value) {
-            callback(new Error(t('system.menu.dialog.pathRequired')))
-          } else {
-            callback()
-          }
-        },
-        trigger: 'blur'
-      }
-    ]
+    // 目录/菜单必填路由地址
+    path:
+      form.menuType !== 'F'
+        ? [{ required: true, message: t('system.menu.dialog.pathRequired'), trigger: 'blur' }]
+        : [],
+    // 菜单必填组件路径
+    component:
+      form.menuType === 'C'
+        ? [{ required: true, message: t('system.menu.dialog.componentRequired'), trigger: 'blur' }]
+        : [],
+    // 按钮必填权限标识
+    permission:
+      form.menuType === 'F'
+        ? [{ required: true, message: t('system.menu.dialog.permissionRequired'), trigger: 'blur' }]
+        : []
   }))
 
   const dialogTitle = computed(() => {
@@ -204,7 +207,9 @@
         ? t('system.menu.typeDirectory')
         : form.menuType === 'C'
           ? t('system.menu.typeMenu')
-          : t('system.menu.typeButton')
+          : form.menuType === 'F'
+            ? t('system.menu.typeButton')
+            : ''
     return t(
       props.dialogType === 'add' ? 'system.menu.dialog.addTitle' : 'system.menu.dialog.editTitle',
       {
@@ -245,7 +250,7 @@
       label: menuTypeLabel(value),
       desc: t(`system.menu.dialog.${MENU_TYPE_META[value].desc}`),
       icon: MENU_TYPE_META[value].icon,
-      disabled: isEdit.value || !isMenuTypeAvailable(value)
+      disabled: isEdit.value
     }))
   )
 
@@ -258,24 +263,6 @@
     if (parentType === 'M') return 'C'
     if (parentType === 'C') return 'F'
     return null
-  })
-
-  const typeHint = computed(() => {
-    if (isEdit.value) return ''
-    const parentType = selectedParentMenu.value?.menuType
-    if (parentType === 'ROOT') return t('system.menu.dialog.parentHintRoot')
-    if (parentType === 'M') return t('system.menu.dialog.parentHintDirectory')
-    if (parentType === 'C') return t('system.menu.dialog.parentHintMenu')
-    return t('system.menu.dialog.parentHintUnknown')
-  })
-
-  const typeHintShort = computed(() => {
-    if (isEdit.value) return ''
-    const parentType = selectedParentMenu.value?.menuType
-    if (parentType === 'ROOT') return t('system.menu.dialog.parentShortRoot')
-    if (parentType === 'M') return t('system.menu.dialog.parentShortDirectory')
-    if (parentType === 'C') return t('system.menu.dialog.parentShortMenu')
-    return t('system.menu.dialog.parentShortUnknown')
   })
 
   const findMenuById = (list: MenuListItem[], id: number): MenuListItem | null => {
@@ -312,13 +299,24 @@
     children?: ParentTreeNode[]
   }
 
+  /**
+   * 按当前表单类型过滤父级候选：按钮挂菜单下、菜单挂目录下、目录挂顶级或目录下
+   */
+  const isParentTypeAllowed = (node: MenuListItem): boolean => {
+    if (node.menuType === 'F') return false
+    if (node.id === 0) return form.menuType === 'M'
+    const allowed: Record<string, string> = { M: 'M', C: 'M', F: 'C' }
+    return allowed[form.menuType] === node.menuType
+  }
+
   const buildParentTree = (list: MenuListItem[]): ParentTreeNode[] =>
     list.map((node) => {
       const typeLabel = node.menuType ? menuTypeLabel(node.menuType) : ''
       return {
         ...node,
         label: typeLabel ? `${node.menuName} · ${typeLabel}` : node.menuName,
-        disabled: lockedParentIds.value.has(node.id),
+        // 防环 + 类型不匹配的节点禁用但保留展示，便于用户查看整体层级
+        disabled: lockedParentIds.value.has(node.id) || !isParentTypeAllowed(node),
         children: node.children ? buildParentTree(node.children) : undefined
       }
     })
@@ -327,9 +325,18 @@
 
   const handleTypeSelect = (type: string) => {
     if (isEdit.value) return
-    typeTouched.value = true
     if (type !== form.menuType) {
       form.menuType = type
+      // 当前父级与新类型不匹配时清空，引导重新选择上级
+      const parentType = selectedParentMenu.value?.menuType
+      const match: Record<string, string> = { M: 'M', C: 'M', F: 'C' }
+      const parentMatch = form.parentId === 0 ? type === 'M' : parentType === match[type]
+      if (!parentMatch) {
+        form.parentId = undefined
+      }
+      // ElSelect 对 modelValue 变化会自动触发 change 校验（validateEvent），且其异步结果
+      // 晚于微任务队列；用宏任务在它落定后清空校验状态，避免切类型时误报必填
+      setTimeout(() => formRef.value?.ref?.clearValidate(), 0)
     }
   }
 
@@ -339,6 +346,12 @@
   const formItems = computed<FormItem[]>(() => {
     const isButton = form.menuType === 'F'
     return [
+      {
+        key: 'menuType',
+        label: t('system.menu.dialog.selectType'),
+        type: 'input',
+        span: 24
+      },
       {
         key: 'parentId',
         label: t('system.menu.dialog.parent'),
@@ -367,11 +380,11 @@
         }
       },
       {
-        key: 'sort',
-        label: t('system.menu.dialog.sort'),
-        type: 'number',
+        key: 'icon',
+        label: t('system.menu.dialog.icon'),
+        type: 'input',
         span: 12,
-        props: { min: 0, max: 9999, controlsPosition: 'right', style: 'width: 100%' }
+        hidden: isButton
       },
       {
         key: 'path',
@@ -394,20 +407,24 @@
         label: t('system.menu.dialog.permission'),
         type: 'input',
         span: 12,
+        // 目录不参与权限校验，该标识对目录无意义
+        hidden: form.menuType === 'M',
         props: { placeholder: t('system.menu.dialog.permissionPlaceholder') }
       },
       {
-        key: 'icon',
-        label: t('system.menu.dialog.icon'),
-        type: 'input',
+        key: 'sort',
+        label: t('system.menu.dialog.sort'),
+        type: 'number',
         span: 12,
-        hidden: isButton
+        props: { min: 0, max: 9999, controlsPosition: 'right', style: 'width: 100%' }
       },
       {
         key: 'visible',
         label: t('system.menu.dialog.visible'),
         type: 'switch',
-        span: 12
+        span: 12,
+        // 按钮不参与页面显示，该开关对按钮无意义
+        hidden: isButton
       },
       {
         key: 'keepAlive',
@@ -420,20 +437,13 @@
   })
 
   /**
-   * 判断菜单类型是否可用
-   */
-  const isMenuTypeAvailable = (type: string): boolean => {
-    return availableMenuTypes.value.some((item) => item.value === type)
-  }
-
-  /**
    * 获取选中的上级菜单信息
    */
   const selectedParentMenu = computed(() => {
     if (form.parentId === 0) {
       return { menuType: 'ROOT' } // 顶级菜单
     }
-    const findMenu = (list: MenuListItem[], id: number): MenuListItem | null => {
+    const findMenu = (list: MenuListItem[], id: number | undefined): MenuListItem | null => {
       for (const item of list) {
         if (item.id === id) return item
         if (item.children?.length) {
@@ -444,28 +454,6 @@
       return null
     }
     return findMenu(menuTreeOptions.value, form.parentId)
-  })
-
-  /**
-   * 可选的菜单类型选项
-   */
-  const availableMenuTypes = computed(() => {
-    const parentType = selectedParentMenu.value?.menuType
-    if (parentType === 'ROOT') {
-      return [{ value: 'M', label: t('system.menu.typeDirectory') }]
-    } else if (parentType === 'M') {
-      return [
-        { value: 'M', label: t('system.menu.typeDirectory') },
-        { value: 'C', label: t('system.menu.typeMenu') }
-      ]
-    } else if (parentType === 'C') {
-      return [{ value: 'F', label: t('system.menu.typeButton') }]
-    }
-    return [
-      { value: 'M', label: t('system.menu.typeDirectory') },
-      { value: 'C', label: t('system.menu.typeMenu') },
-      { value: 'F', label: t('system.menu.typeButton') }
-    ]
   })
 
   /**
@@ -486,7 +474,6 @@
    * 重置表单数据
    */
   const resetForm = (): void => {
-    typeTouched.value = false
     Object.assign(form, {
       id: undefined,
       parentId: 0,
@@ -509,7 +496,6 @@
    */
   const loadFormData = (): void => {
     if (props.dialogType === 'edit' && props.editData) {
-      typeTouched.value = true
       Object.assign(form, {
         id: props.editData.id,
         parentId: props.editData.parentId ?? 0,
@@ -526,6 +512,9 @@
       })
     } else if (props.dialogType === 'add' && props.editData?.parentId) {
       form.parentId = props.editData.parentId
+      // 「新增子菜单」预填入口：按父级自动推荐类型
+      const recommended = recommendedType.value
+      if (recommended) form.menuType = recommended
     }
   }
 
@@ -595,26 +584,6 @@
       }
     }
   )
-
-  /**
-   * 监听上级菜单变化，自动调整/推荐菜单类型
-   */
-  watch(
-    () => form.parentId,
-    () => {
-      if (isEdit.value) return
-      const available = availableMenuTypes.value
-      const isValid = available.some((item) => item.value === form.menuType)
-      if (!isValid) {
-        const next = recommendedType.value || available[0]?.value
-        if (next) form.menuType = next
-        return
-      }
-      if (!typeTouched.value && recommendedType.value) {
-        form.menuType = recommendedType.value
-      }
-    }
-  )
 </script>
 
 <style scoped lang="scss">
@@ -624,20 +593,16 @@
     }
   }
 
-  .menu-type-picker {
-    margin-bottom: 18px;
+  .menu-type-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
 
-    &__header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-
-    &__title {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--el-text-color-secondary);
+    &__cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
     }
 
     &__locked,
@@ -645,14 +610,9 @@
       display: inline-flex;
       gap: 4px;
       align-items: center;
+      align-self: flex-end;
       font-size: 12px;
       color: var(--el-text-color-secondary);
-    }
-
-    &__cards {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
     }
   }
 

@@ -18,7 +18,7 @@ declare namespace Api {
     /** 菜单保存参数 */
     interface MenuSaveParams {
       id?: number
-      parentId: number
+      parentId?: number
       menuName: string
       menuType: string
       path?: string
